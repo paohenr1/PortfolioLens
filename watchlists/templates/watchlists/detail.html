@@ -1,0 +1,31 @@
+{% extends 'research/base.html' %}
+{% block title %}{{ watchlist.name }} · My watchlists{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <a href="{% url 'watchlist_list' %}">Back to my watchlists</a>
+  <p class="eyebrow">Private watchlist</p><h1>{{ watchlist.name }}</h1>
+  <a class="button" href="{% url 'watchlist_add' watchlist.pk %}">Add instrument</a>
+  <div class="research-links"><a href="{% url 'watchlist_market' watchlist.pk %}">View daily market information</a><a href="{% url 'watchlist_preferences' watchlist.pk %}">Edit saved preferences</a></div>
+  <p class="muted">Saved defaults: {{ watchlist.get_price_basis_display }} · {{ watchlist.get_volume_basis_display }} · Order: {{ watchlist.get_instrument_order_display }}.</p>
+</section>
+<section class="reference-panel" aria-label="Saved instruments">
+  <p class="muted">Listing details are saved Intrinio references from when you added each instrument. Daily market information and price history load only when you submit their forms.</p>
+  {% if page.object_list %}
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Saved instrument table"><table class="price-table">
+    <caption>Instruments in {{ watchlist.name }}</caption>
+    <thead><tr><th scope="col">Instrument</th><th scope="col">Listing</th><th scope="col">Reference retrieved</th><th scope="col">Research and controls</th></tr></thead>
+    <tbody>{% for item in page %}<tr>
+      <th scope="row">{{ item.ticker|default_if_none:"Ticker unavailable" }}<br>{{ item.name|default_if_none:"Name unavailable" }}<br><span class="muted">{{ item.security_id }}</span></th>
+      <td>{{ item.exchange_mic|default_if_none:"MIC unavailable" }} · {{ item.currency|default_if_none:"Currency unavailable" }}<br>{% if item.delisted %}Delisted{% elif item.active is True %}Active{% elif item.active is False %}Inactive{% else %}Status unavailable{% endif %}</td>
+      <td>{{ item.reference_retrieved_at|date:"Y-m-d H:i:s T" }}</td>
+      <td><a href="{% url 'security' item.security_id %}">Instrument details</a><br><a href="{% url 'prices' item.security_id %}">Price history</a><br><a href="{% url 'financials' item.security_id %}">Company financials</a><br><a href="{% url 'watchlist_remove' watchlist.pk item.pk %}">Remove {{ item.ticker|default_if_none:item.security_id }}</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% if page.has_other_pages %}<nav class="research-links" aria-label="Instrument pages">
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">Previous page</a>{% endif %}
+    <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Next page</a>{% endif %}
+  </nav>{% endif %}
+  {% else %}<div class="empty-state"><h2>No instruments yet</h2><p>Use stock search to find an instrument, then choose Add to watchlist on its details page.</p></div>{% endif %}
+</section>
+{% endblock %}

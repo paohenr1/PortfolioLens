@@ -1,0 +1,18 @@
+{% extends 'research/base.html' %}
+{% block title %}{% block page_title %}{% endblock %} · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Your research account</p>
+  <h1>{% block heading %}{% endblock %}</h1>
+  {% block introduction %}{% endblock %}
+</section>
+<section class="account-section">
+  <form class="account-form" method="post">
+    {% csrf_token %}
+    {{ form.as_div }}
+    {% block hidden_fields %}{% endblock %}
+    <button class="button" type="submit">{% block submit_label %}{% endblock %}</button>
+  </form>
+  {% block after_form %}{% endblock %}
+</section>
+{% endblock %}

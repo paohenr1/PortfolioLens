@@ -1,0 +1,6 @@
+{% extends 'accounts/form.html' %}
+{% block page_title %}Watchlist preferences{% endblock %}
+{% block heading %}Watchlist preferences{% endblock %}
+{% block introduction %}<p class="lead">Save default price and volume bases and instrument order for {{ watchlist.name }}.</p>{% endblock %}
+{% block submit_label %}Save preferences{% endblock %}
+{% block after_form %}<p class="muted">Preferences belong to this watchlist. Saving makes no market-data requests. Changing a basis for one market-data load does not change these saved defaults.</p><p><a href="{% url 'watchlist_detail' watchlist.pk %}">Back to watchlist</a></p>{% endblock %}

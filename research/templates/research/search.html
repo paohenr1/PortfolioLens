@@ -1,0 +1,40 @@
+{% extends "research/base.html" %}
+{% block title %}Search stocks · Stock Research{% endblock %}
+{% block content %}
+  <section class="intro compact" aria-labelledby="page-title">
+    <p class="eyebrow">Company research</p>
+    <h1 id="page-title">Find a stock</h1>
+    <p class="lead">Search by ticker or company name. Compare listings by their exchange and currency before selecting an instrument.</p>
+  </section>
+  <form class="search-form" action="{% url 'search' %}" method="get">
+    <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
+    <div class="search-controls">{{ form.q }}<button class="button" type="submit">Search</button></div>
+    {% if form.q.errors %}<div role="alert">{{ form.q.errors }}</div>{% endif %}
+    <p class="muted">Up to 20 matches per search. Refine the query if you don’t see the listing you need.</p>
+  </form>
+  {% if provider_error %}
+    {% include "research/provider_error.html" %}
+  {% elif result %}
+    <section class="results" aria-labelledby="results-title">
+      <h2 id="results-title">Search results</h2>
+      <p class="muted">Source: Intrinio security reference data. Retrieved {{ result.retrieved_at|date:"Y-m-d H:i:s T" }}. These are instrument details, not market prices.</p>
+      {% if result.securities %}
+        <ul class="result-list">
+          {% for instrument in result.securities %}
+            <li class="result-card">
+              <div><h3><a href="{% url 'security' instrument.id %}">{{ instrument.name|default_if_none:"Name unavailable" }}</a></h3><span class="ticker">{{ instrument.ticker|default_if_none:"Ticker unavailable" }}</span></div>
+              <dl class="listing-meta">
+                <div><dt>Exchange (MIC)</dt><dd>{{ instrument.exchange_mic|default_if_none:"Unavailable" }}</dd></div>
+                <div><dt>Currency</dt><dd>{{ instrument.currency|default_if_none:"Unavailable" }}</dd></div>
+              </dl>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state" role="status"><h3>No matching instruments</h3><p>Try another ticker or company name. No results were returned by the available feed.</p></div>
+      {% endif %}
+    </section>
+  {% else %}
+    <div class="empty-state"><h2>Start with a ticker or company name</h2><p>Results will appear here after you submit a search. No request is made while you type.</p></div>
+  {% endif %}
+{% endblock %}

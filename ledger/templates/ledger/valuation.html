@@ -1,0 +1,71 @@
+{% extends 'research/base.html' %}
+{% block title %}Market valuation · {{ portfolio.name }} · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Private portfolio research · End of day</p>
+  <h1>Market valuation</h1>
+  <p class="lead">{{ portfolio.name }} · USD</p>
+  <p><a href="{% url 'portfolio_positions' portfolio_id=portfolio.pk %}">View positions and gains</a> · <a href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a></p>
+</section>
+<section class="account-section">
+  <form class="account-form" method="post" aria-label="Valuation settings">
+    {% csrf_token %}
+    {{ form.as_div }}
+    <button class="button" type="submit">Load valuation</button>
+  </form>
+  <p class="muted">Prices load only on submission. Up to five open instruments; one daily-price request each. No automatic refresh or saved quotes.</p>
+  <p>Shares, cash, and FIFO cost include only journal entries through the selected date. Each price must be a confirmed unadjusted close on that exact date. Missing dates, including weekends and holidays, are not filled from an earlier close.</p>
+  <p><a href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a> for an explicit period with supported cash-flow timing.</p>
+  <p class="muted">Corporate actions are recorded manually. Checking the share basis does not verify completeness with a broker. Current reference metadata is not historical listing evidence. Money-weighted returns and tax adjustments remain unavailable.</p>
+</section>
+{% if valuation %}
+<section class="reference-panel">
+  <h2>End-of-day values · {{ valuation.as_of|date:'Y-m-d' }}</h2>
+  <dl class="reference-grid">
+    <div><dt>Recorded cash (USD)</dt><dd>{{ valuation.cash }}</dd></div>
+    <div><dt>Open FIFO cost (USD)</dt><dd>{{ valuation.open_cost_basis }}</dd></div>
+    <div><dt>Position market value (USD)</dt><dd>{{ valuation.market_value|default_if_none:'Unavailable' }}</dd></div>
+    <div><dt>Unrealized gain/loss (USD)</dt><dd>{{ valuation.unrealized_gain|default_if_none:'Unavailable' }}</dd></div>
+    <div><dt>Cash plus market value (USD)</dt><dd>{{ valuation.total_value|default_if_none:'Unavailable' }}</dd></div>
+  </dl>
+  {% if valuation.market_value == None %}<p class="data-warning" role="status">Incomplete valuation: at least one position lacks a usable price. Portfolio market value, unrealized gain/loss, and cash plus market value are unavailable.</p>{% endif %}
+  <p>Each position value is shares × raw close, rounded half up once to USD cents. Unrealized gain/loss is that value minus remaining FIFO cost. Total value adds recorded cash to all position values; it is not an investment return or verified brokerage balance.</p>
+</section>
+<section class="results">
+  <h2>Position values</h2>
+  {% if rows %}
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Valuation table">
+    <table class="price-table">
+      <caption>Holdings and raw daily closes for {{ valuation.as_of|date:'Y-m-d' }}. Source: Intrinio historical stock prices. Retrieval times describe data access, not exchange quote timestamps or a freshness guarantee.</caption>
+      <thead><tr><th scope="col">Instrument</th><th scope="col">Shares</th><th scope="col">FIFO cost (USD)</th><th scope="col">Raw close (USD/share)</th><th scope="col">Market value (USD)</th><th scope="col">Unrealized gain/loss (USD)</th><th scope="col">Price provenance</th></tr></thead>
+      <tbody>{% for row in rows %}<tr>
+        <td>{{ row.instrument.security_ticker }} · {{ row.instrument.exchange_mic }}<br><span class="muted">{{ row.value.position.security_id }}</span></td>
+        <td>{{ row.value.position.quantity }}</td><td>{{ row.value.position.cost_basis }}</td>
+        <td>{{ row.value.raw_close|default_if_none:'Unavailable' }}</td>
+        <td>{{ row.value.market_value|default_if_none:'Unavailable' }}</td>
+        <td>{{ row.value.unrealized_gain|default_if_none:'Unavailable' }}</td>
+        <td>{% if row.value.issue %}{{ row.value.issue }}{% else %}Confirmed daily close · {{ valuation.as_of|date:'Y-m-d' }}<br>Retrieved {{ row.value.retrieved_at|date:'Y-m-d H:i:s T' }}{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% else %}<p>No open positions on this date. Position value and unrealized gain/loss are zero; no prices were requested.</p>{% endif %}
+</section>
+<section class="results">
+  <h2>Allocation weights · {{ allocation.as_of|date:'Y-m-d' }}</h2>
+  <p>Each holding and recorded cash as a share of cash plus market value. Weights use this same valuation and require no additional price requests.</p>
+  {% if allocation.issue %}<p class="data-warning" role="status">{{ allocation.issue }}</p>{% else %}<p class="muted">Percentages use reconciled rounding to two decimal places so they total exactly 100.00%. A displayed 0.00% can represent a small positive holding. These weights are not investment returns or sector/asset-class exposure.</p>{% endif %}
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Allocation table">
+    <table class="price-table">
+      <caption>Cash-inclusive allocation on {{ allocation.as_of|date:'Y-m-d' }}. Total value (USD): {{ allocation.total_value|default_if_none:'Unavailable' }}.</caption>
+      <thead><tr><th scope="col">Component</th><th scope="col">Value (USD)</th><th scope="col">Weight (%)</th></tr></thead>
+      <tbody>{% for row in allocation_rows %}<tr>
+        <td>{% if row.component.security_id %}{{ row.instrument.security_ticker }} · {{ row.instrument.exchange_mic }}<br><span class="muted">{{ row.component.security_id }}</span>{% else %}Recorded cash{% endif %}</td>
+        <td>{{ row.component.value|default_if_none:'Unavailable' }}</td>
+        <td>{% if row.component.weight == None %}Unavailable{% else %}{{ row.component.weight }}%{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+<p><a href="{% url 'portfolio_detail' portfolio_id=portfolio.pk %}">Back to portfolio</a></p>
+{% endblock %}

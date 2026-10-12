@@ -1,0 +1,6 @@
+{% extends 'research/base.html' %}
+{% block title %}Watchlist unavailable · Stock Research{% endblock %}
+{% block content %}<section class="intro compact">
+{% if storage_unavailable %}<h1>Watchlist storage is not configured</h1><p>Private watchlists require PostgreSQL. Follow the database setup instructions to enable them.</p>
+{% else %}<h1>Watchlist unavailable</h1><p>The requested watchlist or instrument is unavailable.</p>{% endif %}
+<a href="{% url 'watchlist_list' %}">Back to my watchlists</a></section>{% endblock %}

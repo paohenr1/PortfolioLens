@@ -1,0 +1,18 @@
+{% if profit_margins %}
+  <section aria-labelledby="profitability-title" class="profitability-panel">
+    <h3 id="profitability-title">Selected-period profitability</h3>
+    <p class="muted">Calculated from this income statement's standardized values for {{ statement.fundamental.fiscal_year }} {{ statement.fundamental.fiscal_period }}{% if statement.fundamental.start_date and statement.fundamental.end_date %} · {{ statement.fundamental.start_date|date:"Y-m-d" }} through {{ statement.fundamental.end_date|date:"Y-m-d" }}{% endif %}. These are period margins; no annualization or trailing-year estimate is applied.</p>
+    <div class="metric-grid profitability-metrics">
+      {% for margin in profit_margins %}
+        <article class="metric-card">
+          <h4>{{ margin.label }}</h4>
+          <p class="metric-value">{% if margin.percent is not None %}{{ margin.percent }}%{% else %}Unavailable{% endif %}</p>
+          {% if margin.issue %}<p class="muted">{{ margin.issue }}</p>{% endif %}
+          <p class="muted">{{ margin.definition }} Rounded to two decimal places, half up.</p>
+          <p class="metric-tag">Source tags: {{ margin.numerator_tag }} / totalrevenue</p>
+        </article>
+      {% endfor %}
+    </div>
+    <p class="muted">Both source values must explicitly use USD units and revenue must be positive. Losses remain negative and supplied zero profit remains zero. No costs, taxes, interest or alternative income figures are reconstructed. These currently retrieved values may be restated; they are not a historical as-of snapshot. Margins do not measure return on assets or equity.</p>
+  </section>
+{% endif %}

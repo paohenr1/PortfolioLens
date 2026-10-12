@@ -1,0 +1,11 @@
+{
+  "standardized_financials": [
+    {"data_tag": {"tag": "dilutedeps", "name": "Diluted earnings per share", "unit": "usdpershare", "sequence": 4}, "value": null},
+    {"data_tag": {"tag": "netincome", "name": "Net income", "unit": "usd", "sequence": 2}, "value": -250000.5},
+    {"data_tag": {"tag": "totalrevenue", "name": "Total revenue", "unit": "usd", "sequence": 1}, "value": 1234567890.125},
+    {"data_tag": {"tag": "basiceps", "name": "Basic earnings per share", "unit": "usdpershare", "sequence": 3}, "value": -0.25},
+    {"data_tag": {"tag": "weightedavebasicshares", "name": "Weighted average basic shares", "unit": "shares", "sequence": 5}, "value": 1000000},
+    {"data_tag": {"tag": "fixturezerometric", "name": "Fixture zero with unknown unit", "unit": null, "sequence": 6}, "value": 0},
+    {"data_tag": {"tag": "fixtureratio", "name": "Fixture ratio", "unit": "percentage", "sequence": null}, "value": 0.15}
+  ]
+}

@@ -1,0 +1,14 @@
+<section class="reference-panel" aria-labelledby="sharpe-title">
+  <h2 id="sharpe-title">Sharpe · explicit risk-free assumption</h2>
+  <dl class="reference-grid sharpe-summary">
+    <div><dt>Validated session returns</dt><dd>{{ sharpe.observations }}</dd></div>
+    <div><dt>Assumed annual simple risk-free rate</dt><dd>{{ sharpe.annual_risk_free_percent }}%</dd></div>
+    <div><dt>Assumed per-session rate · rounded</dt><dd>{{ sharpe.daily_risk_free_percent }}%</dd></div>
+    <div><dt>Mean simple excess return · rounded</dt><dd>{% if sharpe.mean_excess_percent == None %}Unavailable{% else %}{{ sharpe.mean_excess_percent }}%{% endif %}</dd></div>
+    <div><dt>Daily Sharpe</dt><dd>{% if sharpe.daily_sharpe == None %}Unavailable{% else %}{{ sharpe.daily_sharpe }}{% endif %}</dd></div>
+    <div><dt>Annualized Sharpe · 252 sessions</dt><dd>{% if sharpe.annualized_sharpe == None %}Unavailable{% else %}{{ sharpe.annualized_sharpe }}{% endif %}</dd></div>
+  </dl>
+  {% if sharpe.issue %}<p class="data-warning" role="status">{{ sharpe.issue }}</p>{% endif %}
+  <p>The entered annual simple rate is divided by 252 for each session return. Excess return is the portfolio's simple daily return minus that constant per-session rate. Daily Sharpe is mean excess return divided by its sample standard deviation (n−1); annualized Sharpe scales the unrounded ratio by √252.</p>
+  <p class="muted">Requires twenty complete returns and nonzero sample volatility. Ratios have no percent sign. The rate is your assumption, not a retrieved Treasury yield; this session convention does not accrue extra calendar-day interest over weekends or holidays. Annualization assumes stable return behavior without serial correlation. These describe the observed window, not a forecast. Display rounding does not enter calculations, and no additional prices are requested.</p>
+</section>

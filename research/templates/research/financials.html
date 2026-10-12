@@ -1,0 +1,58 @@
+{% extends "research/base.html" %}
+{% block title %}Company financials · Stock Research{% endblock %}
+{% block content %}
+  <section class="intro compact" aria-labelledby="page-title">
+    <a href="{% url 'security' security_id %}">Back to instrument details</a>
+    <p class="eyebrow">Fundamental research</p>
+    <h1 id="page-title">Company financials</h1>
+    <p><a href="{% url 'capital_returns' security_id %}">View return on assets and equity</a></p>
+    <p><a href="{% url 'annual_growth' security_id %}">View annual revenue and earnings growth</a></p>
+    <p><a href="{% url 'annual_multiples' security_id %}">View annual earnings valuation multiples</a></p>
+    <p><a href="{% url 'market_capitalization' security_id %}">View company market capitalization</a></p>
+    <p><a href="{% url 'statement_trends' security_id %}">View annual financial statement trends</a></p>
+    {% if statement %}<p class="lead">{{ statement.fundamental.company.name|default_if_none:"Company name unavailable" }} · {{ statement.security.ticker|default_if_none:"Ticker unavailable" }}</p>{% endif %}
+  </section>
+  <form class="search-form statement-form" method="get" action="{% url 'financials' security_id %}" aria-label="Financial statement settings">
+    {{ form.non_field_errors }}
+    <div class="price-controls">
+      {% for field in form %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}
+      <button class="button" type="submit">Load statement</button>
+    </div>
+    <p class="muted">Choose a company fiscal period. The suggested year does not guarantee available filings. Data loads when you submit.</p>
+  </form>
+  {% if provider_error %}
+    {% include "research/provider_error.html" %}
+  {% elif statement %}
+    <section class="price-panel statement-panel" aria-labelledby="statement-title">
+      <h2 id="statement-title">{{ statement_label }} · {{ statement.fundamental.fiscal_year }} {{ statement.fundamental.fiscal_period }}</h2>
+      <p class="muted">Standardized financials from Intrinio. {% if statement.fundamental.type == "reported" %}Provider-reported period.{% elif statement.fundamental.type == "calculated" %}Provider-calculated period; these values are supplied by Intrinio, not derived here.{% elif statement.fundamental.type == "restated" %}Provider-restated period; updated values may differ from the original filing.{% else %}Reported/calculated/restated period classification unavailable.{% endif %} Standardized values are not the issuer's original as-reported statement layout.</p>
+      <dl class="reference-grid statement-meta">
+        <div><dt>Period start</dt><dd>{% if statement.fundamental.start_date %}{{ statement.fundamental.start_date|date:"Y-m-d" }}{% else %}Unavailable{% endif %}</dd></div>
+        <div><dt>{% if statement.fundamental.statement_code == "balance_sheet_statement" %}Balance-sheet date{% else %}Period end{% endif %}</dt><dd>{% if statement.fundamental.end_date %}{{ statement.fundamental.end_date|date:"Y-m-d" }}{% else %}Unavailable{% endif %}</dd></div>
+        <div><dt>SEC filing date/time</dt><dd>{{ filing_time }}</dd></div>
+        <div><dt>Provider update date/time</dt><dd>{{ updated_time }}</dd></div>
+        <div><dt>First calculable date/time</dt><dd>{{ calculable_time }}</dd></div>
+        <div><dt>Listing currency</dt><dd>{{ statement.security.currency|default_if_none:"Unavailable" }}</dd></div>
+      </dl>
+      {% if statement.fundamental.statement_code == "balance_sheet_statement" %}<p class="muted">Balance-sheet values describe a point in time at the period end, not annual or quarterly sums.</p>{% endif %}
+      <p class="muted">Each value retains its own provider unit. Listing currency is not used to infer statement units or convert currencies.</p>
+      {% if not statement.pagination_complete %}<p class="data-warning" role="status">Partial statement: Intrinio indicates more data, but this response is limited. Missing tags here do not establish that the company has no such metric.</p>{% endif %}
+      {% include "research/profitability.html" %}
+      {% if statement.values %}
+        <div class="metric-grid">
+          {% for metric in metrics %}<article class="metric-card"><h3>{{ metric.label }}</h3><p class="metric-value">{{ metric.value }}</p><p class="muted">{{ metric.unit }} · {{ metric.availability }}</p><p class="muted">{{ metric.definition }}</p><p class="metric-tag">Source tag: {{ metric.tag }}</p></article>{% endfor %}
+        </div>
+        <div class="table-scroll" tabindex="0" aria-label="Scrollable standardized financial values">
+          <table class="price-table financial-table"><caption>Supplied standardized observations · {{ statement_label }} · {{ statement.fundamental.fiscal_year }} {{ statement.fundamental.fiscal_period }}. Values are displayed in full units, without scaling.</caption><thead><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Unit</th><th scope="col">Source tag</th></tr></thead><tbody>{% for row in rows %}<tr><th scope="row">{{ row.label }}</th><td>{{ row.value }}</td><td>{{ row.unit }}</td><td>{{ row.tag }}</td></tr>{% endfor %}</tbody></table>
+        </div>
+      {% else %}
+        <div class="empty-state" role="status"><h3>No financial values supplied</h3><p>Statement metadata was returned, but no standardized values were available in this response. No zero values or substitute metrics have been inferred.</p></div>
+      {% endif %}
+      <p class="muted">Source: Intrinio standardized financials · Retrieved {{ statement.retrieved_at|date:"Y-m-d H:i:s T" }}.</p>
+      <p class="muted">Company ID: {{ statement.fundamental.company.id }} · Statement ID: {{ statement.fundamental.id }}.</p>
+      <p class="muted">This is the currently retrieved version and may include restatements. Filing dates do not prove these exact values were available then. This page is not a point-in-time backtest dataset or a forecast. Trailing metrics, valuation ratios, growth, and cross-period comparisons are not inferred.</p>
+    </section>
+  {% elif not form.is_bound %}
+    <div class="empty-state"><h2>Choose a statement and fiscal period</h2><p>Review income, balance-sheet, or cash-flow observations for the instrument's company. No financial data has been requested yet.</p></div>
+  {% endif %}
+{% endblock %}

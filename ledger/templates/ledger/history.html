@@ -1,0 +1,37 @@
+{% extends 'research/base.html' %}
+{% block title %}Transactions · {{ portfolio.name }} · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Private transaction journal</p>
+  <h1>Transactions</h1>
+  <p class="lead">{{ portfolio.name }} · USD</p>
+  <p><a class="button" href="{% url 'ledger_create' portfolio_id=portfolio.pk %}">Record transaction</a></p>
+</section>
+<section class="reference-panel">
+  <h2>Recorded cash: {{ cash }} USD</h2>
+  <p>Derived from all recorded cash movements and trade proceeds/costs including fees. This is not a verified brokerage balance or investment return.</p>
+  <p><a href="{% url 'portfolio_positions' portfolio_id=portfolio.pk %}">View positions and gains</a></p>
+  <p><a href="{% url 'portfolio_valuation' portfolio_id=portfolio.pk %}">View market valuation</a></p>
+  <p><a href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a></p>
+  <p><a href="{% url 'ledger_audit' portfolio.pk %}">View correction history</a></p>
+  <p class="muted">This table shows the current interpretation. Corrections retain original entries in the audit trail and may restate past accounting and returns.</p>
+  <p class="muted">Recorded net dividends add cash; recorded splits adjust open shares without changing lot cost. Actions are not fetched automatically. Entries are ordered by transaction date and your explicit same-day order.</p>
+</section>
+<section class="results">
+{% if page.object_list %}
+<div class="table-scroll" tabindex="0" role="region" aria-label="Transaction table">
+<table class="price-table">
+  <caption>User-entered executions and cash movements. Amount is the cash movement or rounded gross trade value; trade fees are separate. Instrument labels are reference snapshots at entry time.</caption>
+  <thead><tr><th scope="col">Date</th><th scope="col">Order</th><th scope="col">Type</th><th scope="col">Instrument</th><th scope="col">Split ratio (new for old)</th><th scope="col">Shares</th><th scope="col">Execution price (USD/share)</th><th scope="col">Amount (USD)</th><th scope="col">Trade fees (USD)</th><th scope="col">Cash change (USD)</th><th scope="col">Correction controls</th></tr></thead>
+  <tbody>{% for entry in page %}<tr>
+    <td>{{ entry.event_date|date:'Y-m-d' }}</td><td>{{ entry.sequence }}</td><td>{{ entry.get_kind_display }}</td>
+    <td>{% if entry.security_id %}{{ entry.security_ticker }} · {{ entry.exchange_mic }}<br><span class="muted">{{ entry.security_id }}</span>{% else %}—{% endif %}</td>
+    <td>{% if entry.kind == 'SPLIT' %}{{ entry.split_new }} for {{ entry.split_old }}{% else %}—{% endif %}</td><td>{{ entry.quantity|default_if_none:'—' }}</td><td>{{ entry.unit_price|default_if_none:'—' }}</td><td>{{ entry.amount }}</td><td>{{ entry.fees }}</td><td>{{ entry.cash_delta }}</td><td><a href="{% url 'ledger_correct' portfolio.pk entry.pk %}">Correct</a> · <a href="{% url 'ledger_void' portfolio.pk entry.pk %}">Void</a></td>
+  </tr>{% endfor %}</tbody>
+</table>
+</div>
+{% if page.has_other_pages %}<nav class="research-links" aria-label="Transaction pages">{% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">Previous page</a>{% endif %}<span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?page={{ page.next_page_number }}">Next page</a>{% endif %}</nav>{% endif %}
+{% else %}<div class="empty-state"><h2>No transactions yet</h2><p>Record a deposit before a cash-funded buy. Enter older events with the correct date and order.</p></div>{% endif %}
+<p><a href="{% url 'portfolio_detail' portfolio_id=portfolio.pk %}">Back to portfolio</a></p>
+</section>
+{% endblock %}

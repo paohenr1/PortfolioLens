@@ -1,0 +1,70 @@
+{% extends "research/base.html" %}
+{% block title %}Return on assets and equity · Stock Research{% endblock %}
+{% block content %}
+  <section class="intro compact" aria-labelledby="page-title">
+    <a href="{% url 'security' security_id %}">Back to instrument details</a>
+    <p class="eyebrow">Fundamental research</p>
+    <h1 id="page-title">Return on assets and equity</h1>
+    <p class="lead">Annual net income divided by average opening and closing balances.</p>
+  </section>
+  <form class="search-form statement-form" method="get" action="{% url 'capital_returns' security_id %}" aria-label="Annual return settings">
+    {{ form.non_field_errors }}
+    <div class="price-controls">
+      {% for field in form %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}<p class="muted">{{ field.help_text }}</p></div>{% endfor %}
+      <button class="button" type="submit">Load annual returns</button>
+    </div>
+    <p class="muted">Annual FY periods only. This load uses up to seven requests under the shared market-data limit. No periods are substituted if an input is unavailable.</p>
+  </form>
+  {% if provider_error %}
+    {% include "research/provider_error.html" %}
+  {% elif capital_result %}
+    <section class="price-panel capital-returns-panel" aria-labelledby="capital-title">
+      <h2 id="capital-title">{{ bundle.income.fundamental.company.name|default_if_none:"Company name unavailable" }} · {{ bundle.income.fundamental.fiscal_year }} FY</h2>
+      <dl class="reference-grid capital-period">
+        <div><dt>Income period start</dt><dd>{{ bundle.income.fundamental.start_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+        <div><dt>Income period end</dt><dd>{{ bundle.income.fundamental.end_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+        <div><dt>Opening balance date</dt><dd>{{ bundle.opening_balance.fundamental.end_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+        <div><dt>Closing balance date</dt><dd>{{ bundle.closing_balance.fundamental.end_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+        <div><dt>Selected-period net income · USD</dt><dd>{% if capital_result.net_income is not None %}{{ capital_result.net_income }}{% else %}Unavailable{% endif %}</dd></div>
+      </dl>
+      {% if capital_result.alignment_issue %}<p class="data-warning" role="status">{{ capital_result.alignment_issue }}</p>{% endif %}
+      <div class="metric-grid capital-return-metrics">
+        {% for metric in capital_result.metrics %}
+          <article class="metric-card">
+            <h3>{{ metric.label }}</h3>
+            <p class="metric-value">{% if metric.percent is not None %}{{ metric.percent }}%{% else %}Unavailable{% endif %}</p>
+            {% if metric.issue %}<p class="muted">{{ metric.issue }}</p>{% endif %}
+            <dl>
+              <div><dt>Opening balance · USD</dt><dd>{% if metric.opening is not None %}{{ metric.opening }}{% else %}Unavailable{% endif %}</dd></div>
+              <div><dt>Closing balance · USD</dt><dd>{% if metric.closing is not None %}{{ metric.closing }}{% else %}Unavailable{% endif %}</dd></div>
+              <div><dt>Average balance · USD</dt><dd>{% if metric.average is not None %}{{ metric.average }}{% else %}Unavailable{% endif %}</dd></div>
+            </dl>
+            <p class="muted">netincome ÷ ((opening {{ metric.balance_tag }} + closing {{ metric.balance_tag }}) ÷ 2) × 100. Rounded to two decimals, half up.</p>
+            <p class="metric-tag">Source tags: netincome / {{ metric.balance_tag }}</p>
+          </article>
+        {% endfor %}
+      </div>
+      <p class="muted">Both endpoint balances must be positive with explicit USD units. Zero net income is zero return; losses stay negative. Average means two endpoint observations, not a daily average. Values are not annualized or converted to a trailing-year estimate. Net income is the provider-standardized total, without adjustments for preferred dividends or noncontrolling interests; equity is total equity, not a common-equity-only denominator.</p>
+      <h3>Statement sources and versions</h3>
+      <div class="metric-grid capital-sources">
+        {% for source in sources %}
+          <article class="metric-card">
+            <h4>{{ source.label }} · {{ source.statement.fundamental.fiscal_year }} FY</h4>
+            <dl>
+              <div><dt>Classification</dt><dd>{{ source.statement.fundamental.type|default_if_none:"Unavailable" }}</dd></div>
+              <div><dt>SEC filing date/time</dt><dd>{{ source.filing_time }}</dd></div>
+              <div><dt>Provider update date/time</dt><dd>{{ source.updated_time }}</dd></div>
+              <div><dt>First calculable date/time</dt><dd>{{ source.calculable_time }}</dd></div>
+              <div><dt>Retrieved</dt><dd>{{ source.statement.retrieved_at|date:"Y-m-d H:i:s T" }}</dd></div>
+            </dl>
+            <p class="metric-tag">Statement ID: {{ source.statement.fundamental.id }} · Company ID: {{ source.statement.fundamental.company.id }}</p>
+            {% if not source.statement.pagination_complete %}<p class="data-warning">Partial statement response.</p>{% endif %}
+          </article>
+        {% endfor %}
+      </div>
+      <p class="muted">Source: Intrinio standardized financials. These are currently retrieved versions and may include restatements. Matching dates do not prove the statements share one historical revision. Filing dates do not establish when these exact values were available. This is not an as-of backtest dataset, a forecast or a common-shareholder return measure.</p>
+    </section>
+  {% elif not form.is_bound %}
+    <div class="empty-state"><h2>Choose an annual fiscal year</h2><p>No financial data has been requested yet. The load requires annual income and two balance-sheet dates aligned to the income period.</p></div>
+  {% endif %}
+{% endblock %}

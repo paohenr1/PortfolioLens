@@ -1,0 +1,10 @@
+{% extends 'accounts/form.html' %}
+{% block page_title %}Record transaction{% endblock %}
+{% block heading %}Record transaction{% endblock %}
+{% block introduction %}<p class="lead">{{ portfolio.name }} · USD journal. Enter a completed transaction; this does not place an order.</p>{% if provider_error %}<p role="alert" class="errorlist">{{ provider_error.message }} No transaction was recorded.</p>{% endif %}{% endblock %}
+{% block submit_label %}Record transaction{% endblock %}
+{% block after_form %}
+<p class="muted">Entries are permanent. Correct or Void on the transactions page adds an explicit audit decision without rewriting the original. Review the date, same-day order, amount, and fees before recording. Enter dividends as net cash received on the payment date. Enter splits on their effective date with explicit new-for-old terms. Return of capital, automatic reinvestment, and cash-in-lieu are not supported.</p>
+<p class="muted">Trades, dividends, and splits use one bounded instrument reference request. Deposits, withdrawals, standalone fees, and retries of an already recorded submission use no provider request. Execution prices come from you.</p>
+<p><a href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">Back to transactions</a> · <a href="{% url 'search' %}">Find an instrument</a></p>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'research/base.html' %}
+{% block title %}Correction history · {{ portfolio.name }}{% endblock %}
+{% block content %}
+<section class="intro compact"><p class="eyebrow">Private audit trail</p><h1>Correction history</h1><p class="lead">{{ portfolio.name }} · USD</p>
+<p>Original entries and correction reasons remain permanent. Current transactions and calculations use the latest valid interpretation. Past valuations and returns may change after corrections.</p></section>
+{% for correction in page %}<section class="reference-panel">
+<h2>{% if correction.replacement %}Replacement{% else %}Void{% endif %} · {{ correction.recorded_at|date:'Y-m-d H:i:s T' }}</h2>
+<p>Correction ID: {{ correction.pk }}</p><p><strong>Reason:</strong> {{ correction.reason }}</p>
+<h3>Original entry</h3>{% include 'ledger/entry_reference.html' with entry=correction.target %}
+{% if correction.replacement %}<h3>Replacement entry</h3>{% include 'ledger/entry_reference.html' with entry=correction.replacement %}{% endif %}
+</section>{% empty %}<section class="empty-state"><h2>No corrections yet</h2><p>Use Correct or Void on a transaction to preview a correction.</p></section>{% endfor %}
+{% if page.has_other_pages %}<nav class="research-links" aria-label="Correction pages">{% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">Previous page</a>{% endif %}<span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?page={{ page.next_page_number }}">Next page</a>{% endif %}</nav>{% endif %}
+<p><a href="{% url 'ledger_history' portfolio.pk %}">Back to transactions</a></p>
+{% endblock %}

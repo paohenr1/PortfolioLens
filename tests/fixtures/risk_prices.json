@@ -1,0 +1,12 @@
+{
+  "security": {"id": "sec_fixture_risk", "ticker": "TSTR", "name": "Synthetic Risk Example", "exchange_mic": "XNYS", "currency": "USD"},
+  "stock_prices": [
+    {"date": "2020-01-02", "frequency": "daily", "intraperiod": false, "close": 10, "adj_close": 999},
+    {"date": "2020-01-03", "frequency": "daily", "intraperiod": false, "close": 12, "adj_close": 999},
+    {"date": "2020-01-06", "frequency": "daily", "intraperiod": false, "close": 9, "adj_close": 999},
+    {"date": "2020-01-07", "frequency": "daily", "intraperiod": false, "close": 12, "adj_close": 999},
+    {"date": "2020-01-08", "frequency": "daily", "intraperiod": false, "close": 9.6, "adj_close": 999},
+    {"date": "2020-01-09", "frequency": "daily", "intraperiod": true, "close": 11, "adj_close": 999}
+  ],
+  "next_page": null
+}

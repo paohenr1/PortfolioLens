@@ -1,0 +1,70 @@
+{% extends "research/base.html" %}
+{% load static %}
+{% block title %}Daily price history · Stock Research{% endblock %}
+{% block content %}
+  <section class="intro compact" aria-labelledby="page-title">
+    <a href="{% url 'security' security_id %}">Back to instrument details</a>
+    <p class="eyebrow">Historical research</p>
+    <h1 id="page-title">Daily price history</h1>
+    {% if history %}<p class="lead">{{ history.security.name|default_if_none:"Name unavailable" }} · {{ history.security.ticker|default_if_none:"Ticker unavailable" }}</p>{% endif %}
+  </section>
+  <form class="search-form price-form" method="get" action="{% url 'prices' security_id %}" aria-label="Price history settings">
+    {{ form.non_field_errors }}
+    <div class="price-controls">
+      {% for field in form %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}
+      <button class="button" type="submit">Load prices</button>
+    </div>
+    <p class="muted">Daily observations · Up to 366 calendar days · Prices load when you submit. Risk statistics require complete U.S. equity sessions from 2000 and an end date before today (UTC).</p>
+  </form>
+  {% if provider_error %}
+    {% include "research/provider_error.html" %}
+  {% elif history %}
+    <section class="price-panel" aria-labelledby="price-title">
+      <h2 id="price-title">{{ chart.basis_label }}{% if history.security.currency %} · {{ history.security.currency }}{% endif %}</h2>
+      <p class="muted">{% if basis == "adjusted" %}Intrinio adjusts these closes for splits and dividends. This chart is not a portfolio total-return calculation.{% else %}Unadjusted closing prices. Splits and dividends can affect comparisons across dates.{% endif %}</p>
+      <dl class="price-summary">
+        <div><dt>Latest plotted close</dt><dd>{% if chart.latest %}{{ chart.latest.value }}{% if history.security.currency %} {{ history.security.currency }}{% endif %}<span class="muted"> on {{ chart.latest.date|date:"Y-m-d" }}</span>{% else %}Unavailable{% endif %}</dd></div>
+        <div><dt>Trading currency</dt><dd>{{ history.security.currency|default_if_none:"Unavailable — no currency assumed" }}</dd></div>
+        <div><dt>Latest returned observation</dt><dd>{% if latest_observation_date %}{{ latest_observation_date|date:"Y-m-d" }}{% else %}Unavailable{% endif %}</dd></div>
+      </dl>
+      {% if not history.pagination_complete %}<p class="data-warning" role="status">Partial history: the request limit was reached before all pages arrived. Narrow the date range to retrieve the remaining observations.</p>{% endif %}
+      {% if chart.missing_count %}<p class="data-warning">{{ chart.missing_count }} returned observation{{ chart.missing_count|pluralize }} lack{{ chart.missing_count|pluralize:"s," }} the selected close. Missing values are not replaced or connected through.</p>{% endif %}
+      {% if chart.unconfirmed_count %}<p class="data-warning">{{ chart.unconfirmed_count }} incomplete or unconfirmed period{{ chart.unconfirmed_count|pluralize }} excluded from the chart. Supplied values remain in the table.</p>{% endif %}
+      {% if chart.points %}
+        <figure class="chart-figure">
+          <div class="chart-scroll" tabindex="0" aria-label="Scrollable price chart">
+            <svg class="price-chart" viewBox="0 0 900 340" role="img" aria-labelledby="chart-title chart-description">
+              <title id="chart-title">{{ chart.basis_label }} from {{ history.start_date|date:"Y-m-d" }} to {{ history.end_date|date:"Y-m-d" }}</title>
+              <desc id="chart-description">{{ chart.points|length }} completed daily closes. Horizontal positions use calendar dates. The vertical axis is scaled to the plotted values. Exact values appear in the observations table below.</desc>
+              {% for y, label in chart.y_ticks %}<line class="chart-grid" x1="95" x2="875" y1="{{ y }}" y2="{{ y }}"/><text class="chart-axis" x="85" y="{{ y }}" text-anchor="end" dominant-baseline="middle">{{ label }}</text>{% endfor %}
+              <text class="chart-axis" x="95" y="320">{{ history.start_date|date:"Y-m-d" }}</text>
+              <text class="chart-axis" x="875" y="320" text-anchor="end">{{ history.end_date|date:"Y-m-d" }}</text>
+              {% for path in chart.paths %}<path class="chart-line" d="{{ path }}"/>{% endfor %}
+              {% for point in chart.points %}<circle class="chart-point" cx="{{ point.x }}" cy="{{ point.y }}" r="3" data-label="{{ point.date|date:'Y-m-d' }}: {{ point.value }}{% if history.security.currency %} {{ history.security.currency }}{% endif %}"><title>{{ point.date|date:"Y-m-d" }}: {{ point.value }}{% if history.security.currency %} {{ history.security.currency }}{% endif %}</title></circle>{% endfor %}
+            </svg>
+          </div>
+          <figcaption>Hover or tap the chart to inspect a plotted observation. On small screens, scroll horizontally. Use the table for keyboard access to exact values.</figcaption>
+          <p class="chart-readout" aria-live="polite">{{ chart.basis_label }} · {{ chart.points|length }} plotted observations</p>
+        </figure>
+      {% else %}
+        <div class="empty-state" role="status"><h3>No completed closes available</h3><p>{% if history.observations %}The selected close is missing or its period is incomplete or unconfirmed. Try another price basis or date range.{% else %}Intrinio returned no observations for this date range. Coverage, listing dates, and non-trading days can affect availability.{% endif %}</p></div>
+      {% endif %}
+      <p class="muted">Source: Intrinio historical stock prices · Frequency: daily · Retrieved {{ history.retrieved_at|date:"Y-m-d H:i:s T" }}.</p>
+      <p class="muted">Requested: {{ history.start_date|date:"Y-m-d" }} through {{ history.end_date|date:"Y-m-d" }}. End-of-day dates are not quote timestamps. No real-time price or freshness guarantee is implied.</p>
+      <p class="muted">Lines connect supplied observations; absent dates are not filled. No trading calendar is assumed, so missing trading sessions cannot be inferred. Exhausted pagination does not establish complete market coverage.</p>
+      {% if chart.rows %}
+        <details class="price-table-details">
+          <summary>View observations table ({{ chart.rows|length }})</summary>
+          <div class="table-scroll" tabindex="0" aria-label="Scrollable daily observations">
+            <table class="price-table"><caption>Daily observations, newest first. Currency: {{ history.security.currency|default_if_none:"Unavailable" }}.</caption><thead><tr><th scope="col">Date</th><th scope="col">Raw close</th><th scope="col">Adjusted close</th><th scope="col">Period status</th></tr></thead><tbody>{% for row in chart.rows %}<tr><th scope="row">{{ row.date|date:"Y-m-d" }}</th><td>{{ row.close }}</td><td>{{ row.adjusted_close }}</td><td>{{ row.period_status }}</td></tr>{% endfor %}</tbody></table>
+          </div>
+        </details>
+      {% endif %}
+    </section>
+    {% include "research/stock_risk.html" %}
+    {% include "research/volume.html" %}
+    {% if chart.points or stock_drawdown_chart or volume_chart.points %}<script src="{% static 'research/prices.js' %}" defer></script>{% endif %}
+  {% elif not form.is_bound %}
+    <div class="empty-state"><h2>Choose a range to load prices</h2><p>Compare raw and adjusted daily closes for this instrument. No prices have been requested yet.</p></div>
+  {% endif %}
+{% endblock %}

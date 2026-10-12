@@ -1,0 +1,32 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A workspace for stock research and portfolio analytics.">
+    <title>{% block title %}Stock Research · Portfolio Analytics{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'research/site.css' %}">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="header">
+      <a class="brand" href="{% url 'home' %}"><span class="brand-mark" aria-hidden="true">S</span> Stock Research</a>
+      <nav aria-label="Main navigation">
+        <a href="{% url 'search' %}">Search stocks</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'portfolio_list' %}">My portfolios</a>
+          <a href="{% url 'watchlist_list' %}">My watchlists</a>
+          <a href="{% url 'account' %}">My account</a>
+          <form action="{% url 'sign_out' %}" method="post">{% csrf_token %}<button class="nav-button" type="submit">Sign out</button></form>
+        {% else %}
+          <a href="{% url 'sign_in' %}">Sign in</a>
+          {% if registration_available %}<a href="{% url 'register' %}">Create account</a>{% endif %}
+        {% endif %}
+      </nav>
+      <span class="stage">In development</span>
+    </header>
+    <main id="main">{% block content %}{% endblock %}</main>
+    <footer>Stock Research &amp; Portfolio Analytics <span>Research tools · No trading execution</span></footer>
+  </body>
+</html>

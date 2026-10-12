@@ -1,0 +1,59 @@
+# REVIEW TEMPLATE ONLY. Do not apply until account and ingress checks in
+# docs/render-deployment.md pass. No database or paid tier is declared here.
+services:
+  - type: web
+    name: stock-research-private
+    runtime: python
+    plan: free
+    branch: main
+    autoDeployTrigger: "off"
+    previews:
+      generation: "off"
+    buildCommand: bash deploy/render-build.sh
+    startCommand: .venv/bin/python scripts/start_production.py
+    healthCheckPath: /health/live/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.14"
+      - key: DJANGO_ENV
+        value: production
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DJANGO_PRIVATE_SITE
+        value: "true"
+      - key: DJANGO_ALLOW_REGISTRATION
+        value: "false"
+      - key: DJANGO_RATE_LIMIT_BACKEND
+        value: postgresql
+      - key: DJANGO_DATABASE_ENGINE
+        value: postgresql
+      - key: DJANGO_DATABASE_PORT
+        value: "5432"
+      - key: DJANGO_DATABASE_SSLMODE
+        value: verify-full
+      - key: STOCK_BIND_HOST
+        value: "0.0.0.0"
+      - key: STOCK_WORKERS
+        value: "1"
+      # Render supplies PORT. Do not replace it with a hard-coded local port.
+      # Deliberately false until ingress header replacement is verified.
+      - key: DJANGO_TRUST_PROXY_HTTPS
+        value: "false"
+      # Actual hostnames, persistent secrets and database settings go in the
+      # host's secure settings, never into this template or Git.
+      - key: DJANGO_ALLOWED_HOSTS
+        sync: false
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: INTRINIO_API_KEY
+        sync: false
+      - key: DJANGO_DATABASE_NAME
+        sync: false
+      - key: DJANGO_DATABASE_USER
+        sync: false
+      - key: DJANGO_DATABASE_HOST
+        sync: false
+      - key: DJANGO_DATABASE_PASSWORD
+        sync: false
+      - key: DJANGO_DATABASE_SSLROOTCERT
+        sync: false

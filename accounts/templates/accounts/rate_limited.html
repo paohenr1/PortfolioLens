@@ -1,0 +1,9 @@
+{% extends 'research/base.html' %}
+{% block title %}Please wait · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <h1>Please wait</h1>
+  <p class="lead" role="alert">Too many account attempts. Wait up to one minute before trying again.</p>
+  <p><a href="{% url 'sign_in' %}">Back to sign in</a></p>
+</section>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'research/base.html' %}
+{% block title %}Portfolio not found · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <h1>Portfolio not found</h1>
+  <p class="lead">This portfolio is unavailable to your account.</p>
+  <a href="{% url 'portfolio_list' %}">Back to my portfolios</a>
+</section>
+{% endblock %}

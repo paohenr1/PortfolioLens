@@ -1,0 +1,43 @@
+{% if stock_risk %}
+<section class="reference-panel stock-risk-panel" aria-labelledby="stock-risk-title">
+  <h2 id="stock-risk-title">Stock volatility and drawdown</h2>
+  <p class="muted">Derived from the selected {{ chart.basis_label|lower }} observations in this requested window. Regular U.S. equity sessions use the NYSE calendar, including holidays and extraordinary closures. Weekend and holiday endpoints use sessions inside the range.</p>
+  <dl class="reference-grid stock-risk-summary">
+    <div><dt>Expected session closes</dt><dd>{{ stock_risk.expected_sessions|default_if_none:"Unavailable" }}</dd></div>
+    <div><dt>Validated daily returns</dt><dd>{{ stock_risk.observations }}</dd></div>
+    <div><dt>Daily sample volatility</dt><dd>{% if stock_risk.daily_volatility_percent is not None %}{{ stock_risk.daily_volatility_percent }}%{% else %}Unavailable{% endif %}</dd></div>
+    <div><dt>Annualized volatility · 252 sessions</dt><dd>{% if stock_risk.annualized_volatility_percent is not None %}{{ stock_risk.annualized_volatility_percent }}%{% else %}Unavailable{% endif %}</dd></div>
+    <div><dt>Maximum drawdown</dt><dd>{% if stock_risk.maximum_drawdown_percent is not None %}{{ stock_risk.maximum_drawdown_percent }}%{% else %}Unavailable{% endif %}</dd></div>
+    <div><dt>Worst drawdown peak</dt><dd>{% if stock_risk.peak_date %}{{ stock_risk.peak_date|date:"Y-m-d" }}{% else %}—{% endif %}</dd></div>
+    <div><dt>Worst drawdown trough</dt><dd>{% if stock_risk.trough_date %}{{ stock_risk.trough_date|date:"Y-m-d" }}{% else %}—{% endif %}</dd></div>
+    <div><dt>First recovery of that peak</dt><dd>{% if stock_risk.recovery_date %}{{ stock_risk.recovery_date|date:"Y-m-d" }}{% elif stock_risk.trough_date %}Not recovered in this window{% else %}—{% endif %}</dd></div>
+  </dl>
+  {% if stock_risk.issue %}<p class="data-warning" role="status">{{ stock_risk.issue }} Statistics are unavailable for the entire sample; the supplied price chart and table remain available.</p>{% endif %}
+  {% if stock_risk.volatility_issue %}<p class="data-warning">{{ stock_risk.volatility_issue }}</p>{% endif %}
+  {% if stock_risk.annualization_issue %}<p class="muted">{{ stock_risk.annualization_issue }}</p>{% endif %}
+  <p>Daily return = current selected close / preceding session's selected close − 1. Volatility is the sample standard deviation (n − 1 denominator); annualized volatility multiplies it by √252. At least two returns are needed for daily volatility and twenty for annualization. The 252-session scaling is an assumption, not a forecast.</p>
+  <p>Drawdown = selected close / highest preceding or current close − 1. Maximum drawdown is the largest decline, displayed as a positive loss percentage. The opening close supplies the initial peak; earlier history is excluded. The first deepest episode is retained, with the most recent equal peak and first subsequent recovery. Daily returns and drawdowns below are signed percentages. Results are rounded half up to four places.</p>
+  <p class="muted">{% if basis == "adjusted" %}Adjusted-close statistics use Intrinio's supplied split/dividend adjustments; the adjustment method is not independently reconstructed.{% else %}Raw-close statistics include price effects of splits and dividends. Corporate actions can create apparent losses and volatility.{% endif %} These describe stock prices, with no portfolio holdings, cash flows, fees, tax or currency conversion. Currency metadata may be unavailable; no currency is assumed. No portfolio total return or current freshness guarantee is implied.</p>
+  {% if stock_drawdown_chart %}
+    <figure class="chart-figure stock-drawdown-figure">
+      <div class="chart-scroll" tabindex="0" aria-label="Scrollable stock drawdown chart">
+        <svg class="price-chart" viewBox="0 0 900 340" role="group" aria-labelledby="stock-drawdown-title stock-drawdown-description">
+          <title id="stock-drawdown-title">{{ chart.basis_label }} drawdown</title>
+          <desc id="stock-drawdown-description">Signed loss from the running peak for every validated session. The vertical axis fits the observed loss, with at least a one-percentage-point span. Exact percentages appear in the table.</desc>
+          {% for y, label in stock_drawdown_chart.y_ticks %}<line class="chart-grid" x1="95" x2="875" y1="{{ y }}" y2="{{ y }}"/><text class="chart-axis" x="85" y="{{ y }}" text-anchor="end" dominant-baseline="middle">{{ label }}%</text>{% endfor %}
+          <text class="chart-axis" x="95" y="320">{{ stock_drawdown_chart.start_date|date:"Y-m-d" }}</text>
+          <text class="chart-axis" x="875" y="320" text-anchor="end">{{ stock_drawdown_chart.end_date|date:"Y-m-d" }}</text>
+          <path class="chart-line" d="{{ stock_drawdown_chart.path }}"/>
+          {% for point in stock_drawdown_chart.points %}<circle class="chart-point" cx="{{ point.x }}" cy="{{ point.y }}" r="3" tabindex="{% if forloop.first %}0{% else %}-1{% endif %}" role="img" aria-label="{{ point.as_of|date:'Y-m-d' }}: {{ point.value }}% drawdown" data-label="{{ point.as_of|date:'Y-m-d' }}: {{ point.value }}% drawdown"><title>{{ point.as_of|date:"Y-m-d" }}: {{ point.value }}% drawdown</title></circle>{% endfor %}
+        </svg>
+      </div>
+      <figcaption>Hover or tap to inspect a session. Focus a point and use Left/Right, Home or End. Scroll horizontally on small screens.</figcaption>
+      <p class="chart-readout" aria-live="polite">{{ stock_drawdown_chart.points|length }} validated closes, including the opening baseline</p>
+    </figure>
+    <div class="table-scroll" tabindex="0" aria-label="Scrollable stock risk observations">
+      <table class="price-table stock-risk-table"><caption>{{ chart.basis_label }} risk observations · Currency: {{ history.security.currency|default_if_none:"Unavailable" }}. Opening return has no preceding session inside this window.</caption><thead><tr><th scope="col">Session date</th><th scope="col">Selected close</th><th scope="col">Daily return</th><th scope="col">Drawdown</th></tr></thead><tbody>{% for row in stock_risk.rows %}<tr><th scope="row">{{ row.as_of|date:"Y-m-d" }}</th><td>{{ row.close }}</td><td>{% if row.return_percent is not None %}{{ row.return_percent }}%{% else %}—{% endif %}</td><td>{{ row.drawdown_percent }}%</td></tr>{% endfor %}</tbody></table>
+    </div>
+  {% endif %}
+  <p class="muted">Source: the same bounded Intrinio daily history above, retrieved {{ history.retrieved_at|date:"Y-m-d H:i:s T" }}. No additional provider request is made for risk.</p>
+</section>
+{% endif %}

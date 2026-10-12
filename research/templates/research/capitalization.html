@@ -1,0 +1,47 @@
+{% extends "research/base.html" %}
+{% block title %}Company market capitalization · Stock Research{% endblock %}
+{% block content %}
+  <section class="intro compact" aria-labelledby="page-title">
+    <a href="{% url 'security' security_id %}">Back to instrument details</a>
+    <p class="eyebrow">Fundamental research</p>
+    <h1 id="page-title">Company market capitalization</h1>
+    <p class="lead">View Intrinio's company-level market capitalization for an explicitly selected date.</p>
+  </section>
+  <form class="search-form statement-form" method="get" action="{% url 'market_capitalization' security_id %}" aria-label="Market capitalization settings">
+    {{ form.non_field_errors }}
+    <div class="price-controls">{% for field in form %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}<p class="muted">{{ field.help_text }}</p></div>{% endfor %}</div>
+    <button class="button" type="submit">Load market capitalization</button>
+    <p class="muted">Suggested dates do not establish data availability. Each load uses up to three requests under the shared market-data limit.</p>
+  </form>
+  {% if provider_error %}
+    {% include "research/provider_error.html" %}
+  {% elif capitalization %}
+    <section class="price-panel capitalization-panel" aria-labelledby="capitalization-title">
+      <h2 id="capitalization-title">{{ capitalization.company.name|default_if_none:"Company name unavailable" }} · {{ capitalization.valuation_date|date:"Y-m-d" }}</h2>
+      <article class="metric-card">
+        <h3>Provider-reported company market capitalization · USD</h3>
+        <p class="metric-value">{{ value_text }}</p>
+        {% if availability_issue %}<p class="data-warning" role="status">{{ availability_issue }}</p>{% endif %}
+        <p class="muted">The provider's company-level observation, not the value of only this listing or share class. Listing currency does not set this metric's currency.</p>
+      </article>
+      <h3>Dates, currency and source</h3>
+      <dl class="reference-grid">
+        <div><dt>Provider valuation date · date only</dt><dd>{{ capitalization.valuation_date|date:"Y-m-d" }}</dd></div>
+        <div><dt>Metric currency</dt><dd>USD · confirmed from provider tag metadata</dd></div>
+        <div><dt>Underlying price date / timestamp</dt><dd>Unavailable · not supplied by this endpoint</dd></div>
+        <div><dt>Underlying shares-outstanding count / date</dt><dd>Unavailable · not supplied by this endpoint</dd></div>
+        <div><dt>Provider observation timestamp / completion status</dt><dd>Unavailable · date only; no completion flag supplied</dd></div>
+        <div><dt>Company ID</dt><dd>{{ capitalization.company.id }}</dd></div>
+        <div><dt>Selected instrument ID</dt><dd>{{ capitalization.security.id }}</dd></div>
+        <div><dt>Selected listing currency</dt><dd>{{ capitalization.security.currency|default_if_none:"Unavailable" }}</dd></div>
+        <div><dt>Selected listing exchange MIC</dt><dd>{{ capitalization.security.exchange_mic|default_if_none:"Unavailable" }}</dd></div>
+        <div><dt>Retrieved · UTC</dt><dd>{{ capitalization.retrieved_at|date:"Y-m-d H:i:s T" }}</dd></div>
+        <div><dt>Source tag / unit</dt><dd>{{ capitalization.source_tag }} / {{ capitalization.unit }}</dd></div>
+      </dl>
+      <p class="data-warning" role="status">This is a currently retrieved historical observation, not a live quote or historical-as-known value. The underlying price and share-count dates, share-class coverage, split basis and calculation methodology are not verified. The valuation date does not establish those dates.</p>
+      <p class="muted">Source: Intrinio company historical data and marketcap tag metadata. We display the supplied value without FX conversion or reconstructing it from weighted-average earnings shares. Missing values stay unavailable; a supplied zero stays zero. This is not enterprise value, a portfolio valuation or an investment recommendation.</p>
+    </section>
+  {% elif not form.is_bound %}
+    <div class="empty-state"><h2>Choose a market capitalization date</h2><p>No market data has been requested yet. Select an exact date, then load the company's provider-reported market capitalization.</p></div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "research/base.html" %}
+{% block title %}Annual earnings valuation multiples · Stock Research{% endblock %}
+{% block content %}
+  <section class="intro compact" aria-labelledby="page-title">
+    <a href="{% url 'security' security_id %}">Back to instrument details</a>
+    <p class="eyebrow">Fundamental research</p>
+    <h1 id="page-title">Annual earnings valuation multiples</h1>
+    <p class="lead">Compare an exact-date raw closing price with basic and diluted EPS for one selected annual fiscal period.</p>
+  </section>
+  <form class="search-form statement-form" method="get" action="{% url 'annual_multiples' security_id %}" aria-label="Annual valuation settings">
+    {{ form.non_field_errors }}
+    <div class="price-controls">
+      {% for field in form %}{% if field.name != 'basis_confirmed' %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}<p class="muted">{{ field.help_text }}</p></div>{% endif %}{% endfor %}
+    </div>
+    <div class="account-form">
+      <label for="{{ form.basis_confirmed.id_for_label }}">{{ form.basis_confirmed }} {{ form.basis_confirmed.label }}</label>
+      {{ form.basis_confirmed.errors }}<p class="muted">{{ form.basis_confirmed.help_text }}</p>
+    </div>
+    <button class="button" type="submit">Load annual P/E</button>
+    <p class="muted">Choose the dates explicitly. Suggested dates do not establish an available statement or trading session. Loading uses up to four requests under the shared market-data limit.</p>
+  </form>
+  {% if provider_error %}
+    {% include "research/provider_error.html" %}
+  {% elif multiples %}
+    <section class="price-panel multiples-panel" aria-labelledby="multiples-title">
+      <h2 id="multiples-title">{{ bundle.income.fundamental.company.name|default_if_none:"Company name unavailable" }} · {{ bundle.income.fundamental.fiscal_year }} FY P/E</h2>
+      <dl class="reference-grid">
+        <div><dt>Income period start</dt><dd>{{ bundle.income.fundamental.start_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+        <div><dt>Income period end</dt><dd>{{ bundle.income.fundamental.end_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+        <div><dt>Period days · inclusive</dt><dd>{{ multiples.annual_days|default_if_none:"Unavailable" }}</dd></div>
+        <div><dt>Selected raw-price date</dt><dd>{{ multiples.price_date|date:"Y-m-d" }}</dd></div>
+        <div><dt>Confirmed raw close · USD per share</dt><dd>{% if multiples.raw_close is not None %}{{ multiples.raw_close }}{% else %}Unavailable{% endif %}</dd></div>
+        <div><dt>Share-basis compatibility</dt><dd>User confirmed; not independently verified</dd></div>
+      </dl>
+      {% if multiples.alignment_issue %}<p class="data-warning" role="status">{{ multiples.alignment_issue }}</p>{% endif %}
+      <div class="metric-grid multiples-metrics">
+        {% for metric in multiples.metrics %}
+          <article class="metric-card">
+            <h3>{{ metric.label }}</h3>
+            <p class="metric-value">{% if metric.multiple is not None %}{{ metric.multiple }}×{% else %}Unavailable{% endif %}</p>
+            {% if metric.issue %}<p class="muted">{{ metric.issue }}</p>{% endif %}
+            <dl><div><dt>Supplied EPS · USD per share</dt><dd>{% if metric.eps is not None %}{{ metric.eps }}{% else %}Unavailable{% endif %}</dd></div></dl>
+            <p class="muted">Raw closing price ÷ positive selected-FY EPS. Rounded to two decimals, half up. This is a multiple, not a percentage.</p>
+            <p class="metric-tag">Income-statement source tag: {{ metric.tag }}</p>
+          </article>
+        {% endfor %}
+      </div>
+      <p class="muted">Basic and diluted EPS are separate observations; neither substitutes for the other. Zero or negative earnings make P/E unavailable. A confirmed zero raw price with positive EPS produces 0.00×. Adjusted closes and earlier trading dates are never substituted.</p>
+      <p class="data-warning" role="status">These are selected-FY ratios using currently retrieved statement versions. They are not trailing-twelve-month, forward, latest/live or historical-as-known P/E. A later price date can use an old earnings year; interpret both dates together. Filing metadata does not prove this exact EPS version existed on the price date.</p>
+      <p class="muted">Both price references must identify the same USD instrument and venue; EPS must explicitly use USD-per-share units. Annual income must cover 350–378 days, and the price date must be on or after its period end. Share-class, ADR and split compatibility is a user-confirmed assumption, not established by a company link. No FX, split adjustment, annualization or valuation recommendation is inferred.</p>
+      <h3>Sources and versions</h3>
+      <div class="metric-grid multiples-sources">
+        <article class="metric-card">
+          <h4>Annual income statement · {{ bundle.income.fundamental.fiscal_year }} FY</h4>
+          <dl>
+            <div><dt>Classification</dt><dd>{{ bundle.income.fundamental.type|default_if_none:"Unavailable" }}</dd></div>
+            <div><dt>SEC filing date/time</dt><dd>{{ filing_time }}</dd></div>
+            <div><dt>Provider update date/time</dt><dd>{{ updated_time }}</dd></div>
+            <div><dt>First calculable date/time</dt><dd>{{ calculable_time }}</dd></div>
+            <div><dt>Retrieved</dt><dd>{{ bundle.income.retrieved_at|date:"Y-m-d H:i:s T" }}</dd></div>
+          </dl>
+          <p class="metric-tag">Statement ID: {{ bundle.income.fundamental.id }} · Company ID: {{ bundle.income.fundamental.company.id }}</p>
+          {% if not bundle.income.pagination_complete %}<p class="data-warning">Partial statement response.</p>{% endif %}
+        </article>
+        <article class="metric-card">
+          <h4>Exact-date daily price response</h4>
+          <dl>
+            <div><dt>Instrument ID</dt><dd>{{ bundle.prices.security.id }}</dd></div>
+            <div><dt>Exchange MIC</dt><dd>{{ bundle.prices.security.exchange_mic|default_if_none:"Unavailable" }}</dd></div>
+            <div><dt>Trading currency</dt><dd>{{ bundle.prices.security.currency|default_if_none:"Unavailable" }}</dd></div>
+            <div><dt>Requested date</dt><dd>{{ multiples.price_date|date:"Y-m-d" }}</dd></div>
+            <div><dt>Retrieved</dt><dd>{{ bundle.prices.retrieved_at|date:"Y-m-d H:i:s T" }}</dd></div>
+          </dl>
+          {% if not bundle.prices.pagination_complete %}<p class="data-warning">Partial price response; no additional page requested.</p>{% endif %}
+          <p class="muted">A usable raw close requires exactly one matching daily observation explicitly marked complete, with an aware retrieval timestamp.</p>
+        </article>
+      </div>
+      <p class="muted">Source: Intrinio standardized income financials and daily historical prices. These ratios do not calculate market capitalization, P/B, P/S or enterprise value; those require separately verified share counts and compatible issuer/security scope.</p>
+    </section>
+  {% elif not form.is_bound %}
+    <div class="empty-state"><h2>Choose earnings and price dates</h2><p>No financial data or prices have been requested yet. Choose an annual fiscal year and exact closing-price date, then confirm the EPS and price share basis.</p></div>
+  {% endif %}
+{% endblock %}

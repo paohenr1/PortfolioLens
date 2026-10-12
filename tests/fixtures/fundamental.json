@@ -1,0 +1,13 @@
+{
+  "id": "fun_fixture_income_2019_FY",
+  "company": {"id": "com_fixture_company", "ticker": "TSTF", "name": "Fixture Research Corp"},
+  "statement_code": "income_statement",
+  "fiscal_year": 2019,
+  "fiscal_period": "FY",
+  "type": "reported",
+  "start_date": "2018-10-01",
+  "end_date": "2019-09-30",
+  "filing_date": "2019-10-31T14:30:00Z",
+  "updated_date": "2020-01-15T12:00:00+00:00",
+  "first_calculable": "2019-10-31T14:35:00Z"
+}

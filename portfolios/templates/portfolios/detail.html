@@ -1,0 +1,20 @@
+{% extends 'research/base.html' %}
+{% block title %}{{ portfolio.name }} · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Your private portfolio</p>
+  <h1>{{ portfolio.name }}</h1>
+  <p class="lead">Reporting currency: {{ portfolio.reporting_currency }} — U.S. dollar.</p>
+</section>
+<section class="reference-panel account-section">
+  <h2>Transaction journal</h2>
+  <p>Record USD cash movements, buys, sells, fees, net dividends, and splits. View recorded cash and transaction history.</p>
+  <a class="button" href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a>
+  <p><a class="button" href="{% url 'portfolio_positions' portfolio_id=portfolio.pk %}">View positions and gains</a></p>
+  <p><a class="button" href="{% url 'portfolio_valuation' portfolio_id=portfolio.pk %}">View market valuation</a></p>
+  <p><a class="button" href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a></p>
+  <p><a class="button" href="{% url 'portfolio_daily_returns' portfolio_id=portfolio.pk %}">View daily returns</a></p>
+  <p class="muted">Positions, FIFO cost basis, and realized sale gains come from your journal. Load valuation or time-weighted returns for explicit dates and supported cash-flow timing. Entries do not place trading orders.</p>
+  <a href="{% url 'portfolio_list' %}">Back to my portfolios</a>
+</section>
+{% endblock %}

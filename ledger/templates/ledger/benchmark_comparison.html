@@ -1,0 +1,36 @@
+<section class="reference-panel" aria-labelledby="benchmark-title">
+  <h2 id="benchmark-title">Benchmark comparison · adjusted-price basis</h2>
+  <p>Selected security ID: {{ comparison.security_id }}</p>
+  {% if comparison.reference %}<p>{{ comparison.reference.security.ticker|default:'Ticker unavailable' }} · {{ comparison.reference.security.name|default:'Name unavailable' }} · {{ comparison.reference.security.exchange_mic }} · USD<br><span class="muted">Reference retrieved {{ comparison.reference.retrieved_at|date:'Y-m-d H:i:s T' }}; prices retrieved {{ comparison.retrieved_at|date:'Y-m-d H:i:s T' }}.</span></p>{% endif %}
+  <dl class="reference-grid benchmark-summary">
+    <div><dt>Portfolio time-weighted return</dt><dd>{% if comparison.portfolio_return_percent == None %}Unavailable{% else %}{{ comparison.portfolio_return_percent }}%{% endif %}</dd></div>
+    <div><dt>Benchmark adjusted-price return</dt><dd>{% if comparison.benchmark_return_percent == None %}Unavailable{% else %}{{ comparison.benchmark_return_percent }}%{% endif %}</dd></div>
+    <div><dt>Portfolio minus benchmark</dt><dd>{% if comparison.difference_points == None %}Unavailable{% else %}{{ comparison.difference_points }} percentage points{% endif %}</dd></div>
+  </dl>
+  {% include 'ledger/return_relationship.html' with relationship=comparison.relationship %}
+  {% if comparison.issue %}<p class="data-warning" role="status">{{ comparison.issue }} No sessions are dropped, filled or replaced to produce a comparison.</p>{% endif %}
+  <p>The benchmark links provider-adjusted close ratios across exactly the portfolio's sessions, including weekends and holidays between sessions. Portfolio returns include recorded dividends and fees and remove external funding. The benchmark has no portfolio funding or trading fees.</p>
+  <p class="muted">Adjusted prices are a provider-supplied proxy: adjustment methodology and index tracking have not been verified. This is not an audited total-return index. The return difference is in percentage points, not alpha or a relative wealth ratio. Percentages are rounded only for display.</p>
+  {% if comparison.rows %}
+  <p>Chart: solid line = portfolio; dashed line = benchmark. Both begin at 0% on the opening close. Point labels show both values; use the pointer, Tab and arrow keys to explore.</p>
+  <figure class="chart-figure">
+  <div class="chart-scroll" tabindex="0" aria-label="Scrollable benchmark comparison chart">
+    <svg class="price-chart" viewBox="0 0 900 340" role="group" aria-label="Portfolio and benchmark cumulative returns" data-price-chart>
+      {% for y, value in comparison_chart.y_ticks %}<line x1="95" y1="{{ y }}" x2="875" y2="{{ y }}" class="chart-grid"/><text x="85" y="{{ y }}" text-anchor="end" class="chart-axis">{{ value }}%</text>{% endfor %}
+      <path d="{{ comparison_chart.path }}" class="chart-line" fill="none"/>
+      <path d="{{ comparison_chart.benchmark_path }}" class="chart-line benchmark-line" fill="none"/>
+      {% for point in comparison_chart.points %}<circle cx="{{ point.x }}" cy="{{ point.y }}" r="4" class="chart-point" data-chart-point data-label="{{ point.as_of|date:'Y-m-d' }} · Portfolio {{ point.portfolio }}% · Benchmark {{ point.benchmark }}% · Gap {{ point.difference }} percentage points" role="img" aria-label="{{ point.as_of|date:'Y-m-d' }} · Portfolio {{ point.portfolio }}% · Benchmark {{ point.benchmark }}% · Gap {{ point.difference }} percentage points" tabindex="{% if forloop.first %}0{% else %}-1{% endif %}"><title>{{ point.as_of|date:'Y-m-d' }} · Portfolio {{ point.portfolio }}% · Benchmark {{ point.benchmark }}%</title></circle>{% endfor %}
+      <text x="95" y="325" class="chart-axis">{{ comparison_chart.start_date|date:'Y-m-d' }}</text><text x="875" y="325" text-anchor="end" class="chart-axis">{{ comparison_chart.end_date|date:'Y-m-d' }}</text>
+    </svg>
+  </div>
+  <p class="chart-readout" data-chart-readout aria-live="polite">Select a session point to inspect both cumulative returns.</p>
+  </figure>
+  <div class="table-scroll" role="region" aria-label="Benchmark comparison table" tabindex="0">
+    <table class="price-table">
+      <caption>Matched sessions · daily returns, cumulative returns from the opening close and cumulative gap</caption>
+      <thead><tr><th scope="col">Opening session</th><th scope="col">Closing session</th><th scope="col">Benchmark adjusted close · USD</th><th scope="col">Portfolio daily</th><th scope="col">Benchmark daily</th><th scope="col">Portfolio cumulative</th><th scope="col">Benchmark cumulative</th><th scope="col">Cumulative gap · percentage points</th></tr></thead>
+      <tbody>{% for row in comparison.rows %}<tr><td>{{ row.start_date|date:'Y-m-d' }}</td><td>{{ row.end_date|date:'Y-m-d' }}</td><td>{{ row.adjusted_close }}</td><td>{{ row.portfolio_return_percent }}%</td><td>{{ row.benchmark_return_percent }}%</td><td>{{ row.portfolio_cumulative_percent }}%</td><td>{{ row.benchmark_cumulative_percent }}%</td><td>{{ row.difference_points }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>

@@ -1,0 +1,8 @@
+<section class="availability error-state" aria-labelledby="error-title" role="alert" data-error-code="{{ provider_error.code }}">
+  <div>
+    <h2 id="error-title">Data unavailable</h2>
+    <p>{{ provider_error.message }}</p>
+    {% if provider_error.retry_after %}<p class="muted">Try again after {{ provider_error.retry_after }} seconds.</p>{% endif %}
+    <p class="muted">No substitute or simulated data has been used.</p>
+  </div>
+</section>

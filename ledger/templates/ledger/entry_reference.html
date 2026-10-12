@@ -1,0 +1,11 @@
+<dl class="reference-grid">
+  <div><dt>Entry ID</dt><dd>{{ entry.pk }}</dd></div>
+  <div><dt>Recorded</dt><dd>{{ entry.recorded_at|date:'Y-m-d H:i:s T' }}</dd></div>
+  <div><dt>Event date / order</dt><dd>{{ entry.event_date|date:'Y-m-d' }} / {{ entry.sequence }}</dd></div>
+  <div><dt>Type</dt><dd>{{ entry.get_kind_display }}</dd></div>
+  <div><dt>Instrument</dt><dd>{{ entry.security_id|default:'—' }} {{ entry.security_ticker }} {{ entry.exchange_mic }}</dd></div>
+  <div><dt>Shares / execution price</dt><dd>{{ entry.quantity|default_if_none:'—' }} / {{ entry.unit_price|default_if_none:'—' }} USD</dd></div>
+  <div><dt>Gross amount / fees</dt><dd>{{ entry.amount }} / {{ entry.fees }} USD</dd></div>
+  <div><dt>Split terms</dt><dd>{% if entry.kind == 'SPLIT' %}{{ entry.split_new }} for {{ entry.split_old }}{% else %}—{% endif %}</dd></div>
+  {% if entry.reference_retrieved_at %}<div><dt>Reference retrieved</dt><dd>{{ entry.reference_retrieved_at|date:'Y-m-d H:i:s T' }}</dd></div>{% endif %}
+</dl>

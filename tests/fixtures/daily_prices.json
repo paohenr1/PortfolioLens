@@ -1,0 +1,13 @@
+{
+  "security": {"id": "sec_fixture_primary", "ticker": "TSTF", "name": "Fixture Research Corp", "exchange_mic": "XNYS", "currency": "USD"},
+  "stock_prices": [
+    {"date": "2020-01-10", "frequency": "daily", "intraperiod": null, "close": 18, "adj_close": 17},
+    {"date": "2020-01-09", "frequency": "daily", "intraperiod": true, "close": 16, "adj_close": 15},
+    {"date": "2020-01-08", "frequency": "daily", "intraperiod": false, "close": 15.5, "adj_close": 14.5},
+    {"date": "2020-01-07", "frequency": "daily", "intraperiod": false, "close": 14, "adj_close": null},
+    {"date": "2020-01-06", "frequency": "daily", "intraperiod": false, "close": 13, "adj_close": 12},
+    {"date": "2020-01-03", "frequency": "daily", "intraperiod": false, "close": 12.25, "adj_close": 11.25},
+    {"date": "2020-01-02", "frequency": "daily", "intraperiod": false, "close": 10.5, "adj_close": 9.75}
+  ],
+  "next_page": null
+}

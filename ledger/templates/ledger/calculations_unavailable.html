@@ -1,0 +1,7 @@
+{% extends 'research/base.html' %}
+{% block title %}Calculations unavailable · Stock Research{% endblock %}
+{% block content %}<section class="intro compact">
+<h1>Position calculations are unavailable</h1>
+<p>The recorded journal does not satisfy the supported accounting rules. Review its entries with the administrator before relying on totals.</p>
+<p><a href="{% url 'portfolio_list' %}">Back to my portfolios</a></p>
+</section>{% endblock %}

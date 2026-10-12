@@ -1,0 +1,166 @@
+{
+  "security": {
+    "id": "sec_fixture_relationship",
+    "ticker": "TSTRL",
+    "name": "Synthetic Relationship Example",
+    "exchange_mic": "XNYS",
+    "currency": "USD"
+  },
+  "stock_prices": [
+    {
+      "date": "2020-01-02",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-03",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-06",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-07",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-08",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-09",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-10",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-13",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-14",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-15",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-16",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-17",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-21",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-22",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-23",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-24",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-27",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-28",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-29",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-30",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-01-31",
+      "frequency": "daily",
+      "close": 10,
+      "adj_close": 10,
+      "intraperiod": false
+    },
+    {
+      "date": "2020-02-03",
+      "frequency": "daily",
+      "close": 11,
+      "adj_close": 11,
+      "intraperiod": true
+    }
+  ],
+  "next_page": null
+}

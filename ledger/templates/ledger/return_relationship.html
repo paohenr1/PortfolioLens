@@ -1,0 +1,12 @@
+<section aria-labelledby="relationship-title">
+  <h3 id="relationship-title">Correlation and beta · matched daily returns</h3>
+  <dl class="reference-grid relationship-summary">
+    <div><dt>Matched session returns</dt><dd>{{ relationship.observations }}</dd></div>
+    <div><dt>Correlation · Pearson</dt><dd>{% if relationship.correlation == None %}Unavailable{% else %}{{ relationship.correlation }}{% endif %}</dd></div>
+    <div><dt>Beta · selected benchmark</dt><dd>{% if relationship.beta == None %}Unavailable{% else %}{{ relationship.beta }}{% endif %}</dd></div>
+  </dl>
+  {% if relationship.issue %}<p class="data-warning" role="status">{{ relationship.issue }}</p>{% endif %}
+  {% if relationship.correlation_issue %}<p class="data-warning" role="status">{{ relationship.correlation_issue }}</p>{% endif %}
+  <p class="muted">Requires at least twenty complete matched session returns. Correlation measures how daily returns move together, from −1 to +1. Beta is the fitted daily-return slope with an intercept against this selected benchmark; 1 means equal sensitivity, and a negative value means opposite direction. Both use unrounded simple returns and display four decimal places without percent signs.</p>
+  <p class="muted">Zero benchmark variance makes both undefined; a constant portfolio has undefined correlation and zero beta against a varying benchmark. These describe this observed window and proxy basis, not future performance or a broad-market beta. Calculating them requests no additional prices.</p>
+</section>

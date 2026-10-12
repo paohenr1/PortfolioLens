@@ -1,0 +1,6 @@
+{
+  "securities": [
+    {"id": "sec_fixture_primary", "ticker": "TSTF", "name": "Fixture Research Corp", "exchange_mic": "XNYS", "currency": "USD"},
+    {"id": "sec_fixture_secondary", "ticker": "TSTF", "name": "Fixture Research Corp — secondary listing", "exchange": "XTST", "currency": null}
+  ]
+}

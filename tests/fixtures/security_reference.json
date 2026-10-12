@@ -1,0 +1,11 @@
+{
+  "id": "sec_fixture_primary",
+  "ticker": "TSTF",
+  "name": "Fixture Research Corp",
+  "listing_exchange_mic": "XNYS",
+  "currency": "USD",
+  "company_id": "com_fixture_company",
+  "active": true,
+  "delisted": false,
+  "last_stock_price": "2020-01-02"
+}

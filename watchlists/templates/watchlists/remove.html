@@ -1,0 +1,11 @@
+{% extends 'research/base.html' %}
+{% block title %}Remove instrument · My watchlists{% endblock %}
+{% block content %}
+<section class="intro compact"><h1>Remove instrument</h1><p class="lead">Remove {{ item.ticker|default_if_none:item.security_id }} from {{ watchlist.name }}?</p></section>
+<section class="account-section">
+  <p>{{ item.name|default_if_none:"Name unavailable" }} · {{ item.security_id }}</p>
+  <p class="muted">You can add this instrument again later.</p>
+  <form method="post">{% csrf_token %}<button class="button" type="submit">Remove instrument</button></form>
+  <p><a href="{% url 'watchlist_detail' watchlist.pk %}">Keep instrument</a></p>
+</section>
+{% endblock %}

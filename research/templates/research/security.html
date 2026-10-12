@@ -1,0 +1,27 @@
+{% extends "research/base.html" %}
+{% block title %}Instrument details · Stock Research{% endblock %}
+{% block content %}
+  <section class="intro compact" aria-labelledby="page-title">
+    <a href="{% url 'search' %}">Back to stock search</a>
+    <p class="eyebrow">Instrument reference</p>
+    <h1 id="page-title">{% if security %}{{ security.name|default_if_none:"Name unavailable" }}{% else %}Instrument details{% endif %}</h1>
+    {% if security %}<p class="lead">{{ security.ticker|default_if_none:"Ticker unavailable" }}</p>{% endif %}
+  </section>
+  {% if provider_error %}
+    {% include "research/provider_error.html" %}
+  {% else %}
+    <section class="reference-panel" aria-labelledby="reference-title">
+      <h2 id="reference-title">Listing details</h2>
+      <dl class="reference-grid">
+        <div><dt>Exchange (MIC)</dt><dd>{{ security.exchange_mic|default_if_none:"Unavailable" }}</dd></div>
+        <div><dt>Trading currency</dt><dd>{{ security.currency|default_if_none:"Unavailable" }}</dd></div>
+        <div><dt>Provider instrument ID</dt><dd>{{ security.id }}</dd></div>
+        <div><dt>Listing status</dt><dd>{% if security.delisted %}Delisted{% elif security.active is True %}Active{% elif security.active is False %}Inactive{% else %}Unavailable{% endif %}</dd></div>
+        <div><dt>Latest historical price date reported by provider</dt><dd>{% if security.last_stock_price_date %}{{ security.last_stock_price_date|date:"Y-m-d" }}{% else %}Unavailable{% endif %}</dd></div>
+      </dl>
+      <p class="muted">Source: Intrinio security reference data. Retrieved {{ retrieved_at|date:"Y-m-d H:i:s T" }}.</p>
+      <p class="muted">The historical date is reference metadata, not a quote timestamp or proof of current prices.</p>
+    </section>
+    <section class="empty-state" aria-labelledby="history-link-title"><h2 id="history-link-title">Explore this instrument</h2><p>Review daily prices or the issuer's available standardized financial statements.</p><div class="research-links"><a class="button" href="{% url 'prices' security.id %}">View price history</a><a class="button" href="{% url 'financials' security.id %}">View company financials</a><a class="button" href="{% url 'capital_returns' security.id %}">View return on assets and equity</a><a class="button" href="{% url 'annual_growth' security.id %}">View annual revenue and earnings growth</a><a class="button" href="{% url 'annual_multiples' security.id %}">View annual earnings valuation multiples</a><a class="button" href="{% url 'market_capitalization' security.id %}">View company market capitalization</a><a class="button" href="{% url 'statement_trends' security.id %}">View annual financial statement trends</a><a class="button" href="{% url 'watchlist_choose' %}?security_id={{ security.id|urlencode }}">Add to watchlist</a></div></section>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends 'accounts/form.html' %}
+{% block page_title %}Create watchlist{% endblock %}
+{% block heading %}Create watchlist{% endblock %}
+{% block introduction %}<p class="lead">Give your private research list a name.</p>{% endblock %}
+{% block submit_label %}Create watchlist{% endblock %}
+{% block after_form %}<p class="muted">Up to 50 watchlists per account. Names must be unique within your account.</p><p><a href="{% url 'watchlist_list' %}">Back to my watchlists</a></p>{% endblock %}

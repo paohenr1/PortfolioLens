@@ -1,0 +1,75 @@
+{% extends "research/base.html" %}
+{% block title %}Annual revenue and earnings growth · Stock Research{% endblock %}
+{% block content %}
+  <section class="intro compact" aria-labelledby="page-title">
+    <a href="{% url 'security' security_id %}">Back to instrument details</a>
+    <p class="eyebrow">Fundamental research</p>
+    <h1 id="page-title">Annual revenue and earnings growth</h1>
+    <p class="lead">Compare revenue and net income across two adjacent annual fiscal periods.</p>
+  </section>
+  <form class="search-form statement-form" method="get" action="{% url 'annual_growth' security_id %}" aria-label="Annual growth settings">
+    {{ form.non_field_errors }}
+    <div class="price-controls">
+      {% for field in form %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}<p class="muted">{{ field.help_text }}</p></div>{% endfor %}
+      <button class="button" type="submit">Load annual growth</button>
+    </div>
+    <p class="muted">Annual FY periods only. The load uses up to five requests under the shared market-data limit. No missing periods or source values are substituted.</p>
+  </form>
+  {% if provider_error %}
+    {% include "research/provider_error.html" %}
+  {% elif growth %}
+    <section class="price-panel growth-panel" aria-labelledby="growth-title">
+      <h2 id="growth-title">{{ bundle.current.fundamental.company.name|default_if_none:"Company name unavailable" }} · {{ bundle.prior.fundamental.fiscal_year }} FY → {{ bundle.current.fundamental.fiscal_year }} FY</h2>
+      <dl class="reference-grid growth-periods">
+        <div><dt>Prior period start</dt><dd>{{ bundle.prior.fundamental.start_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+        <div><dt>Prior period end</dt><dd>{{ bundle.prior.fundamental.end_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+        <div><dt>Current period start</dt><dd>{{ bundle.current.fundamental.start_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+        <div><dt>Current period end</dt><dd>{{ bundle.current.fundamental.end_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+        <div><dt>Prior period days · inclusive</dt><dd>{{ growth.prior_days|default_if_none:"Unavailable" }}</dd></div>
+        <div><dt>Current period days · inclusive</dt><dd>{{ growth.current_days|default_if_none:"Unavailable" }}</dd></div>
+      </dl>
+      {% if growth.alignment_issue %}<p class="data-warning" role="status">{{ growth.alignment_issue }}</p>{% endif %}
+      {% if growth.version_warning %}<p class="data-warning" role="status">{{ growth.version_warning }}</p>{% endif %}
+      {% if not growth.alignment_issue and growth.prior_days != growth.current_days %}<p class="data-warning" role="status">Period lengths differ. These are supplied-period changes; no per-day adjustment or annualization is applied.</p>{% endif %}
+      <div class="metric-grid growth-metrics">
+        {% for metric in growth.metrics %}
+          <article class="metric-card">
+            <h3>{{ metric.label }}</h3>
+            <p class="metric-value">{% if metric.percent is not None %}{{ metric.percent }}%{% else %}Unavailable{% endif %}</p>
+            {% if metric.issue %}<p class="muted">{{ metric.issue }}</p>{% endif %}
+            {% if metric.movement %}<p class="growth-movement">{{ metric.movement }}</p>{% endif %}
+            <dl>
+              <div><dt>Prior value · USD</dt><dd>{% if metric.prior is not None %}{{ metric.prior }}{% else %}Unavailable{% endif %}</dd></div>
+              <div><dt>Current value · USD</dt><dd>{% if metric.current is not None %}{{ metric.current }}{% else %}Unavailable{% endif %}</dd></div>
+              <div><dt>Dollar change · USD</dt><dd>{% if metric.change is not None %}{{ metric.change }}{% else %}Unavailable{% endif %}</dd></div>
+            </dl>
+            <p class="muted">(Current − prior) ÷ prior × 100. Percentage growth requires a positive prior value and is rounded to two decimals, half up. Dollar change remains exact.</p>
+            <p class="metric-tag">Source tag in each income statement: {{ metric.tag }}</p>
+          </article>
+        {% endfor %}
+      </div>
+      <p class="muted">Both source values must explicitly use USD units. Percentage growth from a zero or negative prior value is unavailable; loss/profit transitions and dollar changes remain visible. These are revenue and provider-standardized net income comparisons, not EPS growth, organic growth or a forecast.</p>
+      <p class="muted">Period alignment requires adjacent FYs covering 350–378 days each, with lengths differing by at most seven days. Stub years, gaps and overlaps are unavailable. Matching dates and units do not verify unchanged accounting policies, acquisitions or business composition.</p>
+      <h3>Statement sources and versions</h3>
+      <div class="metric-grid growth-sources">
+        {% for source in sources %}
+          <article class="metric-card">
+            <h4>{{ source.label }} · {{ source.statement.fundamental.fiscal_year }} FY</h4>
+            <dl>
+              <div><dt>Classification</dt><dd>{{ source.statement.fundamental.type|default_if_none:"Unavailable" }}</dd></div>
+              <div><dt>SEC filing date/time</dt><dd>{{ source.filing_time }}</dd></div>
+              <div><dt>Provider update date/time</dt><dd>{{ source.updated_time }}</dd></div>
+              <div><dt>First calculable date/time</dt><dd>{{ source.calculable_time }}</dd></div>
+              <div><dt>Retrieved</dt><dd>{{ source.statement.retrieved_at|date:"Y-m-d H:i:s T" }}</dd></div>
+            </dl>
+            <p class="metric-tag">Statement ID: {{ source.statement.fundamental.id }} · Company ID: {{ source.statement.fundamental.company.id }}</p>
+            {% if not source.statement.pagination_complete %}<p class="data-warning">Partial statement response.</p>{% endif %}
+          </article>
+        {% endfor %}
+      </div>
+      <p class="muted">Source: Intrinio standardized financials. Both statements require a known reported/calculated/restated classification. These are currently retrieved versions and may be restated. Matching periods do not establish one historical revision; filing dates do not prove these exact values were available then. This is not a point-in-time backtest dataset.</p>
+    </section>
+  {% elif not form.is_bound %}
+    <div class="empty-state"><h2>Choose an annual comparison</h2><p>No financial data has been requested yet. Choose the current fiscal year to compare it with the immediately preceding annual income statement.</p></div>
+  {% endif %}
+{% endblock %}

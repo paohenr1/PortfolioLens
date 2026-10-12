@@ -1,0 +1,89 @@
+{% extends "research/base.html" %}
+{% load static %}
+{% block title %}Annual financial statement trends · Stock Research{% endblock %}
+{% block content %}
+  <section class="intro compact" aria-labelledby="page-title">
+    <a href="{% url 'security' security_id %}">Back to instrument details</a>
+    <p class="eyebrow">Fundamental research</p>
+    <h1 id="page-title">Annual financial statement trends</h1>
+    <p class="lead">Review two to four explicitly selected annual fiscal periods, with source versions and adjacent changes.</p>
+  </section>
+  <form class="search-form statement-form" method="get" action="{% url 'statement_trends' security_id %}" aria-label="Annual statement trend settings">
+    {{ form.non_field_errors }}
+    <div class="price-controls">
+      {% for field in form %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}
+      <button class="button" type="submit">Load annual trends</button>
+    </div>
+    <p class="muted">Choose one statement type and consecutive FYs ending at the selected year. Defaults do not guarantee available filings. Two/three/four periods use up to five/seven/nine requests under the shared limit.</p>
+  </form>
+  {% if provider_error %}
+    {% include "research/provider_error.html" %}
+  {% elif trends %}
+    <section class="price-panel trends-panel" aria-labelledby="trends-title">
+      <h2 id="trends-title">{{ statement_label }} · {{ bundle.statements.0.fundamental.company.name|default_if_none:"Company name unavailable" }}</h2>
+      {% if trends.alignment_issue %}<p class="data-warning" role="status">{{ trends.alignment_issue }}</p>{% endif %}
+      {% if is_balance %}<p class="muted">Balance-sheet values are point-in-time observations at each supplied period end. Changes compare those balances; they are not annual flows or sums.</p>{% else %}<p class="muted">Income and cash-flow values cover the supplied annual periods. Comparisons require adjacent full-year windows; no annualization or per-day adjustment is applied.</p>{% endif %}
+      {% for panel in panels %}
+        <article class="trend-metric" aria-labelledby="trend-{{ panel.metric.tag }}">
+          <h3 id="trend-{{ panel.metric.tag }}">{{ panel.metric.label }} · USD</h3>
+          <p class="metric-tag">Standardized source tag: {{ panel.metric.tag }}</p>
+          {% if panel.chart.available %}
+            <figure class="chart-figure" aria-labelledby="chart-{{ panel.metric.tag }}-caption">
+              <figcaption id="chart-{{ panel.metric.tag }}-caption">{{ panel.metric.label }} observations. Symmetric scale: ±{{ panel.chart.scale }} USD. Each metric uses its own scale. Missing observations have no bar and are not interpolated.</figcaption>
+              <div class="chart-scroll" tabindex="0" aria-label="Scrollable {{ panel.metric.label }} chart">
+                <svg class="price-chart" viewBox="0 0 640 310" role="img" aria-labelledby="svg-{{ panel.metric.tag }}-title">
+                  <title id="svg-{{ panel.metric.tag }}-title">{{ panel.metric.label }} by explicitly selected fiscal year; exact values in the table</title>
+                  <line class="chart-grid" x1="35" y1="150" x2="605" y2="150" />
+                  <text class="chart-axis" x="5" y="155">0</text>
+                  {% for bar in panel.chart.bars %}
+                    {% if bar.available %}
+                      <rect x="{{ bar.bar_x }}" y="{{ bar.y }}" width="50" height="{{ bar.height }}" fill="#24594e" />
+                      <circle class="chart-point" cx="{{ bar.x }}" cy="{{ bar.cy }}" r="4" tabindex="{{ bar.tabindex }}" data-label="{{ bar.label }}" aria-label="{{ bar.label }}"><title>{{ bar.label }}</title></circle>
+                    {% else %}<text class="chart-axis" x="{{ bar.x }}" y="140" text-anchor="middle">Unavailable</text>{% endif %}
+                    <text class="chart-axis" x="{{ bar.x }}" y="298" text-anchor="middle">{{ bar.year }} FY</text>
+                  {% endfor %}
+                </svg>
+              </div>
+              <p class="chart-readout" aria-live="polite">Focus a point and use Left/Right or Home/End; move or tap near a bar to inspect its exact observation.</p>
+            </figure>
+          {% else %}<p class="data-warning" role="status">No supported observations for this metric; no chart values are substituted.</p>{% endif %}
+          <div class="table-scroll" tabindex="0" aria-label="Scrollable {{ panel.metric.label }} observations">
+            <table class="price-table"><caption>{{ panel.metric.label }} · exact supplied values in USD</caption><thead><tr><th scope="col">Fiscal period</th><th scope="col">Value · USD</th><th scope="col">Availability</th></tr></thead><tbody>
+              {% for value in panel.metric.values %}<tr><th scope="row">{{ value.year }} FY</th><td>{% if value.value is not None %}{{ value.value }}{% else %}Unavailable{% endif %}</td><td>{{ value.issue|default_if_none:"Supplied observation" }}</td></tr>{% endfor %}
+            </tbody></table>
+          </div>
+          <div class="table-scroll" tabindex="0" aria-label="Scrollable {{ panel.metric.label }} adjacent changes">
+            <table class="price-table"><caption>{{ panel.metric.label }} · adjacent annual changes</caption><thead><tr><th scope="col">Prior → current FY</th><th scope="col">Dollar change · USD</th><th scope="col">Percentage change</th><th scope="col">Conditions</th></tr></thead><tbody>
+              {% for change in panel.metric.changes %}<tr><th scope="row">{{ change.prior_year }} → {{ change.current_year }}</th><td>{% if change.change is not None %}{{ change.change }}{% else %}Unavailable{% endif %}</td><td>{% if change.percent is not None %}{{ change.percent }}%{% else %}Unavailable{% endif %}</td><td>{% if change.issue %}{{ change.issue }}{% endif %}{% if change.warning %} {{ change.warning }}{% endif %}{% if not change.issue and not change.warning %}Comparable supplied periods{% endif %}</td></tr>{% endfor %}
+            </tbody></table>
+          </div>
+        </article>
+      {% endfor %}
+      <p class="muted">Dollar change = current − prior, exactly. Percentage change = (current − prior) ÷ prior × 100, rounded half up to two decimals only when prior is positive. Zero and negative bases retain dollar changes but have no percentage. Missing periods/values are never filled or bridged.</p>
+      <p class="data-warning" role="status">These are currently retrieved reported/calculated/restated versions. Matching dates and units do not establish unchanged accounting policies or one historical revision. Filing dates do not prove these exact values existed then; this is not a point-in-time backtest dataset, forecast or organic-growth claim.</p>
+      <h3>Statement dates, sources and versions</h3>
+      <div class="metric-grid trends-sources">
+        {% for source in sources %}
+          <article class="metric-card">
+            <h4>{{ source.statement.fundamental.fiscal_year }} FY · {{ statement_label }}</h4>
+            <dl>
+              <div><dt>Period start</dt><dd>{{ source.statement.fundamental.start_date|date:"Y-m-d"|default:"Unavailable" }}{% if is_balance %} · not used for point-in-time changes{% endif %}</dd></div>
+              <div><dt>{% if is_balance %}Balance-sheet date{% else %}Period end{% endif %}</dt><dd>{{ source.statement.fundamental.end_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
+              <div><dt>Classification</dt><dd>{{ source.statement.fundamental.type|default_if_none:"Unavailable" }}</dd></div>
+              <div><dt>SEC filing date/time</dt><dd>{{ source.filing_time }}</dd></div>
+              <div><dt>Provider update date/time</dt><dd>{{ source.updated_time }}</dd></div>
+              <div><dt>First calculable date/time</dt><dd>{{ source.calculable_time }}</dd></div>
+              <div><dt>Retrieved</dt><dd>{{ source.statement.retrieved_at|date:"Y-m-d H:i:s T" }}</dd></div>
+            </dl>
+            <p class="metric-tag">Statement ID: {{ source.statement.fundamental.id }} · Company ID: {{ source.statement.fundamental.company.id }}</p>
+            {% if not source.statement.pagination_complete %}<p class="data-warning">Partial statement response.</p>{% endif %}
+          </article>
+        {% endfor %}
+      </div>
+      <p class="muted">Source: Intrinio standardized financials. Each observation requires explicit USD units; listing currency is not used to infer units. Annual flow windows must cover 350–378 days, be adjacent and differ in length by at most seven days. Balance-sheet endpoints must advance by 350–378 days for changes. Incompatible pairs retain valid individual observations but have no computed change.</p>
+    </section>
+    <script src="{% static 'research/prices.js' %}" defer></script>
+  {% elif not form.is_bound %}
+    <div class="empty-state"><h2>Choose annual statement periods</h2><p>No financial data has been requested yet. Select one statement type, the last fiscal year and two to four consecutive annual periods.</p></div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "research/base.html" %}
+{% block content %}
+  <section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Research with clarity</p>
+    <h1 id="page-title">Better questions.<br>Reliable financial data.</h1>
+    <p class="lead">A focused workspace for understanding companies and tracking your portfolio, with clear sources and transparent calculations.</p>
+    <a class="button" href="{% url 'search' %}">Search stocks</a>
+  </section>
+  <section class="availability" aria-labelledby="availability-title">
+    <span class="status-dot" aria-hidden="true"></span>
+    <div>
+      <h2 id="availability-title">Data connection</h2>
+      <p role="status" data-provider-status="{{ provider_status.code }}">{{ provider_status.message }}</p>
+      <p class="muted">No prices, financial metrics, or portfolio results are displayed until their data sources are verified.</p>
+    </div>
+  </section>
+  <section class="roadmap" aria-labelledby="roadmap-title">
+    <div class="section-heading">
+      <h2 id="roadmap-title">Your research workspace</h2>
+      <span class="muted">Research, portfolios, and risk.</span>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <span class="step">01 / Research</span>
+        <h3>Find an instrument</h3>
+        <p>Search by ticker or company name, then review the instrument’s exchange and trading currency. Data access requires an Intrinio connection.</p>
+        <a href="{% url 'search' %}">Open stock search</a>
+      </article>
+      <article class="card">
+        <span class="step">02 / Portfolios</span>
+        <h3>Track your investments</h3>
+        <p>Record transactions, reconcile holdings, and review cost basis and allocations in a private workspace.</p>
+        <span class="tag">Planned</span>
+      </article>
+      <article class="card">
+        <span class="step">03 / Analytics</span>
+        <h3>Measure what matters</h3>
+        <p>Evaluate performance and risk with documented calculations that distinguish investment returns from cash flows.</p>
+        <span class="tag">Planned</span>
+      </article>
+    </div>
+  </section>
+{% endblock %}

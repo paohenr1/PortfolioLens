@@ -1,0 +1,40 @@
+{% if volume_chart %}
+<section class="price-panel volume-panel" aria-labelledby="volume-title">
+  <h2 id="volume-title">{{ volume_chart.basis_label }} · Daily share volume</h2>
+  <p class="muted">{% if volume_basis == "adjusted" %}Intrinio's supplied adjusted volume: shares exchanged during the period, adjusted for splits and dividends. The provider's adjustment method is not independently reconstructed; this is not an observed raw share count.{% else %}Intrinio's supplied raw volume: number of shares exchanged during each daily period. This is a share count, not currency turnover or dollar liquidity.{% endif %} Volume basis is selected independently of price basis; no values substitute for the other basis.</p>
+  <dl class="price-summary volume-summary">
+    <div><dt>Latest plotted volume</dt><dd>{% if volume_chart.latest %}{{ volume_chart.latest.value }} {% if volume_basis == "adjusted" %}provider-adjusted shares{% else %}shares{% endif %}<span class="muted"> on {{ volume_chart.latest.date|date:"Y-m-d" }}</span>{% else %}Unavailable{% endif %}</dd></div>
+    <div><dt>Plotted completed observations</dt><dd>{{ volume_chart.points|length }}</dd></div>
+  </dl>
+  {% if not history.pagination_complete %}<p class="data-warning" role="status">Partial volume history: the page limit was reached. Bars show only the supplied completed observations; narrow the range to retrieve remaining pages.</p>{% endif %}
+  {% if volume_chart.missing_count %}<p class="data-warning">{{ volume_chart.missing_count }} returned observation{{ volume_chart.missing_count|pluralize }} lack{{ volume_chart.missing_count|pluralize:"s," }} the selected volume. Missing values and absent dates are not filled with zero.</p>{% endif %}
+  {% if volume_chart.unconfirmed_count %}<p class="data-warning">{{ volume_chart.unconfirmed_count }} incomplete or unconfirmed volume period{{ volume_chart.unconfirmed_count|pluralize }} excluded from the bars. Supplied values remain in the table.</p>{% endif %}
+  {% if volume_chart.points %}
+    <figure class="chart-figure volume-figure">
+      <div class="chart-scroll" tabindex="0" aria-label="Scrollable daily volume chart">
+        <svg class="price-chart" viewBox="0 0 900 340" role="group" aria-labelledby="volume-chart-title volume-chart-description">
+          <title id="volume-chart-title">{{ volume_chart.basis_label }} from {{ history.start_date|date:"Y-m-d" }} to {{ history.end_date|date:"Y-m-d" }}</title>
+          <desc id="volume-chart-description">Completed supplied daily volume observations. Bars use actual calendar spacing and a zero baseline. Missing or unconfirmed values have no bar; known zero values have selectable baseline points. Exact values are in the table.</desc>
+          <line class="chart-grid" x1="95" x2="875" y1="35" y2="35"/><text class="chart-axis" x="85" y="35" text-anchor="end">{{ volume_chart.scale_label }}</text>
+          <line class="chart-grid" x1="95" x2="875" y1="285" y2="285"/><text class="chart-axis" x="85" y="285" text-anchor="end">0</text>
+          <text class="chart-axis" x="95" y="320">{{ history.start_date|date:"Y-m-d" }}</text><text class="chart-axis" x="875" y="320" text-anchor="end">{{ history.end_date|date:"Y-m-d" }}</text>
+          {% for point in volume_chart.points %}<rect class="volume-bar" x="{{ point.bar_left }}" y="{{ point.y }}" width="{{ volume_chart.bar_width }}" height="{{ point.height }}"/><circle class="chart-point" cx="{{ point.x }}" cy="{{ point.y }}" r="3" tabindex="{% if forloop.first %}0{% else %}-1{% endif %}" role="img" aria-label="{{ point.date|date:'Y-m-d' }}: {{ point.value }} {% if volume_basis == 'adjusted' %}provider-adjusted shares{% else %}shares{% endif %}" data-label="{{ point.date|date:'Y-m-d' }}: {{ point.value }} {% if volume_basis == 'adjusted' %}provider-adjusted shares{% else %}shares{% endif %}"><title>{{ point.date|date:"Y-m-d" }}: {{ point.value }} {% if volume_basis == "adjusted" %}provider-adjusted shares{% else %}shares{% endif %}</title></circle>{% endfor %}
+        </svg>
+      </div>
+      <figcaption>Hover or tap to inspect volume. Focus a point and use Left/Right, Home or End. Scroll horizontally on small screens. Vertical axis fits observed volume from zero; labels use four significant digits. Very small relative values may round to the baseline in pixel geometry; exact values remain in the readout and table.</figcaption>
+      <p class="chart-readout" aria-live="polite">{{ volume_chart.basis_label }} · {{ volume_chart.points|length }} plotted observations</p>
+    </figure>
+  {% else %}
+    <div class="empty-state" role="status"><h3>No completed volume available</h3><p>{% if history.observations %}The selected volume is missing or its period is incomplete or unconfirmed. Price availability does not establish volume coverage.{% else %}No daily observations were supplied for this range.{% endif %}</p></div>
+  {% endif %}
+  {% if volume_chart.rows %}
+    <details class="volume-table-details"><summary>View volume observations ({{ volume_chart.rows|length }})</summary>
+      <div class="table-scroll" tabindex="0" aria-label="Scrollable volume observations">
+        <table class="price-table volume-table"><caption>Supplied daily share counts, newest first. Adjusted volume retains provider adjustments. Fractional values are preserved; no trading currency is inferred.</caption><thead><tr><th scope="col">Date</th><th scope="col">Raw volume (shares)</th><th scope="col">Adjusted volume (provider-adjusted shares)</th><th scope="col">Period status</th></tr></thead><tbody>{% for row in volume_chart.rows %}<tr><th scope="row">{{ row.date|date:"Y-m-d" }}</th><td>{{ row.volume }}</td><td>{{ row.adjusted_volume }}</td><td>{{ row.period_status }}</td></tr>{% endfor %}</tbody></table>
+      </div>
+    </details>
+  {% endif %}
+  <p class="muted">Source: the same Intrinio historical daily-price response · Requested {{ history.start_date|date:"Y-m-d" }} through {{ history.end_date|date:"Y-m-d" }} · Retrieved {{ history.retrieved_at|date:"Y-m-d H:i:s T" }}. No extra provider request is made for volume.</p>
+  <p class="muted">Bars display supplied observations. No trading calendar, missing-session diagnosis, complete market coverage or freshness guarantee is inferred for volume. No totals, average volume, turnover or liquidity metric is calculated.</p>
+</section>
+{% endif %}

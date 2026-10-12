@@ -1,0 +1,9 @@
+{% extends 'research/base.html' %}
+{% block title %}Portfolios unavailable · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <h1>Portfolios unavailable</h1>
+  <p class="lead" role="alert">Portfolio storage is not configured for this environment.</p>
+  <p>You can still <a href="{% url 'search' %}">search stocks</a> or return to <a href="{% url 'account' %}">My account</a>.</p>
+</section>
+{% endblock %}

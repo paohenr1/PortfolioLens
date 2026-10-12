@@ -1,0 +1,59 @@
+{% extends 'research/base.html' %}
+{% block title %}Positions and gains · {{ portfolio.name }} · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Private journal calculations · FIFO</p>
+  <h1>Positions and gains</h1>
+  <p class="lead">{{ portfolio.name }} · USD · First in, first out</p>
+  <p><a href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a> · <a href="{% url 'ledger_create' portfolio_id=portfolio.pk %}">Record transaction</a></p>
+</section>
+<section class="reference-panel">
+  <h2>Recorded journal totals</h2>
+  <dl class="reference-grid">
+    <div><dt>Recorded cash (USD)</dt><dd>{{ analysis.cash }}</dd></div>
+    <div><dt>Open cost basis (USD)</dt><dd>{{ analysis.open_cost_basis }}</dd></div>
+    <div><dt>Realized sale gain/loss (USD)</dt><dd>{{ analysis.realized_gain }}</dd></div>
+    <div><dt>Standalone fees (USD)</dt><dd>{{ analysis.standalone_fees }}</dd></div>
+    <div><dt>Net dividends received (USD)</dt><dd>{{ analysis.net_dividends }}</dd></div>
+  </dl>
+  <p>Buy fees enter lot cost; sell fees reduce proceeds. Sales consume the oldest shares by transaction date and same-day order. Standalone fees reduce cash and are shown separately; they are not deducted again from sale gains.</p>
+  <p><a href="{% url 'portfolio_valuation' portfolio_id=portfolio.pk %}">View market valuation</a> to load closing prices for an explicit date.</p>
+  <p><a href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a> for an explicit supported period.</p>
+  <p class="muted">These are journal-derived research calculations. Contributions are not gains. Load valuation to view allocation weights. Money-weighted returns remain unavailable. Only explicitly recorded splits and net cash dividends are processed. Transfers and tax adjustments are unsupported; this is not a tax report or verified brokerage statement.</p>
+  <details><summary>How partial-sale cents are allocated</summary><p>Each lot's cumulative sold cost is its original cost multiplied by the fraction of its original shares sold, rounded half up to USD cents. A sale receives the increase in that cumulative cost. The remainder stays with the open lot, so closing it allocates its full cost exactly. Very small remaining lots may have zero cent-denominated basis.</p></details>
+</section>
+<section class="results">
+  <h2>Open positions</h2>
+  {% if positions.object_list %}
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Open position table">
+  <table class="price-table">
+    <caption>Journal shares including recorded splits, and remaining FIFO cost. Labels use the latest stored reference snapshot; no quotes are requested.</caption>
+    <thead><tr><th scope="col">Instrument</th><th scope="col">Shares</th><th scope="col">Cost basis (USD)</th><th scope="col">Open FIFO lots</th></tr></thead>
+    <tbody>{% for row in positions %}<tr>
+      <td>{{ row.instrument.security_ticker }} · {{ row.instrument.exchange_mic }}<br><span class="muted">{{ row.position.security_id }}<br>Reference retrieved {{ row.instrument.reference_retrieved_at|date:'Y-m-d H:i:s T' }}</span></td>
+      <td>{{ row.position.quantity }}</td><td>{{ row.position.cost_basis }}</td>
+      <td><details><summary>{{ row.position.lots|length }} open lot{{ row.position.lots|length|pluralize }}</summary><ul>{% for lot in row.position.lots %}<li>{{ lot.acquisition_date|date:'Y-m-d' }}, order {{ lot.acquisition_order }}: {{ lot.quantity }} shares; {{ lot.cost_basis }} USD remaining cost</li>{% endfor %}</ul></details></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% if positions.has_other_pages %}<nav class="research-links" aria-label="Position pages">{% if positions.has_previous %}<a href="?positions_page={{ positions.previous_page_number }}&amp;sales_page={{ sales.number }}">Previous positions</a>{% endif %}<span>Page {{ positions.number }} of {{ positions.paginator.num_pages }}</span>{% if positions.has_next %}<a href="?positions_page={{ positions.next_page_number }}&amp;sales_page={{ sales.number }}">Next positions</a>{% endif %}</nav>{% endif %}
+  {% else %}<p>No open positions in the recorded journal.</p>{% endif %}
+</section>
+<section class="results">
+  <h2>Realized sales</h2>
+  {% if sales.object_list %}
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Realized sale table">
+  <table class="price-table">
+    <caption>All recorded sales, including closed positions. Shares and consumed lots use each sale's recorded share basis. Gain/loss equals net proceeds minus allocated FIFO cost; each amount is USD.</caption>
+    <thead><tr><th scope="col">Date / order</th><th scope="col">Instrument</th><th scope="col">Shares sold</th><th scope="col">Gross proceeds (USD)</th><th scope="col">Sell fees (USD)</th><th scope="col">Net proceeds (USD)</th><th scope="col">FIFO cost (USD)</th><th scope="col">Gain/loss (USD)</th><th scope="col">Consumed lots</th></tr></thead>
+    <tbody>{% for row in sales %}<tr>
+      <td>{{ row.sale.event_date|date:'Y-m-d' }} / {{ row.sale.sequence }}</td>
+      <td>{{ row.instrument.security_ticker }} · {{ row.instrument.exchange_mic }}<br><span class="muted">{{ row.sale.security_id }}</span></td>
+      <td>{{ row.sale.quantity }}</td><td>{{ row.sale.gross_proceeds }}</td><td>{{ row.sale.fees }}</td><td>{{ row.sale.net_proceeds }}</td><td>{{ row.sale.cost_basis }}</td><td>{{ row.sale.gain }}</td>
+      <td><details><summary>{{ row.sale.lots|length }} lot{{ row.sale.lots|length|pluralize }}</summary><ul>{% for lot in row.sale.lots %}<li>{{ lot.acquisition_date|date:'Y-m-d' }}, order {{ lot.acquisition_order }}: {{ lot.quantity }} shares; {{ lot.cost_basis }} USD allocated cost</li>{% endfor %}</ul></details></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% if sales.has_other_pages %}<nav class="research-links" aria-label="Sale pages">{% if sales.has_previous %}<a href="?sales_page={{ sales.previous_page_number }}&amp;positions_page={{ positions.number }}">Previous sales</a>{% endif %}<span>Page {{ sales.number }} of {{ sales.paginator.num_pages }}</span>{% if sales.has_next %}<a href="?sales_page={{ sales.next_page_number }}&amp;positions_page={{ positions.number }}">Next sales</a>{% endif %}</nav>{% endif %}
+  {% else %}<p>No sales recorded. Realized sale gain/loss is zero.</p>{% endif %}
+  <p><a href="{% url 'portfolio_detail' portfolio_id=portfolio.pk %}">Back to portfolio</a></p>
+</section>
+{% endblock %}

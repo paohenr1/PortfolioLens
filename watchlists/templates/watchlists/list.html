@@ -1,0 +1,21 @@
+{% extends 'research/base.html' %}
+{% block title %}My watchlists · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Private workspace</p><h1>My watchlists</h1>
+  <p class="lead">Keep instruments you want to research in lists that belong to your account.</p>
+  <a class="button" href="{% url 'watchlist_create' %}">Create watchlist</a>
+</section>
+<section class="results" aria-label="Your watchlists">
+  {% if page.object_list %}
+  <ul class="result-list">{% for watchlist in page %}
+    <li class="result-card"><h2><a href="{% url 'watchlist_detail' watchlist.pk %}">{{ watchlist.name }}</a></h2></li>
+  {% endfor %}</ul>
+  {% if page.has_other_pages %}<nav class="research-links" aria-label="Watchlist pages">
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">Previous page</a>{% endif %}
+    <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Next page</a>{% endif %}
+  </nav>{% endif %}
+  {% else %}<div class="empty-state"><h2>No watchlists yet</h2><p>Create your first watchlist, then add instruments from their details pages.</p></div>{% endif %}
+</section>
+{% endblock %}

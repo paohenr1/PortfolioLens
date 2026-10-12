@@ -1,0 +1,38 @@
+{% extends 'research/base.html' %}
+{% block title %}Daily market information · {{ watchlist.name }}{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <a href="{% url 'watchlist_detail' watchlist.pk %}">Back to watchlist</a>
+  <p class="eyebrow">Private watchlist research</p><h1>Daily market information</h1>
+  <p class="lead">{{ watchlist.name }} · Select up to five instruments for an exact-date daily close and volume.</p>
+  <div class="research-links"><a href="{% url 'watchlist_preferences' watchlist.pk %}">Edit saved preferences</a><a href="{% url 'watchlist_add' watchlist.pk %}">Add instrument</a></div>
+</section>
+<form class="search-form statement-form" method="get" action="{% url 'watchlist_market' watchlist.pk %}" aria-label="Watchlist market settings">
+  {{ form.non_field_errors }}
+  <div class="price-controls">{% for field in form %}{% if field.name != 'items' %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}<p class="muted" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p></div>{% endif %}{% endfor %}</div>
+  <fieldset class="watchlist-picker"><legend>{{ form.items.label }}</legend>{{ form.items.errors }}{{ form.items }}<p class="muted" id="{{ form.items.auto_id }}_helptext">{{ form.items.help_text }}</p></fieldset>
+  <button class="button" type="submit">Load selected market information</button>
+  <p class="muted">Loading spends the shared market-data allowance. No automatic polling or background refresh. Suggested dates may have no available observation.</p>
+</form>
+{% if rows %}
+<section class="price-panel watchlist-market-panel" aria-labelledby="market-title">
+  <h2 id="market-title">Selected daily observations · {{ market_date|date:"Y-m-d" }}</h2>
+  <p><strong>Price basis:</strong> {{ price_label }} · <strong>Volume basis:</strong> {{ volume_label }}</p>
+  {% if rate_limit %}<p class="data-warning" role="alert">{{ rate_limit.message }} Remaining instruments were not requested. Try again after {{ rate_limit.retry_after }} seconds.</p>{% endif %}
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Watchlist market values"><table class="price-table financial-table">
+    <caption>Exact-date closes and share volumes. Each row retains its own response currency and exchange; no totals across instruments or currencies.</caption>
+    <thead><tr><th scope="col">Saved instrument</th><th scope="col">Selected close</th><th scope="col">Selected volume · shares</th><th scope="col">Price-response reference</th><th scope="col">Availability and source</th></tr></thead>
+    <tbody>{% for row in rows %}<tr>
+      <th scope="row">{{ row.item.ticker|default_if_none:row.item.security_id }}<br>{{ row.item.name|default_if_none:"Name unavailable" }}<br><span class="muted">{{ row.item.security_id }}</span><br><a href="{% url 'prices' row.item.security_id %}">Price history</a></th>
+      <td class="market-close">{{ row.close_text }}{% if row.observation.close is not None %} {{ row.history.security.currency }} per share{% endif %}</td>
+      <td class="market-volume">{{ row.volume_text }}</td>
+      <td>{% if row.history %}{{ row.history.security.exchange_mic|default_if_none:"MIC unavailable" }} · {{ row.history.security.currency|default_if_none:"Currency unavailable" }}{% else %}Unavailable{% endif %}</td>
+      <td class="market-availability">{% if row.not_requested %}Not requested after request limit.{% elif row.error %}{{ row.error.message }}{% if row.error.retry_after %} Retry after {{ row.error.retry_after }} seconds.{% endif %}{% else %}{% if row.observation.price_issue %}<p>Price: {{ row.observation.price_issue }}</p>{% endif %}{% if row.observation.volume_issue %}<p>Volume: {{ row.observation.volume_issue }}</p>{% endif %}{% if not row.observation.price_issue and not row.observation.volume_issue %}<p>Daily observation explicitly marked complete.</p>{% endif %}<p>Source: Intrinio daily historical prices.<br>Requested date: {{ market_date|date:"Y-m-d" }} · date only.<br>Retrieved: {{ row.history.retrieved_at|date:"Y-m-d H:i:s T" }}.</p>{% endif %}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  <p class="muted">Scroll the table horizontally to view volume, currency and source details. Keyboard users can focus the table and use the arrow keys.</p>
+  <p class="data-warning" role="status">These are dated daily observations, not live quotes. Each price response supplies its own currency and exchange reference; saved bookmark details may be older. A date-only observation is not a quote timestamp. Provider-adjusted prices may reflect splits and dividends; adjusted volume uses the provider's basis. No independent adjustment, total-return verification, price change, FX conversion or turnover is inferred.</p>
+  <p class="muted">Only a complete single-row exact-date response can supply values. Selected price and volume fields are independent: a missing price does not remove usable volume. No fallback between bases, dates or instruments. Missing values remain unavailable; supplied zero and fractional counts are preserved. Values are not saved to the watchlist.</p>
+</section>
+{% elif not form.is_bound %}<div class="empty-state"><h2>Choose instruments and a date</h2><p>No market data has been requested yet. Saved preferences supply the initial bases; your selection loads only when you submit.</p></div>{% endif %}
+{% endblock %}

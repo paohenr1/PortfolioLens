@@ -1,0 +1,10 @@
+{% extends 'accounts/form.html' %}
+{% block page_title %}Sign in{% endblock %}
+{% block heading %}Sign in{% endblock %}
+{% block introduction %}<p class="lead">Use your username to open your research account.</p>{% endblock %}
+{% block hidden_fields %}<input type="hidden" name="next" value="{{ next }}">{% endblock %}
+{% block submit_label %}Sign in{% endblock %}
+{% block after_form %}
+{% if registration_available %}<p>New here? <a href="{% url 'register' %}">Create account</a>.</p>{% endif %}
+<p class="muted">Password recovery is not available yet.</p>
+{% endblock %}

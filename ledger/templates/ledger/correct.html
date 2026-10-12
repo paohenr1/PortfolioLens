@@ -1,0 +1,30 @@
+{% extends 'research/base.html' %}
+{% block title %}Correct transaction · {{ portfolio.name }}{% endblock %}
+{% block content %}
+<section class="intro compact"><p class="eyebrow">Private journal correction</p>
+<h1>{% if void %}Void transaction{% else %}Replace transaction{% endif %}</h1><p class="lead">{{ portfolio.name }} · USD</p>
+<p>A correction preserves the original entry and restates the journal, including past accounting and returns. Every later transaction must remain valid.</p></section>
+<section class="reference-panel"><h2>Original entry</h2>{% include 'ledger/entry_reference.html' with entry=target %}</section>
+{% if provider_error %}{% include 'research/provider_error.html' %}{% endif %}
+{% if correction_error %}<p class="errorlist" role="alert">{{ correction_error }}</p>{% endif %}
+{% if after %}
+<section class="reference-panel"><h2>Correction preview</h2>
+  <p><strong>Reason:</strong> {{ reason }}</p>
+  {% if replacement %}<p>Replace with {{ replacement.kind }} on {{ replacement.event_date|date:'Y-m-d' }}, order {{ replacement.sequence }}. Instrument: {{ replacement.security_id|default:'—' }}. Shares: {{ replacement.quantity|default_if_none:'—' }}; execution price: {{ replacement.unit_price|default_if_none:'—' }} USD. Gross amount: {{ replacement.gross_amount }} USD; fees: {{ replacement.fees }} USD. {% if replacement.kind == 'SPLIT' %}Split: {{ replacement.split_new }} for {{ replacement.split_old }}.{% endif %}</p>{% else %}<p>Void this entry without adding a replacement transaction.</p>{% endif %}
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Correction accounting preview"><table class="price-table"><caption>Whole-journal accounting effect; no market prices requested</caption>
+  <thead><tr><th scope="col">Measure</th><th scope="col">Before</th><th scope="col">After</th></tr></thead><tbody>
+  <tr><th scope="row">Recorded cash (USD)</th><td>{{ before.cash }}</td><td>{{ after.cash }}</td></tr>
+  <tr><th scope="row">Open cost basis (USD)</th><td>{{ before.open_cost_basis }}</td><td>{{ after.open_cost_basis }}</td></tr>
+  <tr><th scope="row">Realized sale gain (USD)</th><td>{{ before.realized_gain }}</td><td>{{ after.realized_gain }}</td></tr>
+  </tbody></table></div>
+  <h3>Resulting open positions</h3><ul>{% for position in after.positions %}<li>{{ position.security_id }}: {{ position.quantity }} shares; basis {{ position.cost_basis }} USD</li>{% empty %}<li>No open positions</li>{% endfor %}</ul>
+  <form class="account-form" method="post">{% csrf_token %}<input type="hidden" name="stage" value="save">{{ save_form.as_div }}<button class="button" type="submit">Save correction</button></form>
+  <p class="muted">Preview expires after 15 minutes. Saving rechecks the journal. A new trade, dividend or split replacement uses one reference request; voids and cash replacements use none.</p>
+</section>
+{% else %}<section class="account-section">
+{% if save_form.errors %}<div role="alert">{{ save_form.errors }}</div>{% endif %}
+<form class="account-form" method="post">{% csrf_token %}<input type="hidden" name="stage" value="preview">{{ form.as_div }}<button class="button" type="submit">Preview correction</button></form>
+<p class="muted">Preview makes no provider request and saves no changes. Corrections and their reasons remain permanent.</p>
+</section>{% endif %}
+<p><a href="{% url 'ledger_history' portfolio.pk %}">Cancel and return to transactions</a></p>
+{% endblock %}

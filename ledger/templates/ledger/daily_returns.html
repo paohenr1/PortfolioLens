@@ -1,0 +1,93 @@
+{% extends 'research/base.html' %}
+{% load static %}
+{% block title %}Daily returns · {{ portfolio.name }} · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Private portfolio research · U.S. equity sessions</p>
+  <h1>Daily returns</h1><p class="lead">{{ portfolio.name }} · USD</p>
+  <p><a href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a> · <a href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a></p>
+</section>
+<section class="account-section">
+  <form class="account-form" method="post" aria-label="Daily return settings">
+    {% csrf_token %}{{ form.as_div }}<button class="button" type="submit">Load daily returns</button>
+  </form>
+  <p>Choose two completed U.S. equity session dates from 2000, covering at most 90 calendar days. The opening close is the baseline; its transactions are already included. Each subsequent row measures the return from the previous session close, including over weekends and holidays.</p>
+  <p>After the opening date, deposits and withdrawals must occur at end of day after all other activity. Activity on non-session dates is unsupported. Dividends and fees remain in returns; recorded shares must match raw prices and include all applicable splits.</p>
+  <p class="muted">Supports two instruments held anywhere in the period, including positions sold before the end, and at most 16 opening, closing and cash-flow boundary dates. Historical price loads use at most eight requests. Cash-only series request no prices. Loads require confirmation; no automatic refresh or saved prices.</p>
+  <p class="muted">Sessions use the exchange-calendars NYSE regular-session calendar, including early closes and known exceptional closures, for supported U.S. equity venues. Missing, incomplete or unconfirmed prices stay unavailable. No earlier-close substitution or adjusted-price fallback.</p>
+  <p class="muted">Calculations use the corrected journal known now and may restate past results. They depend on complete entries and confirmed flow timing. Risk statistics describe the selected observed window. Optional Sharpe uses your confirmed risk-free assumption.</p>
+  <p class="muted">An optional benchmark adds at most one reference request and one price request. Its adjusted-price return uses the same session dates. Find the provider instrument ID through <a href="{% url 'search' %}">instrument search</a>; no default benchmark is assumed.</p>
+</section>
+{% if provider_error %}<p class="data-warning" role="alert">{{ provider_error.message }}</p>{% endif %}
+{% if performance %}
+{% if sharpe %}{% include 'ledger/sharpe.html' %}{% endif %}
+{% if comparison %}{% include 'ledger/benchmark_comparison.html' %}{% endif %}
+<section class="reference-panel">
+  <h2>Session series · {{ performance.start_date|date:'Y-m-d' }} through {{ performance.end_date|date:'Y-m-d' }}</h2>
+  <dl class="reference-grid"><div><dt>Cumulative time-weighted return</dt><dd>{% if performance.return_percent == None %}Unavailable{% else %}{{ performance.return_percent }}%{% endif %}</dd></div></dl>
+  {% if performance.issue %}<p class="data-warning" role="status">{{ performance.issue }} The complete-period return is unavailable; available rows do not represent the full result.</p>{% endif %}
+  <p>Each daily factor is (ending value minus the net end-of-day external flow) ÷ opening value. The cumulative return links unrounded factors. Percentages display four decimal places. No zero returns are added on closed-market dates.</p>
+</section>
+<section class="reference-panel" aria-labelledby="risk-title">
+  <h2 id="risk-title">Volatility and drawdown</h2>
+  <dl class="reference-grid risk-summary">
+    <div><dt>Session return rows</dt><dd>{{ risk.observations }}</dd></div>
+    <div><dt>Daily sample volatility</dt><dd>{% if risk.daily_volatility_percent == None %}Unavailable{% else %}{{ risk.daily_volatility_percent }}%{% endif %}</dd></div>
+    <div><dt>Annualized volatility · 252 sessions</dt><dd>{% if risk.annualized_volatility_percent == None %}Unavailable{% else %}{{ risk.annualized_volatility_percent }}%{% endif %}</dd></div>
+    <div><dt>Maximum drawdown</dt><dd>{% if risk.maximum_drawdown_percent == None %}Unavailable{% else %}{{ risk.maximum_drawdown_percent }}%{% endif %}</dd></div>
+    <div><dt>Worst drawdown peak</dt><dd>{% if risk.peak_date %}{{ risk.peak_date|date:'Y-m-d' }}{% else %}—{% endif %}</dd></div>
+    <div><dt>Worst drawdown trough</dt><dd>{% if risk.trough_date %}{{ risk.trough_date|date:'Y-m-d' }}{% else %}—{% endif %}</dd></div>
+    <div><dt>First recovery of that peak</dt><dd>{% if risk.recovery_date %}{{ risk.recovery_date|date:'Y-m-d' }}{% elif risk.trough_date %}Not recovered in this window{% else %}—{% endif %}</dd></div>
+  </dl>
+  {% if risk.issue %}<p class="data-warning" role="status">{{ risk.issue }} Missing or invalid rows are not dropped from the sample.</p>{% endif %}
+  {% if risk.volatility_issue %}<p class="data-warning">{{ risk.volatility_issue }}</p>{% endif %}
+  {% if risk.annualization_issue %}<p class="muted">{{ risk.annualization_issue }}</p>{% endif %}
+  <p>Daily volatility is the sample standard deviation of unrounded simple session returns, with n−1 in the denominator and at least two returns. Annualized volatility scales that variance by 252 and requires twenty returns. This is a convention, not the observed number of sessions in a year or a return forecast.</p>
+  <p>Drawdown tracks the compounded return after removing external cash flows. Maximum drawdown is the largest percentage loss from a preceding peak in this window, including the opening baseline. Deposits and withdrawals do not create losses or recoveries. The first deepest episode is retained; repeated equal highs use the most recent peak.</p>
+  <p class="muted">All risk results require a complete daily series. Short samples can be unstable. Values display four decimal places; calculations use unrounded factors. These are observed close-to-close results, not intraday or lifetime portfolio risk. Calculating them requests no additional prices.</p>
+</section>
+{% if drawdown_chart %}
+<section class="results">
+  <h2>Drawdown through the window</h2>
+  <figure class="chart-figure">
+    <div class="chart-scroll" tabindex="0" aria-label="Scrollable drawdown chart">
+      <svg class="price-chart" viewBox="0 0 900 340" role="group" aria-labelledby="drawdown-title drawdown-description">
+        <title id="drawdown-title">Drawdown from the running return peak</title>
+        <desc id="drawdown-description">Drawdown percentages between zero and minus 100. Horizontal positions use calendar dates. Use arrow keys on a point to inspect sessions, or read the table below.</desc>
+        {% for y,label in drawdown_chart.y_ticks %}<line class="chart-grid" x1="95" x2="875" y1="{{ y }}" y2="{{ y }}"/><text class="chart-axis" x="85" y="{{ y }}" text-anchor="end" dominant-baseline="middle">{{ label }}%</text>{% endfor %}
+        <text class="chart-axis" x="95" y="320">{{ drawdown_chart.start_date|date:'Y-m-d' }}</text><text class="chart-axis" x="875" y="320" text-anchor="end">{{ drawdown_chart.end_date|date:'Y-m-d' }}</text>
+        <path class="chart-line" d="{{ drawdown_chart.path }}"/>
+        {% for point in drawdown_chart.points %}<circle class="chart-point" cx="{{ point.x }}" cy="{{ point.y }}" r="3" tabindex="{% if forloop.first %}0{% else %}-1{% endif %}" role="img" aria-label="{{ point.as_of|date:'Y-m-d' }}: {{ point.value }}% drawdown" data-label="{{ point.as_of|date:'Y-m-d' }}: {{ point.value }}% drawdown"><title>{{ point.as_of|date:'Y-m-d' }}: {{ point.value }}% drawdown</title></circle>{% endfor %}
+      </svg>
+    </div>
+    <figcaption>Hover or tap to inspect a session. Focus a point and use Left/Right, Home or End. On small screens, scroll horizontally. The vertical scale fits observed drawdown, with a minimum span of one percentage point.</figcaption>
+    <p class="chart-readout" aria-live="polite">{{ drawdown_chart.points|length }} observed session closes, including the opening baseline</p>
+  </figure>
+  <script src="{% static 'research/prices.js' %}" defer></script>
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Drawdown observation table">
+    <table class="price-table"><caption>Return drawdown from the running peak, with external cash flows removed. Negative values are below the peak.</caption><thead><tr><th scope="col">Session date</th><th scope="col">Drawdown</th></tr></thead><tbody>{% for row in risk.rows %}<tr><th scope="row">{{ row.as_of|date:'Y-m-d' }}</th><td>{{ row.drawdown_percent }}%</td></tr>{% endfor %}</tbody></table>
+  </div>
+</section>
+{% endif %}
+<section class="results">
+  <h2>Daily session calculations</h2>
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Daily return table">
+    <table class="price-table"><caption>USD values between consecutive U.S. equity sessions. A positive opening value and complete valuations at both dates are required.</caption>
+      <thead><tr><th scope="col">Opening date</th><th scope="col">Ending date</th><th scope="col">Opening value (USD)</th><th scope="col">Ending value (USD)</th><th scope="col">Net external flow (USD)</th><th scope="col">Ending value before flow (USD)</th><th scope="col">Return</th></tr></thead>
+      <tbody>{% for row in performance.periods %}<tr>
+        <td>{{ row.start_date|date:'Y-m-d' }}</td><td>{{ row.end_date|date:'Y-m-d' }}</td><td>{{ row.start_value|default_if_none:'Unavailable' }}</td><td>{{ row.end_value|default_if_none:'Unavailable' }}</td><td>{{ row.external_flow }}</td><td>{{ row.before_flow_value|default_if_none:'Unavailable' }}</td><td>{% if row.return_percent == None %}Unavailable<br>{{ row.issue }}{% else %}{{ row.return_percent }}%{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</section>
+<section class="results">
+  <h2>Session valuations and price provenance</h2>
+  {% for value in valuations %}<details><summary>{{ value.as_of|date:'Y-m-d' }} · Total value {{ value.total_value|default_if_none:'Unavailable' }} USD</summary>
+    <p>Recorded cash: {{ value.cash }} USD · Position value: {{ value.market_value|default_if_none:'Unavailable' }} USD.</p>
+    {% if value.rows %}<ul>{% for row in value.rows %}<li>{{ row.position.security_id }} · {{ row.position.quantity }} shares · Raw close {{ row.raw_close|default_if_none:'Unavailable' }} USD/share · Market value {{ row.market_value|default_if_none:'Unavailable' }} USD. {% if row.issue %}{{ row.issue }}{% else %}Confirmed daily close {{ value.as_of|date:'Y-m-d' }}; retrieved {{ row.retrieved_at|date:'Y-m-d H:i:s T' }}.{% endif %}</li>{% endfor %}</ul>{% else %}<p>Cash-only session: no prices required.</p>{% endif %}
+  </details>{% endfor %}
+  <p class="muted">Source: Intrinio historical stock prices. Retrieval times describe access, not quote timestamps or guaranteed freshness.</p>
+</section>
+{% endif %}
+<p><a href="{% url 'portfolio_detail' portfolio_id=portfolio.pk %}">Back to portfolio</a></p>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'research/base.html' %}
+{% block title %}My portfolios · Stock Research{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Private workspace</p>
+  <h1>My portfolios</h1>
+  <p class="lead">Organize your investments in portfolios that belong to your account.</p>
+  <a class="button" href="{% url 'portfolio_create' %}">Create portfolio</a>
+</section>
+<section class="results" aria-label="Your portfolios">
+  {% if page.object_list %}
+  <ul class="result-list">
+    {% for portfolio in page %}
+    <li class="result-card"><div>
+      <h2><a href="{% url 'portfolio_detail' portfolio_id=portfolio.pk %}">{{ portfolio.name }}</a></h2>
+      <p class="muted">Reporting currency: {{ portfolio.reporting_currency }}</p>
+    </div></li>
+    {% endfor %}
+  </ul>
+  {% if page.has_other_pages %}
+  <nav class="research-links" aria-label="Portfolio pages">
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">Previous page</a>{% endif %}
+    <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Next page</a>{% endif %}
+  </nav>
+  {% endif %}
+  {% else %}
+  <div class="empty-state"><h2>No portfolios yet</h2><p>Create your first portfolio to start organizing your investments.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

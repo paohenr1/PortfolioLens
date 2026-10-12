@@ -1,0 +1,9 @@
+{% extends 'accounts/form.html' %}
+{% block page_title %}Create account{% endblock %}
+{% block heading %}Create account{% endblock %}
+{% block introduction %}<p class="lead">Choose a username and password. We do not ask for your email address.</p>{% endblock %}
+{% block submit_label %}Create account{% endblock %}
+{% block after_form %}
+<p class="muted">Keep your password in a password manager. Password recovery is not available yet.</p>
+<p>Already registered? <a href="{% url 'sign_in' %}">Sign in</a>.</p>
+{% endblock %}

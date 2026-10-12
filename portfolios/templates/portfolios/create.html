@@ -1,0 +1,6 @@
+{% extends 'accounts/form.html' %}
+{% block page_title %}Create portfolio{% endblock %}
+{% block heading %}Create portfolio{% endblock %}
+{% block introduction %}<p class="lead">Give your portfolio a name. Reporting currently supports U.S. dollars.</p>{% endblock %}
+{% block submit_label %}Create portfolio{% endblock %}
+{% block after_form %}<p class="muted">You can create up to 50 portfolios. Names must be unique within your account.</p><p><a href="{% url 'portfolio_list' %}">Back to my portfolios</a></p>{% endblock %}
