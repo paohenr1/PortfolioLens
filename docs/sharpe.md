@@ -1,16 +1,13 @@
 # Sharpe with an explicit risk-free assumption
 
-Version 0.19 adds optional Sharpe statistics to **View daily returns**. Enter
-**Optional risk-free rate · annual simple %** and confirm the constant-rate and
-252-session convention, alongside the existing flow/share-basis confirmation.
-An explicit `0` is allowed and must be confirmed. Leaving the rate blank skips
-Sharpe; zero is never inferred. Confirming without a rate or entering a rate
-without confirmation gives a form error before prices are requested.
+On **View daily returns and risk**, enter **Optional risk-free rate · annual simple %**
+and confirm the constant-rate/252-session convention alongside the flow/share-basis
+confirmation. Explicit zero is allowed; a blank rate skips Sharpe. A rate without
+confirmation, or confirmation without a rate, fails before price requests.
 
-The rate is a user-supplied assumption, not a retrieved Treasury rate or a
-provider estimate. It accepts −100% through +100%, with up to four decimal places.
-No new provider requests, destination, dependency, migration, storage write,
-background task or paid service was added. A benchmark is not required.
+The rate is a user assumption, not a retrieved Treasury rate or provider estimate. It
+accepts −100% through +100% with up to four decimal places. No additional prices or
+benchmark are required.
 
 ## Definitions and convention
 
@@ -80,7 +77,7 @@ quote request. Owner authentication, CSRF, private cache headers, bounded shared
 quota and safe error/Retry-After handling remain in place. Journal corrections
 restate excess returns and Sharpe, while original entries remain permanent.
 
-## Examples and validation
+## Arithmetic example
 
 Ten alternating +100% and −50% simple returns have arithmetic mean 25% and
 sample variance `11.25/19`, even though their cumulative return is zero.
@@ -90,28 +87,11 @@ With an annual simple 4% assumption, the per-session rate is `4/252` percent,
 mean excess displays **24.9841%**, and ratios display **0.3247** and **5.1542**.
 These intentionally synthetic values check the arithmetic, not plausible yields.
 
-34 new tests include 22 pure calculation/form cases and twelve PostgreSQL page
-cases. They cover explicit zero/nonzero/negative and invalid assumptions,
-confirmation, sample/variance gates, zero/negative excess, missing or inconsistent
-data, terminal loss, funding, unrounded annualization, low caller precision,
-tiny variation, pure imports, private access/CSRF, unchanged quotes/journal rows,
-benchmark-only failures, rate limits and fee-correction restatement.
+## Limitations
 
-Full PostgreSQL: **739 passed without skips**. SQLite: **484 passed, 255 skipped**;
-SQLite does not validate PostgreSQL persistence/concurrency. Sharpe, relationship
-and daily-return browsers pass desktop/mobile using synthetic data in disposable
-PostgreSQL databases. They check confirmation, 19/20 samples, zero variance,
-rates/ratios, missing data, responsive layout and private access. Ruff checks
-158 Python files; Django, migration-drift, static and actual local HTTP readiness
-checks pass. Normal startup never enables browser fixtures.
+The risk-free rate is a constant user assumption. Time-varying or independently
+retrieved risk-free series, confidence intervals and autocorrelation adjustments are
+unsupported.
 
-```sh
-uv run --frozen --env-file .local/database-test.env python manage.py test --noinput
-python3 tests/browser_sharpe.py
-python3 tests/browser_relationships.py
-python3 tests/browser_daily_returns.py
-```
-
-Live portfolio acceptance, production deployment and time-varying or externally
-verified risk-free series remain unverified or future work. [Selected-period profitability](profitability.md) is implemented. [Annual return on assets/equity](capital-returns.md) is implemented. Next: annual revenue
-and earnings growth with aligned periods.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

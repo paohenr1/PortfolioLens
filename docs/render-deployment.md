@@ -1,187 +1,102 @@
-# Render + Neon deployment draft
+# Render and Neon operations
 
-Prepared October 12, 2026, for the existing v0.31 application. This is a reviewable
-candidate, not a selected or provisioned host. No resource, account, source push,
-database migration, public endpoint or charge has been created.
+The application uses Render for the web service and Neon PostgreSQL for durable records.
+Releases are manual. This guide describes configuration and checks; it does not attest
+to the current dashboard settings or deployment health.
 
-## What is prepared
+## Verify the release target
 
-[The blueprint template](../deploy/render.yaml.template) specifies one native
-Python **Free** web service, one worker, private research, closed registration,
-a process-only health check, manual deployment and automatic previews disabled.
-It declares no Render
-database, disk, background worker, cron service or paid plan. PostgreSQL remains
-external: the candidate is Neon Free, subject to its actual account allowances.
-It is deliberately named `.template` so it cannot become a default root
-`render.yaml` deployment by accident.
+Before each release, inspect Render's selected repository, branch and commit. Do not
+infer the deployed branch from GitHub's default branch or from a merged PR. The
+[blueprint template](../deploy/render.yaml.template) names `main`, but it is a reference
+template, not a readout of the running service. Keep deployment and preview automation
+disabled unless intentionally changing the release process.
 
-[The build script](../deploy/render-build.sh) requires Python 3.12, installs the
-same pinned uv version as CI into a checkout-local tool environment, installs
-locked runtime packages, runs production configuration checks and collects
-compressed static assets. It validates the same manifest/server configuration
-as the production entry point. It does not migrate, seed, create users, query
-the database or call Intrinio. The start command uses the installed application's
-Python directly, so Render does not need a globally installed uv executable.
+Review source changes, migration implications, configuration and rollback before
+selecting a commit. Publishing a PR does not deploy it.
 
-The template uses Python 3.12.14, the interpreter tested in this environment.
-Render's current version documentation supports specifying any released version
-from 3.7.3 onward using the full `PYTHON_VERSION`. Actual remote build remains
-unrun. `PORT` comes from Render;
-the application binds `0.0.0.0` behind the selected ingress. Initial worker count
-is one. Measure memory on the actual free instance before increasing it.
+## Build and runtime
 
-## Verified terms and remaining account checks
+- Build: `bash deploy/render-build.sh`
+- Start: `.venv/bin/python scripts/start_production.py`
+- Health check: `/health/live/`
+- Python: use the version specified by the reviewed deployment template.
 
-The saved `render.com` addition is now in the running desired policy and
-`https://render.com/docs/free` returns **HTTP 200** through the configured proxy.
-Free terms, pricing, the Blueprint reference/schema, Python version settings,
-health checks and web-service port/TLS behavior were read on October 12, 2026.
-The runtime still reports network state `unknown`; successful specific requests
-are evidence of those operations, not of all desired policy enforcement.
+The build installs pinned uv and locked runtime packages, checks production
+configuration and collects/validates static assets. It does not migrate, seed, create
+users, query the database or call Intrinio. Worker startup also performs no migrations
+or account creation. Render supplies `PORT`; the managed service binds `0.0.0.0`. Start
+with one worker and measure memory/request latency before increasing it. See [runtime
+details](production-serving.md).
 
-The updated template passes Render's current official JSON schema. It uses
-`autoDeployTrigger: "off"` instead of deprecated `autoDeploy`, and explicitly
-disables preview generation. The downloaded schema's SHA256 was
-`8a3fb8da6b4f55fe686fbefa790e011d3dd7895f013f355953c572a21ab6494a`.
-This is local validation against a public schema, not an account/API apply.
+## Secure configuration
 
-Render Free has 512 MB RAM, 0.1 CPU in its Blueprint reference, 750 shared free
-service-hours/month, 15-minute idle sleep and roughly one-minute cold starts.
-Hobby includes 5 GB outbound traffic and 500 build minutes/month. Render explicitly
-advises against Free for production. It can suspend a service for unusually heavy
-external traffic, including Neon/Intrinio calls, without publishing a numeric
-threshold. See the [full comparison and billing behavior](free-hosting-comparison.md).
+Use [production.env.example](../deploy/production.env.example) and secure service
+settings. Keep the application secret stable, debug disabled, hosts explicit, private
+access enabled, registration closed and shared PostgreSQL limits enabled. The
+application accepts individual database fields, not `DATABASE_URL`.
 
-Use a dedicated Hobby workspace without a payment method for a zero-spend
-prototype if its account permits that. Confirm the selected service is Free,
-remaining allowances and any account-specific eligibility requirement. If a card
-is already attached, overages can incur charges. A build-pipeline spend limit
-does not establish a universal spending cap. Do not automatically upgrade.
-No credit-card information or actual billing setting was inspected here.
+Require `DJANGO_DATABASE_SSLMODE=verify-full` and a trusted CA available to libpq.
+Verify the actual database hostname/certificate. Do not copy development proxy
+certificates or placeholder credentials into Render.
 
-Neon's previously verified Free allowances and sleep behavior remain in the
-[comparison](free-hosting-comparison.md). Recheck the selected account, region,
-PostgreSQL version, endpoint and TLS configuration before
-connecting. The application uses individual database fields, not `DATABASE_URL`;
-enter them through secure settings rather than printing an authenticated URL.
+Use Neon's direct endpoint for migrations and backup/restore tooling. Its pooled
+endpoint uses transaction pooling and has session-feature restrictions; evaluate pooling
+separately with ledger and shared-quota concurrency checks. The current application uses
+`CONN_MAX_AGE=0`.
 
-Use the **direct Neon endpoint initially** for this small single-worker candidate,
-and always for migration and `pg_dump`/`pg_restore`. Neon documents its pooled
-endpoint as PgBouncer transaction pooling, with session-feature restrictions;
-the Console's connection-pooling toggle is on by default for new projects.
-Do not accidentally use its `-pooler` hostname for operator tasks. The current
-app uses `CONN_MAX_AGE=0`; evaluate pooling separately if measured connection
-volume justifies it, with actual shared-quota/ledger concurrency checks.
+Enable `DJANGO_TRUST_PROXY_HTTPS` only after verifying that ingress replaces
+`X-Forwarded-Proto` and blocks direct external application access. Behind verified TLS
+termination, this setting must match ingress behavior to avoid redirect loops. It does
+not establish trust in forwarded client addresses.
 
-## Settings and controlled release
+## Database operations
 
-Use the blueprint's `sync: false` entries and
-[production environment template](../deploy/production.env.example) as the list
-of secure settings. Keep an explicit service hostname and a strong persistent
-application secret. The Intrinio vault binding in this development environment
-does not provision Render credentials; a proxy placeholder must not be copied.
-No credential values belong in chat, Git or build commands.
-
-`DJANGO_DATABASE_SSLMODE=verify-full` is mandatory. Supply a trusted CA path
-readable on the target through `DJANGO_DATABASE_SSLROOTCERT`, or confirm the
-client's system-root mechanism is supported before selecting it. Neon's official
-secure-connection source lists `/etc/ssl/certs/ca-certificates.crt` for Debian/Ubuntu
-clients; verify that path exists on the chosen runtime before using it. A connection
-with `sslmode=require` alone is insufficient. Do not copy this environment's
-session proxy certificate to an unrelated production host. Verify the actual
-host certificate and database hostname with the intended client before migration.
-
-Keep `DJANGO_TRUST_PROXY_HTTPS=false` until Render's ingress is confirmed to
-replace `X-Forwarded-Proto` and block direct external application access. Then
-review an explicit switch to true and test real HTTPS, hostile headers and
-redirects. The false value is safe for a draft but cannot make authenticated
-pages usable behind HTTP-to-app TLS termination: it will redirect them again.
-Process liveness alone cannot detect this mistake.
-
-No production migration or user creation occurs during build or worker startup.
-Render Free explicitly provides **no shell/SSH or one-off jobs**. Use a trusted
-operator machine with the locked checkout, the direct database endpoint and
-securely loaded production settings for the initial release. These are operator commands,
-not commands executed against any hosted database in this task:
+Use a trusted operator machine with the locked checkout and securely loaded settings if
+the selected Render tier has no shell or one-off jobs. Inspect the intended database and
+migration plan before applying changes:
 
 ```sh
 uv sync --frozen --no-dev
 uv run --frozen --no-dev python manage.py check --deploy
 uv run --frozen --no-dev python manage.py migrate --plan
-# After confirming the intended database, schema change and required backup:
-uv run --frozen --no-dev python manage.py migrate --noinput
-uv run --frozen --no-dev python manage.py createsuperuser
 ```
 
-Supply credentials through the operator's secure environment, not shell argv.
-Use the intended migration role and verify runtime role grants separately;
-do not give the running web application provider-admin credentials. The built-in
-user command prompts for its password. An application superuser is distinct from
-a PostgreSQL superuser. These commands create neither fixtures nor provider data.
-Freeze application writes during any later incompatible migration and take a
-verified backup first; never race a schema change against active workers.
+Apply migrations as a separate controlled operation using the intended migration role.
+Provision accounts through Django management tools when needed. Keep the runtime role
+separate from provider administration and do not seed test fixtures. For incompatible
+migrations, plan write downtime and recovery before proceeding. Do not assume that
+rolling application code back reverses a database migration.
 
-The code currently exists as local changes. Git-based hosting will require an
-authorized source commit/push or other supported upload before it can build
-this release. Do not connect Render to the old remote README and claim the
-application is deployed. After reviewing terms, account access, data rights and
-the concrete configuration, authorize the selected external release separately.
+## Operational limits and recovery
 
-## Backups and acceptance
+Free tiers can sleep, cold-start, suspend on usage limits and change their allowances.
+Verify current account limits, payment settings and provider terms before releases. A
+build spending limit is not a universal billing cap. The web filesystem is ephemeral;
+account, journal and watchlist records belong in PostgreSQL. Do not use keep-awake
+traffic to circumvent provider sleep policies.
 
-Web-local files are not durable portfolio storage. Use PostgreSQL for account,
-journal and watchlist records. The process-only probe deliberately avoids
-database traffic that would prevent Neon from suspending. Do not create a
-keep-awake service to defeat free-tier sleep.
+The health endpoint is process-only: it proves neither database readiness nor Intrinio
+access. It avoids continuous database probes. A busy synchronous worker can delay health
+checks, so measure behavior on the selected instance.
 
-Render's frequent health probes accept 2xx/3xx within five seconds and use the
-service hostname (or a verified custom domain) as `Host`. Include that hostname
-in `DJANGO_ALLOWED_HOSTS`. The endpoint remains process-only, so it deliberately
-does not satisfy Render's optional suggestion to query the database on each probe.
-A busy single synchronous worker can delay probes; measure normal research
-requests on the actual low-CPU instance before accepting reliability. No local
-smoke establishes peak memory or timing on Render's Free compute.
+[Backup/export and isolated recovery tooling](backups.md) exists, but the repository
+does not configure scheduled off-machine backups, retention or a recovery-time
+objective. Do not infer backup coverage from these scripts or a database provider's
+short restore history.
 
-The existing [backup command and restore drill](backups.md) are implemented.
-An encrypted off-machine destination, scheduler, retention and matching native
-PostgreSQL client tools still need selection and a real-target recovery drill.
-Do not declare a paid cron job or persistent disk to solve this without approval.
-For a personal prototype, an existing trusted computer can run backups on a
-schedule, but its availability and encrypted copy location must be established.
-Neon's short restore history does not replace those copies.
+For a release, verify HTTPS and redirects, sign-in, anonymous access restrictions,
+closed registration, static assets, ownership, database TLS and representative
+functional behavior. Provider checks require appropriate entitlements and a bounded
+request budget. Record actual results separately from local test results.
 
-Before opening access, verify hosted HTTPS/sign-in, anonymous research denial,
-closed registration, static assets, owner isolation, real database TLS, quotas,
-bounded Intrinio requests under applicable subscription rights and restoration
-into an isolated database. Local runtime checks do not prove these hosted results.
+## Provider references
 
-## Evidence and next action
+Recheck current terms and configuration guidance rather than relying on saved allowance
+figures:
 
-Current application evidence remains 995 PostgreSQL tests passing from the prior
-release. This draft adds no application feature or dependency; the full suite was
-not repeated for it. The new build script passes both fresh and repeated builds
-with synthetic production settings, no provider key and an unused loopback
-database endpoint. Its separate runtime environment contains 23 locked packages.
-Actual two-worker Gunicorn/WhiteNoise smoke passes using those fresh packages;
-owned smoke processes stop. The two existing intentional HSTS advisories remain
-printed, with no checks silenced. Shell syntax, Ruff (215 files), frozen development
-setup (24 packages), local migrations/no drift and fresh normal startup/readiness
-also pass. All seven development business/counter counts remain zero and the
-original specification checksum is unchanged. These results do not validate
-the actual Render deployment, ingress, account allowances or hosted database.
-The updated review template separately passes the current official public schema.
-
-Next: establish the Free Render/Neon accounts and secure access needed for this
-prototype, then review the concrete external release. The remaining work covers
-account setup, source publication, database/TLS, the first user, backup scheduling
-and hosted acceptance; it is more than pressing a deploy button.
-
-Sources checked: [Render Free](https://render.com/docs/free),
-[pricing](https://render.com/pricing),
-[Blueprint reference](https://render.com/docs/blueprint-spec),
-[schema](https://render.com/schema/render.yaml.json),
-[Python version](https://render.com/docs/python-version),
-[web-service ingress](https://render.com/docs/web-services),
-[health checks](https://render.com/docs/health-checks),
-[Neon TLS source](https://github.com/neondatabase/website/blob/main/content/docs/connect/connect-securely.md)
-and [Neon pooling source](https://github.com/neondatabase/website/blob/main/content/docs/connect/connection-pooling.md).
+- [Render free services](https://render.com/docs/free)
+- [Render Blueprint specification](https://render.com/docs/blueprint-spec)
+- [Render health checks](https://render.com/docs/health-checks)
+- [Neon connection security](https://neon.com/docs/connect/connect-securely)
+- [Neon connection pooling](https://neon.com/docs/connect/connection-pooling)

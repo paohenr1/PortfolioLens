@@ -1,14 +1,12 @@
 # Time-weighted returns with end-of-day cash flows
 
-Version 0.12 adds a private explicit-period return page. Open **View time-weighted
-returns**, choose opening and closing valuation dates, confirm cash-flow timing
-and recorded share basis, and submit **Load returns**. Opening the form makes no
-provider request. This uses the existing Python/Django/Intrinio stack with no new
-dependency, database migration, paid service or stored return projection.
+Open **View time-weighted returns**, choose opening and closing valuation dates, confirm
+cash-flow timing and recorded share basis, and submit **Load returns**. Opening the form
+makes no provider request. Returns are calculated per request, not stored as
+independently editable values.
 
-Version 0.14 uses the current effective journal after explicit
-[corrections](corrections.md). Historical event-date results can be restated; the
-audit preserves original entries but does not reconstruct what was known earlier.
+Calculations use the effective journal after [corrections](corrections.md). Historical
+results can be restated; the audit does not reconstruct what was known earlier.
 
 ## Supported timing and period
 
@@ -89,12 +87,12 @@ apply. No adjusted prices, weekend/holiday fallback, carry-forward, interpolatio
 automatic polling or saved/cache quotes are added. Cash-only boundaries need no
 quotes, including non-trading dates.
 
-A load supports at most eight required prices, five holdings on any boundary,
-and 16 boundary dates. Preflight rejects larger or unsupported-timing plans before
-any quote request. Requests spend the same process-local 10/client and 30 total/minute
-budget as research and journal lookup requests. A rate limit stops remaining prices
-and returns private 429 with Retry-After. Other provider failures return safe 503
-messages. Valid missing-price responses give 200 with explicit unavailability.
+A load supports at most eight required prices, five holdings on any boundary, and 16
+boundary dates. Preflight rejects larger or unsupported-timing plans before any quote
+request. Requests spend the same shared 10/client and 30 total/minute budget as research
+and journal lookup requests. A rate limit stops remaining prices and returns private 429
+with Retry-After. Other provider failures return safe 503 messages. Valid missing-price
+responses give 200 with explicit unavailability.
 
 Every boundary must have a complete, reconciled valuation matching the planned
 date, cash and positions. If any required valuation is missing or invalid, or an
@@ -103,7 +101,7 @@ valid subperiod returns remain visible but are not linked into a partial result
 presented as the full period. Boundary totals, cash, shares, raw prices, exact dates
 and retrieval provenance are visible. There is no freshness or live-price claim.
 
-## Modules and verification
+## Implementation
 
 - `ledger/performance.py`: pure boundary plan, timing rules and exact return linking.
 - `ledger/analytics.py`: reusable bounded journal snapshot and reference labels.
@@ -112,33 +110,12 @@ and retrieval provenance are visible. There is no freshness or live-price claim.
 - `tests/test_performance.py`, `tests/test_performance_pages.py`: independent examples
   and actual PostgreSQL boundaries, privacy, limits and failures.
 
-This part adds 38 tests: 21 pure calculation/planning and 17 PostgreSQL page/service
-checks. Examples cover deposits, withdrawals, fees, dividends, splits, zero/total
-loss, missing boundaries, exact chaining, caller precision, timing rejection,
-date/request/boundary limits, no journal writes, concurrent-snapshot consistency,
-ownership, CSRF, rate limits and safe errors.
+## Limitations
 
-Full PostgreSQL suite: **518 passed, no skips**. Full SQLite: 518 discovered,
-302 passed and 216 PostgreSQL tests explicitly skipped. Lint/format, Django checks,
-migration drift and static collection pass. SQLite does not prove private storage.
+Intraday and money-weighted returns, return annualization and FX are unsupported.
+Results are based on manually supplied history, not a verified brokerage statement.
+Daily risk and benchmark comparisons are available through the separate daily-return
+workflow.
 
-The isolated browser runner uses actual HTTPX normalization with synthetic prices
-on its own generated PostgreSQL database. It checks a hand-calculated deposit
-adjustment and linked 4.8600% return, cash-only and zero-baseline states, missing
-closes, intraday rejection, provenance, ownership, CSRF, sign-out, keyboard tables
-and desktop/mobile layout. Valuation/allocation and FIFO regressions also pass.
-Screenshots: `/tmp/stock-performance-*.png`. Child processes and generated test
-databases are cleaned up; no development records or live API calls are added.
-
-From the repository root:
-
-```sh
-export UV_CACHE_DIR=/workspace/.cache/uv
-uv run --frozen --env-file .local/database-test.env python manage.py test --noinput
-python3 tests/browser_performance.py
-```
-
-Live valuation/return behavior, broader coverage, licensing and distributed quotas
-remain unverified. Intraday and money-weighted returns, return annualization, benchmarks,
-additional risk metrics, FX and production deployment remain
-separate work. Private [watchlists](watchlists.md) are implemented. Explicit [corrections](corrections.md) are implemented. Bounded [daily session returns](daily-returns.md) are implemented. Observed [volatility and drawdown](risk.md) are implemented. Next: benchmark comparison with aligned sessions.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

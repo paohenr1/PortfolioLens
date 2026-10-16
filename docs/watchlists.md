@@ -1,28 +1,17 @@
 # Private watchlists
 
-The current watchlist version (0.28) adds [daily market information and saved
-preferences](watchlist-market.md). The original bookmark workflow below remains
-available; its dated verification counts record the 0.13 milestone.
-
-Version 0.13 adds private instrument bookmarks to the existing Django application.
 After signing in, choose **My watchlists**, then **Create watchlist**. On an
-instrument's research details page, choose **Add to watchlist**, select one of
-your lists, and submit **Add instrument**. You can also enter the stable Intrinio
-instrument ID through **Add instrument** on a watchlist.
-
-Each saved row links to instrument details, price history, and company financials.
-**Remove** opens a confirmation page; **Keep instrument** cancels, and the
-CSRF-protected **Remove instrument** submission removes that bookmark. You may
-add it again later. No watchlist rename, deletion, sharing, or transfer workflow
-is included in this part.
+instrument’s research details page, choose **Add to watchlist**, select a list, and
+confirm. Lists support [daily market information and saved
+preferences](watchlist-market.md).
 
 ## Identity, provenance, and cost
 
-A new bookmark makes exactly one instrument-reference request through the
-existing Intrinio adapter and shared process-local request budget. Lists and
-forms make no provider calls. Removing a bookmark also makes none. Re-adding an
-already saved ID returns the existing row without a request or reference update.
-Two concurrent additions can each spend one reference request, but save one row.
+A new bookmark makes exactly one instrument-reference request through the existing
+Intrinio adapter and shared request budget. Lists and forms make no provider calls.
+Removing a bookmark also makes none. Re-adding an already saved ID returns the existing
+row without a request or reference update. Two concurrent additions can each spend one
+reference request, but save one row.
 
 Identity uses the stable provider ID, independently of ticker, so separate
 listings and share classes remain distinguishable. The reference snapshot stores
@@ -32,12 +21,11 @@ reference at addition time and do not establish current listing status, prices,
 feed freshness, or tradability. No full provider payload, authenticated URL,
 price, financial statement, valuation, or automatic refresh is stored here.
 
-Unlike a USD portfolio journal, a watchlist can bookmark a reference with another
-or unknown currency/venue. This does not establish price/fundamental entitlement
-or permit cross-currency totals. Research pages retain their own explicit data
-requests and unavailable states. Re-adding a removed instrument gets a new
-reference snapshot. There is no quote polling, alert service, new dependency,
-hosted database, or additional subscription purchase.
+Unlike a USD portfolio journal, a watchlist can bookmark a reference with another or
+unknown currency/venue. This does not establish price/fundamental entitlement or permit
+cross-currency totals. Research pages retain their own explicit data requests and
+unavailable states. Re-adding a removed instrument gets a new reference snapshot. There
+is no quote polling or alert service.
 
 ## Privacy and bounded writes
 
@@ -70,40 +58,17 @@ hosted database, or additional subscription purchase.
 Apply `watchlists/0001_initial` using the existing development database settings:
 
 ```sh
-export UV_CACHE_DIR=/workspace/.cache/uv
 uv run --frozen --env-file .local/database.env python manage.py migrate --noinput
 ```
 
 The migration adds watchlist tables and constraints; it does not change journal
 entries, accounting definitions or the immutable-ledger trigger.
 
-## Verification and limits
+## Limitations
 
-The module adds 36 tests: two form tests, one storage guard, and 33 PostgreSQL
-tests. They cover owner isolation and forged IDs, constraints, empty/unknown and
-non-USD references, escaping, pagination, duplicate/re-add behavior, caps, safe
-provider failures, actual adapter/shared-budget use, CSRF and method guards, and
-four real database races for duplicate names/IDs and list/item allowances.
+Saved references are not live quotes. Public sharing and alerts are unsupported.
+Provider storage/display rights must permit the intended use. Daily market information
+and saved preferences are documented separately.
 
-Full PostgreSQL: **518 passed, no skips**. Full SQLite: **302 passed, 216 skipped**;
-those skips explicitly exclude PostgreSQL persistence/concurrency behavior.
-Ruff lint/format, Django checks, migration drift and static collection pass.
-
-The optional browser runner uses its own disposable PostgreSQL database and an
-explicit synthetic HTTPX reference transport. Desktop and mobile checks cover
-two users, details-page selection, duplicates, keyboard controls, removal
-confirmation/cancellation, CSRF, provider failure, forged owner and sign-out.
-It removes its child server/database and adds no development records. Screenshots
-are `/tmp/stock-watchlists-*.png`; normal startup never enables this fixture mode.
-Existing performance and valuation/allocation browser regressions also pass.
-
-```sh
-uv run --frozen --env-file .local/database-test.env python manage.py test --noinput
-python3 tests/browser_watchlists.py
-```
-
-This part adds no live API acceptance check. The adapter's earlier live reference
-checks remain separate evidence. Saved references are not current quotes.
-Subscription storage/display/redistribution rights, production deployment,
-distributed quotas, account recovery, and public sharing remain unverified or
-future work. Explicit [corrections](corrections.md) are implemented. Bounded [daily session returns](daily-returns.md) are implemented. Observed [volatility and drawdown](risk.md) are implemented. Daily market information and saved preferences are now implemented. Next: broader live-data and complete user-journey acceptance testing.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

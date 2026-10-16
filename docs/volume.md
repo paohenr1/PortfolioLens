@@ -1,11 +1,10 @@
 # Historical daily trading volume
 
-Version 0.26, verified October 11, 2026. On **View price history**, choose dates,
-price basis and the independent **Volume basis**, then **Load prices**. The same
-bounded daily response now supplies prices, stock risk and volume. Raw volume is
-the default, including older saved price URLs without the new field. The initial
-form still suggests 90 days ending on the prior UTC day; no load occurs until
-submission. Changing fields alone makes no request.
+On **View price history**, choose dates, price basis and the independent **Volume
+basis**, then **Load prices**. The same bounded daily response supplies prices, stock
+risk and volume. Raw volume is the default, including older saved price URLs without the
+new field. The initial form still suggests 90 days ending on the prior UTC day; no load
+occurs until submission. Changing fields alone makes no request.
 
 ## Source fields and units
 
@@ -87,36 +86,11 @@ timeouts, response limits and no-retry policy apply. Per-page quotas and safe
 volume context, retain the form, redact diagnostics and use no-store with bounded
 Retry-After. Normal startup never enables fixtures or a fallback dataset.
 
-## Actual verification
+## Limitations
 
-27 new tests: seven normalization/adapter, ten chart and ten page/form cases.
-Focused volume/price/stock-risk-page/valuation/benchmark regression: 93 passed.
-Full PostgreSQL: 884 passed, no skips. SQLite: 629 passed, 255 PostgreSQL-only
-skipped. Ruff lint/format checks 180 Python files; Django checks, no migration
-drift, static collection, frozen setup and fresh current-source readiness pass.
-The presentation module imports without Django initialization. Tests include
-exact fractional JSON, optional/zero/invalid fields, representation bounds,
-independent basis, gaps, unknown periods, single dates, dense ranges, hostile
-Decimal traps, volume without prices, shared caps/quotas and safe error cleanup.
+Raw and provider-adjusted share counts are separate from price basis. Fractional and
+observed zero volumes are preserved. Missing or unconfirmed observations do not become
+zero. Adjustment methodology and feed coverage require provider verification.
 
-`python3 -m tests.browser_volume` passes eight synthetic scenarios at desktop
-and mobile sizes: complete, zero, missing, unconfirmed, volume-only, partial,
-empty and malformed. Exact readouts, basis changes, keyboard/pointer controls,
-table focus, independent figures, single script, overflow and 429 cleanup pass.
-The existing search/details/price browser and all eight stock-risk scenarios
-also pass. These test-only loopback processes create no development records or
-test database and never enter the normal application transport.
-
-Normal-application live AAPL XNAS/USD acceptance passed for raw and adjusted
-volume over August 12–October 10, 2026: 42 completed observations per basis,
-through October 9, with exact table data and desktop/mobile keyboard/pointer
-and page-overflow checks. The price/risk workflow remained available. Four
-backend requests covered search, reference and two history loads using the
-existing vault binding/subscription. No key, raw response or live screenshot
-was retained and no account was created. This verifies that listing/window,
-not wider venue/feed coverage, adjustment methodology, subscription quotas,
-redistribution/cache rights or production deployment.
-
-All six development model counts and temporary browser database counts remain
-zero. The original specification is unchanged. Next: market capitalization
-research with explicit price/share dates and currency.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

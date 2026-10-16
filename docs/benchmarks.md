@@ -1,17 +1,15 @@
 # Benchmark comparisons
 
-Version 0.17 adds an optional benchmark to **View daily returns**. Find an
-instrument through **Search stocks**, open its details, and copy its **Provider
-instrument ID** into **Optional benchmark security ID**. Choose completed session
-dates, confirm the existing flow/share-basis conditions, and **Load daily returns**.
-Leave the benchmark blank for the existing portfolio-only workflow.
+On **View daily returns and risk**, optionally enter a benchmark. Find an instrument
+through **Search stocks** and copy its **Provider instrument ID** into **Optional
+benchmark security ID**. Choose completed session dates, confirm flow/share-basis
+conditions, and **Load daily returns**. Leave the benchmark blank for portfolio-only
+analysis.
 
-The selected security must use USD and a supported U.S. equity venue. There is
-no assumed default, ticker substitution, currency conversion, automatic load or
-refresh. GET requests show the form without market-data requests. Loads require
-an authenticated owner and CSRF-protected POST. Prices and comparisons are
-request-local; no new table, persistent quote cache, dependency or paid service
-was added. The original product specification remains unchanged.
+The selected security must use USD and a supported U.S. equity venue. There is no
+default benchmark, ticker substitution, currency conversion or automatic load. Loads
+require an authenticated owner and CSRF-protected POST. Prices and comparisons are
+request-local.
 
 ## Definitions and comparison basis
 
@@ -87,28 +85,12 @@ table provides daily returns, cumulative returns, adjusted prices and gaps.
 Coordinates are display-only. Provenance shows reference and history retrieval
 times, which do not establish quote freshness or adjustment methodology.
 
-## Validation and remaining work
+## Limitations
 
-42 new tests cover independent arithmetic, funding, rounding, exact alignment,
-missing/invalid prices, metadata consistency, terminal loss/restart, chart bounds,
-pure imports, private ownership, CSRF, snapshot reads, no writes, preflight,
-safe failures, missing credentials and real mock-HTTP quota/pagination behavior.
-The adapter transport demonstrates eight portfolio pages plus one benchmark
-reference and one benchmark page, spending exactly ten budget units.
+Provider adjustment/index methodology and entitlement coverage must be checked for the
+chosen instrument. A security proxy is not automatically a total-return index.
+Correlation and beta describe portfolio-level relationships, not holding-level risk
+attribution.
 
-Full PostgreSQL: **739 passed without skips**. SQLite: **484 passed, 255 skipped**;
-SQLite does not validate PostgreSQL storage/concurrency. The benchmark browser
-passes on desktop/mobile in a disposable PostgreSQL database with synthetic
-prices, covering cash/funding, exact +30% benchmark and −25.1400-point gap,
-missing data, chart keyboard/touch behavior, table access, ownership and CSRF.
-Existing daily, risk and price-chart browser checks also pass. Ruff checks 133
-Python files; Django, migration-drift and static-collection checks pass.
-
-```sh
-uv run --frozen --env-file .local/database-test.env python manage.py test --noinput
-python3 tests/browser_benchmarks.py
-```
-
-No live API request was needed for this module. Live benchmark acceptance,
-index methodology, coverage/licensing and production deployment remain unverified.
-[Correlation and beta](relationships.md) are implemented. [Sharpe](sharpe.md) is implemented. [Selected-period profitability](profitability.md) is implemented. [Annual return on assets/equity](capital-returns.md) is implemented. [Annual revenue and earnings growth](growth.md) is implemented. Next: valuation multiples with explicit price and earnings dates.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

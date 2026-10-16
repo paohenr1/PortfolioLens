@@ -1,10 +1,7 @@
 # Intrinio market-data integration
 
-Implemented on October 10, 2026. Authenticated search and instrument-reference
-acceptance passed that day. Bounded daily-price access and charts also passed;
-AAPL annual income/balance/cash-flow statement access and browser pages also
-passed. See [price-history definitions](price-history.md) and
-[fundamentals definitions](fundamentals.md).
+Backend requests provide instrument references, historical observations and company
+financials. Coverage depends on the configured account and endpoint entitlements.
 
 ## Supported path
 
@@ -29,7 +26,7 @@ The UTC retrieval time is when the reference response was received. A
 fresh market data. Old dates are displayed as provider reference metadata and
 are not described as live prices.
 
-## Verified contracts and remaining account questions
+## Provider contracts and entitlements
 
 Official GitHub sources inspected:
 
@@ -46,19 +43,9 @@ Official GitHub sources inspected:
 - [Standardized values and units](https://github.com/intrinio/python-sdk/blob/master/docs/DataTagSummary.md)
 - [API host and query-key authentication](https://github.com/intrinio/python-sdk/blob/master/intrinio_sdk/configuration.py)
 
-The user reported US Fundamentals and Stock Prices (Individual, yearly),
-U.S. historical prices, U.S. fundamentals, EOD index levels, and delayed/streaming
-feeds. No additional subscription is proposed. These names do not establish
-endpoint-level access, coverage, current limits, or public display/caching rights.
-Confirm those separately before exposing the application publicly.
-
-On October 10, 2026, the published cloud configuration reported a saved vault
-binding for `INTRINIO_API_KEY` and allowed `api-v2.intrinio.com`. The management
-command below completed authenticated AAPL search and lookup of a returned
-instrument ID. A separate browser check completed search and selection against
-the running application, with the detail page checked at desktop and mobile
-widths. These checks used four backend reference requests total, no retries,
-and no fixture fallback. No key values or raw responses were recorded.
+Subscription names alone do not establish endpoint access, coverage, quotas or
+storage/display/redistribution rights. Verify these for the intended audience before
+broadening access or retaining additional provider data.
 
 ## Credential and request safety
 
@@ -90,15 +77,14 @@ requests per client address and 30 total per minute. Invalid input,
 empty forms, missing credentials, POST, and HEAD do not cause provider calls.
 Forwarded client-address headers are not trusted without a verified proxy.
 
-Development memory counters use a monotonic clock and lock, retain at most 30
-client hashes per window and reset on process restart. Production now requires
-shared PostgreSQL counters, using the database clock and durable row locking;
-worker restarts and separate processes share the same allowance. Storage failure
-returns a fixed 503 before provider I/O, without memory fallback. See
-[release safeguards](release-safeguards.md). Fixed windows still allow boundary
-bursts. This is not a replacement for actual subscription limits or an account-wide
-quota across deployments using different databases. Clients behind an unverified
-proxy share its address allowance.
+Development memory counters use a monotonic clock and lock, retain at most 30 client
+hashes per window and reset on process restart. Production requires shared PostgreSQL
+counters, using the database clock and durable row locking; worker restarts and separate
+processes share the same allowance. Storage failure returns a fixed 503 before provider
+I/O, without memory fallback. See [release safeguards](release-safeguards.md). Fixed
+windows still allow boundary bursts. This is not a replacement for actual subscription
+limits or an account-wide quota across deployments using different databases. Clients
+behind an unverified proxy share its address allowance.
 
 Provider rate limits return HTTP 429 with a bounded `Retry-After` (1–3600
 seconds). Authentication/entitlement/transport/invalid-data failures return safe
@@ -107,13 +93,9 @@ HTTP 503 pages. A missing reference record returns HTTP 404. A search endpoint's
 
 ## Live acceptance after secure configuration
 
-In environment settings, supply `INTRINIO_API_KEY` securely and permit
-`api-v2.intrinio.com`. The environment configuration declares this credential for that HTTPS
-destination, preserving existing bindings and allowed destinations. Saving a
-draft does not apply its values, update a running process, or publish it.
-
-After the configuration is applied and the process restarted, run from the
-repository root:
+Configure `INTRINIO_API_KEY` securely and permit the fixed HTTPS API destination
+`api-v2.intrinio.com`. Use live commands deliberately; they spend provider quota. From
+the repository root:
 
 ```sh
 uv run --frozen python manage.py verify_intrinio --query AAPL
@@ -153,41 +135,27 @@ metrics. Statement units come from data tags, independently of listing currency.
 
 ## Tests and limitations
 
-The 518 Django tests include HTTPX MockTransport integration and failure cases.
-The optional browser runner performs desktop/mobile search, selection, and price charts using
-explicitly synthetic fixtures; see [setup](setup.md) and the
-[fixture notes](../tests/fixtures/README.md). No fixture is a production fallback.
+Tests use HTTPX MockTransport and labeled fixtures; fixtures are never a normal startup
+fallback. See [setup](setup.md) and [fixture notes](../tests/fixtures/README.md). A
+successful check establishes access only for the tested endpoint, instrument and period,
+not broad coverage, account quotas or redistribution rights.
 
-Live search/reference access and browser selection are validated for the tested
-query. Daily AAPL close access and a one-year raw/adjusted browser chart also
-passed (251 completed observations). AAPL 2025 FY standardized income, balance-sheet,
-and cash-flow pages passed (22, 30, and 22 supplied rows respectively), including
-the restated balance-sheet classification. Other instruments/periods, account quotas, wider
-coverage, and licensing have not been validated.
-There is no application data cache, persistence for market data, websocket
-client or deployment yet. Accounts and private portfolio metadata are implemented
-separately; neither workflow requests market data. The [USD journal](ledger.md)
-stores immutable current reference snapshots for trades, not price-history or
-statement caches. A new trade, dividend, or split uses one instrument lookup; cash entries, reads,
-and exact submission retries use none. [FIFO positions and realized gains](fifo.md)
-use only journal snapshots and make no provider requests.
+No successful-response cache or websocket client is implemented. Journal and watchlist
+entries retain selected instrument reference fields, not full provider payloads or
+historical-price/statement datasets. New trades, dividends and splits use reference
+lookups; cash entries and accounting reads use none. Corporate actions are manually
+supplied and are not verified against an action endpoint.
 
-Recorded dividend/split entries verify current instrument references only;
-no corporate-action endpoint or action completeness is verified. Ratios, dates
-and net receipts are supplied by the user; see [action rules](corporate-actions.md).
-
-
-## Dated company market capitalization (0.27)
+## Dated company market capitalization
 
 [Company market capitalization](market-capitalization.md) uses a separate company
-historical-data request and verified `marketcap` USD tag metadata. It reserves up
-to three requests under the same budget. This feed/date works with the existing
-vault-bound subscription in live AAPL acceptance. Underlying price/share-count
-dates and calculation methodology remain unavailable/unverified; the application
-never guesses them or uses weighted-average earnings shares to reconstruct cap.
+historical-data request and verified `marketcap` USD tag metadata. It reserves up to
+three requests under the same budget. Underlying price/share-count dates and calculation
+methodology remain unavailable/unverified; the application never guesses them or uses
+weighted-average earnings shares to reconstruct cap.
 
 
-## Watchlist daily market information (0.28)
+## Watchlist daily market information
 
 [Watchlist daily loads](watchlist-market.md) reuse one exact-date, single-page
 price request for each of at most five selected owned bookmarks. Each request

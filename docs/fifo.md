@@ -1,15 +1,14 @@
 # FIFO positions, cost basis, and realized sale gains
 
-Version 0.8 adds **View positions and gains** to portfolio details and transaction
-history. The private page displays recorded cash, remaining FIFO cost basis,
-realized sale gain/loss, standalone fees, open positions, and every sale, including
-sales of fully closed positions. Expand a row to inspect its open or consumed lots.
-All money is USD; open quantities include explicitly recorded splits. Sales
-retain their own date/order share basis. See [dividends and splits](corporate-actions.md).
+Open **View positions and gains** from portfolio details or transaction history. The
+private page displays recorded cash, remaining FIFO cost basis, realized sale
+gains/losses, standalone fees, open positions and every sale, including sales of fully
+closed positions. Expand a row to inspect open or consumed lots.
 
-Version 0.14 uses the current effective journal after explicit
-[corrections](corrections.md). Historical event-date results can be restated; the
-audit preserves original entries but does not reconstruct what was known earlier.
+All money is USD. Open quantities include explicitly recorded splits; sales retain their
+date/order share basis. See [dividends and splits](corporate-actions.md). Calculations
+use the effective journal after [corrections](corrections.md), so historical results can
+be restated without reconstructing what was known earlier.
 
 ## Calculation policy
 
@@ -94,35 +93,11 @@ time breaks ties). Open positions display that timestamp. Sale-row labels also
 use this latest journal label, not a reconstructed ticker as of the sale date.
 Labels are HTML-escaped; no quote or current reference refresh occurs.
 
-## Verification and limits
+## Limitations
 
-```sh
-export UV_CACHE_DIR=/workspace/.cache/uv
-uv run --frozen --env-file .local/database-test.env python manage.py test --verbosity 2
-python3 tests/browser_fifo.py
-```
+These are research accounting results, not brokerage reconciliation or a tax statement.
+No specific-lot selection, short positions, FX or tax adjustments are supported. Market
+valuation and returns are separate calculations.
 
-The initial FIFO part added 20 pure accounting tests and 13 real PostgreSQL page/snapshot
-tests. The full PostgreSQL suite passes 518 tests with no skips. A full SQLite
-run skips 216 PostgreSQL tests; it validates pure accounting but not private
-portfolio storage. Browser checks use the existing temporary PostgreSQL helper
-and explicitly synthetic references/trades: multi-lot gains, lot provenance,
-final loss/close, owner isolation, sign-out, keyboard tables, and desktop/mobile
-layouts. The child server and generated database are cleaned up, without writing
-development accounts or entries. Screenshots: `/tmp/stock-fifo-*.png`.
-
-These are research calculations from manually supplied transactions, not a tax
-report or verified brokerage statement. [Market value and unrealized gains](valuation.md)
-load separately for an explicit date. [Allocation weights](allocations.md) reuse
-complete valuations. [Time-weighted returns](performance.md) use explicit periods
-and supported end-of-day flow timing. Recorded net cash dividends and exact per-lot splits are supported.
-Corrections, transfers, interest, FX, and tax adjustments are unsupported. Historical
-journal shares must not be compared to current or adjusted prices without
-corporate-action/share-basis reconciliation. No automatic action completeness
-is established. Private [watchlists](watchlists.md) are implemented. Explicit [corrections](corrections.md) are implemented. Bounded [daily session returns](daily-returns.md) are implemented. Observed [volatility and drawdown](risk.md) are implemented. Next: benchmark comparison with aligned sessions. No dependency, paid service, migration, or live
-market-data request was added for this part.
-
-Recorded splits now scale both remaining shares and original-equivalent lot
-shares by the same exact ratio. Cost already allocated to an earlier sale stays
-unchanged, and later sales allocate only further cost. Net dividend receipts
-are reported separately and do not change lot basis or realized sale gains.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

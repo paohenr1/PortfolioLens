@@ -1,14 +1,13 @@
 # Accounts and authorization
 
-This part uses Django's built-in authentication and sessions, the existing
-custom user model, and local templates. It adds no dependencies, paid services,
-email delivery, or provider requests. Development research pages remain public;
-production now defaults to sign-in required and registration closed. See
-[production serving/private access](production-serving.md).
+Accounts use Django authentication and sessions, a custom user model, and local
+templates. Development defaults to public research and open registration; production
+defaults to sign-in required and registration closed. See [production
+serving](production-serving.md).
 
 ## Workflow
 
-1. Choose **Create account**. Supply a unique username and confirm a password.
+1. When registration is enabled, choose **Create account**. Supply a unique username and confirm a password.
    Passwords must have at least 12 characters and pass Django's common-password,
    numeric-password, and user-similarity checks. Successful registration signs
    in the new user and opens **My account**.
@@ -36,12 +35,12 @@ are presented. Multi-factor authentication and social login are also pending.
 | `/password/change/` | Signed-in GET/POST; changes only the current user's password |
 | `/password/changed/` | Signed-in GET/HEAD confirmation |
 
-The account page accepts no user identifier for lookup. Supplying another
-username or user ID in query parameters cannot change the displayed owner.
-This proves the account boundary, not future portfolio authorization: each
-private portfolio query must filter by its owner and have negative isolation
-tests. The [portfolio foundation](portfolios.md) now applies owner filters and
-isolation checks on PostgreSQL; ledger access uses the same owner-scoped boundary; see [ledger](ledger.md).
+The account page accepts no user identifier for lookup. Supplying another username or
+user ID in query parameters cannot change the displayed owner. This proves the account
+boundary, not future portfolio authorization: each private portfolio query must filter
+by its owner and have negative isolation tests. The [portfolio
+foundation](portfolios.md) applies owner filters and isolation checks on PostgreSQL;
+ledger access uses the same owner-scoped boundary; see [ledger](ledger.md).
 
 Django handles password hashing, password validation, constant-work handling
 for unknown login usernames, authentication, session-key and CSRF-token
@@ -77,42 +76,20 @@ addresses, at most sixty per window. Forwarded address headers are ignored.
 There is no username-based lockout that a stranger can trigger for a victim.
 
 Development memory counters reset on restart and each worker has its own allowance.
-Production now requires shared PostgreSQL admission across workers/restarts;
-storage failure returns a fixed no-store 503 before account mutation, without
-memory fallback. See [release safeguards](release-safeguards.md). Fixed windows
-allow boundary bursts and users sharing an address share its allowance. The global
-cap can deny legitimate login attempts during an attack. Verified ingress identity,
-recovery and host-specific operations still need deployment review.
-Registration is open in this development application;
-do not expose it publicly as a finished authentication service.
+Production requires shared PostgreSQL admission across workers/restarts; storage failure
+returns a fixed no-store 503 before account mutation, without memory fallback. See
+[release safeguards](release-safeguards.md). Fixed windows allow boundary bursts and
+users sharing an address share its allowance. The global cap can deny legitimate login
+attempts during an attack. Verified ingress identity, recovery and host-specific
+operations still need deployment review. Development defaults to open registration;
+production defaults to closed registration. Review access policy before broadening
+either setting.
 
-## Validation
+## Limitations
 
-The 28 authentication tests exercise real sessions, two-user identity
-isolation, CSRF enforcement, unsafe return destinations including HTTPS
-downgrades, registration validation, generic failures, inactive accounts,
-password hashing, password-change behavior across sessions, POST-only logout,
-private cache headers, cookie settings, sensitive POST metadata, fixed-window
-recovery, and concurrent client/global budget enforcement. They use Django's
-isolated test database and make no provider calls. The full suite now has 518 tests and passes on PostgreSQL.
+Self-service password recovery, email verification and multi-factor authentication are
+not implemented. Production defaults to closed registration; development registration
+depends on configuration.
 
-```sh
-uv run --frozen python manage.py test tests.test_authentication --verbosity 2
-python3 tests/browser_authentication.py
-```
-
-The optional browser runner uses the cloud's preinstalled Playwright/Chromium.
-It starts a loopback server with a temporary migrated database, creates two
-test accounts, checks owner identity, password changes/re-login, sign-out,
-validation, keyboard controls, and desktop/mobile overflow. It removes the
-temporary database and stops its child process afterward. It makes only local
-browser requests and never creates accounts in the development database.
-Screenshots are under `/tmp/stock-authentication-*.png`; diagnostics are in
-`/tmp/stock-authentication-server.log`. The runner is separate from normal
-startup and is not yet included in GitHub Actions.
-
-PostgreSQL and owner-scoped private portfolio metadata are now implemented.
-The append-only [USD ledger](ledger.md) now uses this identity boundary.
-[FIFO positions, cost basis, and realized sale gains](fifo.md) also use this
-owner boundary. Recorded [dividends and splits](corporate-actions.md) also use
-that boundary; [market valuation](valuation.md) now uses the same private owner checks.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

@@ -1,10 +1,8 @@
 # Historical daily prices and charts
 
-Implemented and verified on October 10, 2026; extended with
-[stock volatility and drawdown](stock-risk.md) in v0.25 on October 11.
-[Daily trading volume](volume.md) is implemented in v0.26, using the same load.
-[Fundamentals](fundamentals.md), portfolio accounting and portfolio performance
-are implemented. Real-time prices remain separate work.
+Historical price pages show raw or provider-adjusted daily closes. The same load
+supports [volume](volume.md) and, with sufficient complete observations, [stock
+volatility and drawdown](stock-risk.md). Realtime prices are unsupported.
 
 ## User workflow
 
@@ -54,19 +52,19 @@ a regular U.S. equity session calendar and requires every completed selected
 close. It withholds statistics on gaps and partial history, without another
 request; see [risk definitions and limits](stock-risk.md).
 
-The provider's adjustment fields are displayed as supplied. The application
-does not independently reconstruct the adjustment method or claim a portfolio
-total-return series. Ledger valuation and dividend accounting will use explicit
-share/cash-flow policies documented in [valuation](valuation.md).
+The provider's adjustment fields are displayed as supplied. The application does not
+independently reconstruct the adjustment method or claim a portfolio total-return
+series. Ledger valuation and dividend accounting use explicit share/cash-flow policies
+documented in [valuation](valuation.md).
 
 ## Cost and failure bounds
 
 - Date ranges start on/after 1900-01-01, end no later than the current UTC date,
   and contain at most 366 days including both endpoints. A single date is valid.
 - One submission makes at most four requests, with at most 100 rows per page
-  and 366 unique observation dates. Each page uses the existing per-process
+  and 366 unique observation dates. Each page uses the existing shared
   budget of 10/client and 30 total requests per minute. Search and detail calls
-  share the same budget. Distributed/public limits remain pending.
+  share the same budget. Production admission is shared through PostgreSQL.
 - Response size is at most 256 KiB per page. Existing verified TLS, no redirects,
   3-second connect/5-second I/O timeouts, and per-page streaming checks apply.
   Four page limits do not create a hard wall-clock deadline for the whole action.
@@ -79,7 +77,7 @@ share/cash-flow policies documented in [valuation](valuation.md).
   a labeled partial chart. Authentication/entitlement errors are HTTP 503,
   not empty history; rate limits are HTTP 429 with bounded `Retry-After`.
 - No retries, background requests, prefetching, persistent market-data cache,
-  fixture fallback, or new paid services were added. Result/error responses
+  or fixture fallback is implemented. Result/error responses
   use `Cache-Control: no-store`; licensing must be checked before caching or
   public display.
 
@@ -98,21 +96,11 @@ already-rendered points and makes no requests. The scrollable chart/table
 contain their own overflow on mobile; the table offers keyboard-accessible
 exact values. No third-party chart package, external assets, or Node build is needed.
 
-## Verification and limits
+## Limitations
 
-The price milestone added 28 price/command tests; the current 884-test suite covers strict
-normalization, exact decimals, exponents, date bounds, paging/identity/cursor
-failures, shared quotas, geometry, missing/zero values, incomplete periods,
-escaping/redaction, and safe failure states. The test-only browser workflow
-passed at desktop and mobile sizes, including chart inspection, keyboard table
-access, and a price rate-limit page. Its invented observations are explicitly
-labeled [test fixtures](../tests/fixtures/README.md) and isolated from normal startup.
+Provider-adjusted closes do not establish a particular total-return methodology. Partial
+or missing observations remain labeled; no interpolation or prior-close substitution is
+performed. Live coverage and display rights depend on the configured subscription.
 
-Authenticated `verify_prices --query AAPL` passed with 21 completed adjusted
-closes in its default 30-day range. A separate normal-application browser check
-passed a 366-calendar-day range with 251 completed observations, raw/adjusted
-charts, point inspection, the values table, and desktop/mobile layout. This
-tested real pagination (more than 100 observations) without storing raw
-responses or keys. These counts describe the checks performed, not promised
-coverage or freshness. Fundamental checks are documented separately. Other instruments, subscription quotas,
-redistribution/caching terms, and deployment remain unverified.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

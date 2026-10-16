@@ -1,11 +1,10 @@
 # Transaction corrections
 
-Version 0.14 adds owner-only **Correct** and **Void** controls to current
-transactions. **Correct** replaces a mistaken event; **Void** removes it from
-the current interpretation without a replacement. Both retain the original
-entry, a permanent reason, and a correction timestamp in **View correction
-history**. This is an accounting restatement, not a reversing trade, cash
-transfer, brokerage instruction or tax-reporting claim.
+Owner-only **Correct** and **Void** controls operate on current transactions.
+**Correct** replaces a mistaken event; **Void** removes it from the effective history
+without a replacement. Both retain the original entry, permanent reason and timestamp in
+**View correction history**. These are accounting restatements, not reversing trades,
+cash transfers or brokerage instructions.
 
 ## Review and save
 
@@ -26,20 +25,19 @@ used in a later sell is rejected. A received net dividend can remain after a buy
 is voided: the existing dividend policy records cash received and does not infer
 ownership or entitlement on an earlier record date.
 
-A replacement identical to the original is rejected. Each entry can be targeted
-once. If its replacement also needs correction, select that current replacement;
-the audit preserves the complete chain. Correcting several dependent events
-atomically is outside this part. Correct individual events only when the resulting
-full journal is valid; do not insert compensating financial events merely to
-force a correction through.
+A replacement identical to the original is rejected. Each entry can be targeted once. If
+its replacement also needs correction, select that current replacement; the audit
+preserves the complete chain. Correcting several dependent events atomically is
+unsupported. Correct individual events only when the resulting full journal is valid; do
+not insert compensating financial events merely to force a correction through.
 
 ## Financial interpretation
 
-Positions, transaction cash, dated valuations, allocation weights, and
-time-weighted returns now read the same effective journal: all stored events
-except targets of correction decisions. A replacement is an ordinary financial
-event at its explicit event date/order. The correction audit record contributes
-no shares or cash and is not a deposit or withdrawal.
+Positions, transaction cash, dated valuations, allocation weights, and time-weighted
+returns read the same effective journal: all stored events except targets of correction
+decisions. A replacement is an ordinary financial event at its explicit event
+date/order. The correction audit record contributes no shares or cash and is not a
+deposit or withdrawal.
 
 For example, deposit $1,000, buy ten shares at $25 with a $1 fee, then sell four
 at $30 with a $2 fee. Cash is $867, remaining basis $150.60 and realized gain
@@ -84,7 +82,7 @@ entry trigger stays installed.
   dividend or split replacement uses one existing bounded reference request
   outside the database lock, verifying ID/USD/venue. Safe provider errors retain
   the original and form, with no replacement or audit row. Rate failures preserve
-  Retry-After. No quote polling, cache, dependency or paid service is introduced.
+  Retry-After. There is no quote polling or price cache.
 - Reasons are stripped, nonblank, control-free and at most 500 characters. The
   audit HTML escapes them. Corrections are insert-only at both ORM and PostgreSQL
   levels, with foreign-portfolio/self/cycle link checks and replacement completeness.
@@ -99,42 +97,12 @@ which is compatible with foreign-key `KEY SHARE` checks. A direct-write race
 initially exposed a deadlock under a stronger lock; the corrected guard passes
 the race test without disabling foreign-key or integrity checks.
 
-## Setup and verification
+## Limitations
 
-Apply both new migrations, `ledger/0004_corrections` and
-`ledger/0005_correction_guards`, with the existing PostgreSQL settings:
+Multi-event corrections and reports reconstructed as previously known are unsupported.
+Corrections restate history by event date. After corrections exist, use forward
+migrations; downgrading to the old unversioned uniqueness constraint is not a supported
+removal procedure.
 
-```sh
-export UV_CACHE_DIR=/workspace/.cache/uv
-uv run --frozen --env-file .local/database.env python manage.py migrate --noinput
-uv run --frozen --env-file .local/database-test.env python manage.py test --noinput
-python3 tests/browser_corrections.py
-```
-
-The upgrade test confirms existing values remain unchanged, revision defaults
-are correct and immutability remains active. After corrections exist, use forward
-migrations; downgrading to the old unversioned uniqueness constraint is not a
-supported way to remove this feature.
-
-The module adds 44 tests: three form tests, one storage guard and 40 PostgreSQL
-tests. Five concurrency checks cover identical retries, competing corrections,
-append races, a journal change during provider lookup and direct SQL order races.
-Other cases cover independently calculated FIFO/cash results, dividends/splits,
-historical cutoff and external-flow restatement, signed scope/expiry/tampering,
-stale previews, idempotency, rollback, reference failure, caps, audit escaping,
-pagination, immutable storage and upgrade preservation.
-
-Full PostgreSQL: **518 passed, no skips**. Full SQLite: **302 passed, 216 skipped**;
-SQLite does not establish PostgreSQL persistence/concurrency. Ruff lint/format,
-Django checks, migration drift and static collection pass.
-
-The desktop/mobile browser runner uses its own disposable PostgreSQL database
-and explicit synthetic reference/price transport. It checks hand-calculated
-preview/save/audit, exact retry, void/reused order, later appends, corrected
-valuation/allocation/returns, stale preview, ownership, CSRF and keyboard controls.
-Screenshots are `/tmp/stock-correction-*.png`. Its child/database are removed;
-normal startup never enables test fixtures or creates development records.
-
-No new live API acceptance call or deployment is part of this module. Multi-event
-corrections, as-known historical reports, complex actions, FX, tax accounting,
-distributed quotas and production operations remain future work. Bounded [daily session returns](daily-returns.md) are implemented. Observed [volatility and drawdown](risk.md) are implemented. Next: benchmark comparison with aligned sessions.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

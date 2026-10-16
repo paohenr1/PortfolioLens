@@ -1,12 +1,8 @@
 # Observed portfolio volatility and drawdown
 
-For stock price research, see [stock risk](stock-risk.md). It uses raw/adjusted
-closes without portfolio cash-flow accounting.
-
-Version 0.16 adds risk results to **View daily returns** after a confirmed load.
-They reuse the same journal snapshot and price histories, making no additional
-provider requests or storage writes. No dependency, migration, hosted service,
-new network destination, benchmark or risk-free rate was added.
+**View daily returns and risk** includes daily and annualized sample volatility, maximum
+drawdown, and peak/trough/recovery dates when the input requirements are met.
+Calculations reuse the daily series without additional prices or writes.
 
 ## Inputs and completeness
 
@@ -106,7 +102,7 @@ display. A portfolio falling from $100 to $90 and then receiving cash remains
 at a 10% return drawdown when subsequent investment return is zero, even if
 its dollar balance exceeds $100.
 
-## Presentation and verification
+## Presentation
 
 `ledger/risk_chart.py` converts the already calculated values into SVG coordinates.
 Calendar dates determine horizontal positions. The vertical scale fits drawdown
@@ -117,31 +113,11 @@ Left/Right, Home and End; a table provides all exact displayed values. No CDN
 or new script dependency is required. Private response/CSRF/ownership guards
 also cover the rendered risk statistics and chart.
 
-This module adds **33 tests**: 21 pure statistical/integrity cases, four chart
-cases, and eight actual PostgreSQL page/journal cases. They verify independent
-sample variance, sample gates, unrounded inputs, caller precision, peak/tie/
-trough/recovery rules, cash-flow effects, loss/restart, incomplete and malformed
-contracts, Django-independent import, chart bounds and scaling, correction
-restatement, no additional prices/writes, and safe provider errors.
+## Limitations
 
-Full PostgreSQL: **739 passed without skips**. SQLite: **484 passed, 255 skipped**;
-SQLite does not establish PostgreSQL storage/concurrency. Risk and daily-return
-browser checks pass on desktop/mobile with explicit synthetic prices in their
-own disposable PostgreSQL databases. The existing search/selection/price-chart
-browser also passes, including pointer/touch behavior of the shared script.
-Ruff checks 158 Python files; Django checks, migration drift and static
-collection pass. Normal startup never enables browser fixtures.
+Results describe selected closes and the current corrected journal, not
+lifetime/intraday risk or reports as previously known. Short samples can be unstable;
+zero historical volatility or drawdown does not promise future stability.
 
-```sh
-uv run --frozen --env-file .local/database-test.env python manage.py test --noinput
-python3 tests/browser_risk.py
-python3 tests/browser_daily_returns.py
-python3 tests/browser_smoke.py
-```
-
-Results describe the selected observed closes and current corrected journal,
-not lifetime/intraday risk, predictions, broker reconciliation or point-in-time
-reports as previously known. Short samples can be unstable; a zero historical
-volatility/drawdown result does not promise future stability. Live portfolio-risk
-acceptance, wider coverage, licensing, distributed quotas and production
-deployment remain unverified or future work. [Benchmark comparisons](benchmarks.md) are implemented. [Correlation and beta](relationships.md) are implemented. [Sharpe](sharpe.md) is implemented. [Selected-period profitability](profitability.md) is implemented. [Annual return on assets/equity](capital-returns.md) is implemented. [Annual revenue and earnings growth](growth.md) is implemented. Next: valuation multiples with explicit price and earnings dates.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.
