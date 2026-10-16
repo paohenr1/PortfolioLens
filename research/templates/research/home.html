@@ -2,7 +2,7 @@
 {% block content %}
   <section class="intro" aria-labelledby="page-title">
     <p class="eyebrow">Research with clarity</p>
-    <h1 id="page-title">Better questions.<br>Reliable financial data.</h1>
+    <h1 id="page-title">Understand your holdings.<br>Review your portfolio.</h1>
     <p class="lead">A focused workspace for understanding companies and tracking your portfolio, with clear sources and transparent calculations.</p>
     <a class="button" href="{% url 'search' %}">Search stocks</a>
   </section>
@@ -11,32 +11,32 @@
     <div>
       <h2 id="availability-title">Data connection</h2>
       <p role="status" data-provider-status="{{ provider_status.code }}">{{ provider_status.message }}</p>
-      <p class="muted">No prices, financial metrics, or portfolio results are displayed until their data sources are verified.</p>
+      <p class="muted">Market prices and company financials require provider access. Recorded cash, FIFO positions, and realized gains come from your transaction journal.</p>
     </div>
   </section>
-  <section class="roadmap" aria-labelledby="roadmap-title">
+  <section class="workspace" aria-labelledby="workspace-title">
     <div class="section-heading">
-      <h2 id="roadmap-title">Your research workspace</h2>
-      <span class="muted">Research, portfolios, and risk.</span>
+      <h2 id="workspace-title">Your research workspace</h2>
+      <span class="muted">Research, portfolios, and watchlists.</span>
     </div>
     <div class="cards">
       <article class="card">
         <span class="step">01 / Research</span>
         <h3>Find an instrument</h3>
-        <p>Search by ticker or company name, then review the instrument’s exchange and trading currency. Data access requires an Intrinio connection.</p>
+        <p>Search by ticker or company name, then explore prices, volume, stock risk, company financials, and valuation multiples. Market data loads on demand.</p>
         <a href="{% url 'search' %}">Open stock search</a>
       </article>
       <article class="card">
         <span class="step">02 / Portfolios</span>
         <h3>Track your investments</h3>
-        <p>Record transactions, reconcile holdings, and review cost basis and allocations in a private workspace.</p>
-        <span class="tag">Planned</span>
+        <p>Record transactions, review FIFO positions and dated valuation, then explore returns, volatility, and drawdown. Portfolio analysis requires transaction history.</p>
+        <a href="{% url 'portfolio_list' %}">Open my portfolios</a>
       </article>
       <article class="card">
-        <span class="step">03 / Analytics</span>
-        <h3>Measure what matters</h3>
-        <p>Evaluate performance and risk with documented calculations that distinguish investment returns from cash flows.</p>
-        <span class="tag">Planned</span>
+        <span class="step">03 / Watchlists</span>
+        <h3>Keep your research organized</h3>
+        <p>Save instruments in private watchlists and load closing prices and volume for up to five selected instruments on an exact date.</p>
+        <a href="{% url 'watchlist_list' %}">Open my watchlists</a>
       </article>
     </div>
   </section>

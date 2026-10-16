@@ -5,13 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A workspace for stock research and portfolio analytics.">
-    <title>{% block title %}Stock Research · Portfolio Analytics{% endblock %}</title>
+    <title>{% block title %}PortfolioLens · Portfolio Analytics{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'research/site.css' %}">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="header">
-      <a class="brand" href="{% url 'home' %}"><span class="brand-mark" aria-hidden="true">S</span> Stock Research</a>
+      <a class="brand" href="{% url 'home' %}"><span class="brand-mark" aria-hidden="true">P</span> PortfolioLens</a>
       <nav aria-label="Main navigation">
         <a href="{% url 'search' %}">Search stocks</a>
         {% if user.is_authenticated %}
@@ -24,9 +24,8 @@
           {% if registration_available %}<a href="{% url 'register' %}">Create account</a>{% endif %}
         {% endif %}
       </nav>
-      <span class="stage">In development</span>
     </header>
-    <main id="main">{% block content %}{% endblock %}</main>
-    <footer>Stock Research &amp; Portfolio Analytics <span>Research tools · No trading execution</span></footer>
+    <main id="main" tabindex="-1">{% block content %}{% endblock %}</main>
+    <footer>PortfolioLens <span>Research tools · No trading execution</span></footer>
   </body>
 </html>

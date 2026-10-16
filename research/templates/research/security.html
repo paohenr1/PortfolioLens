@@ -1,5 +1,5 @@
 {% extends "research/base.html" %}
-{% block title %}Instrument details · Stock Research{% endblock %}
+{% block title %}Instrument details · PortfolioLens{% endblock %}
 {% block content %}
   <section class="intro compact" aria-labelledby="page-title">
     <a href="{% url 'search' %}">Back to stock search</a>
@@ -22,6 +22,6 @@
       <p class="muted">Source: Intrinio security reference data. Retrieved {{ retrieved_at|date:"Y-m-d H:i:s T" }}.</p>
       <p class="muted">The historical date is reference metadata, not a quote timestamp or proof of current prices.</p>
     </section>
-    <section class="empty-state" aria-labelledby="history-link-title"><h2 id="history-link-title">Explore this instrument</h2><p>Review daily prices or the issuer's available standardized financial statements.</p><div class="research-links"><a class="button" href="{% url 'prices' security.id %}">View price history</a><a class="button" href="{% url 'financials' security.id %}">View company financials</a><a class="button" href="{% url 'capital_returns' security.id %}">View return on assets and equity</a><a class="button" href="{% url 'annual_growth' security.id %}">View annual revenue and earnings growth</a><a class="button" href="{% url 'annual_multiples' security.id %}">View annual earnings valuation multiples</a><a class="button" href="{% url 'market_capitalization' security.id %}">View company market capitalization</a><a class="button" href="{% url 'statement_trends' security.id %}">View annual financial statement trends</a><a class="button" href="{% url 'watchlist_choose' %}?security_id={{ security.id|urlencode }}">Add to watchlist</a></div></section>
+    <section class="empty-state" aria-labelledby="history-link-title"><h2 id="history-link-title">Explore this instrument</h2><p>Explore price history for prices, volume, volatility, and drawdown. Review company statements for margins, or use the dedicated annual analysis pages below.</p><div class="research-links"><a class="button" href="{% url 'prices' security.id %}">View price history</a><a class="button" href="{% url 'financials' security.id %}">View company financials</a><a class="button" href="{% url 'capital_returns' security.id %}">View return on assets and equity</a><a class="button" href="{% url 'annual_growth' security.id %}">View annual revenue and earnings growth</a><a class="button" href="{% url 'annual_multiples' security.id %}">View annual earnings valuation multiples</a><a class="button" href="{% url 'market_capitalization' security.id %}">View company market capitalization</a><a class="button" href="{% url 'statement_trends' security.id %}">View annual financial statement trends</a><a class="button" href="{% url 'watchlist_choose' %}?security_id={{ security.id|urlencode }}">Add to watchlist</a></div></section>
   {% endif %}
 {% endblock %}

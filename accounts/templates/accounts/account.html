@@ -1,5 +1,5 @@
 {% extends 'research/base.html' %}
-{% block title %}My account · Stock Research{% endblock %}
+{% block title %}My account · PortfolioLens{% endblock %}
 {% block content %}
 <section class="intro compact">
   <p class="eyebrow">Your research account</p>
@@ -10,6 +10,6 @@
   <h2>Account security</h2>
   <p><a class="button" href="{% url 'password_change' %}">Change password</a></p>
   <p class="muted">Sessions expire after eight hours of inactivity. Sign out when using a shared device.</p>
-  <p><a href="{% url 'portfolio_list' %}">My portfolios</a> · <a href="{% url 'search' %}">Search stocks</a></p>
+  <p><a href="{% url 'portfolio_list' %}">My portfolios</a> · <a href="{% url 'watchlist_list' %}">My watchlists</a> · <a href="{% url 'search' %}">Search stocks</a></p>
 </section>
 {% endblock %}
