@@ -8,6 +8,7 @@ brokerage accounts or produce tax statements.
 ## Current capabilities
 
 - Instrument search, price/volume history, stock risk and company financial analysis.
+- Private CSV format checking and transient input previews, without instrument matching or saving.
 - Private watchlists with saved preferences and on-demand market information.
 - Transaction accounting, explicit corrections, dividends/splits and FIFO positions.
 - Dated valuation and allocations, supported time-weighted/daily returns and risk.
@@ -40,4 +41,5 @@ diagnostics must preserve that distinction.
 
 The [holdings-import and snapshot-review proposal](proposals/holdings-import.md)
 defines a bounded first slice, input rules and acceptance criteria. It remains a
-design proposal; no import or snapshot-review feature is implemented.
+design proposal beyond the implemented CSV check; matching, saved snapshots and
+analysis are not implemented.

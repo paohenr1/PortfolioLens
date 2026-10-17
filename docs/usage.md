@@ -70,3 +70,26 @@ Create a list through **My watchlists**, then use **Add to watchlist** on an ins
 References are saved with retrieval times; they are not live quotes. Save price/volume
 bases and sorting preferences, then request exact-date market information for up to five
 selected instruments. Opening the list itself does not request prices.
+
+## Check a holdings CSV
+
+From **My portfolios**, choose **Check a holdings CSV**. Enter a name, the date
+those holdings describe, and an explicit USD cash balance. Upload a UTF-8 CSV of
+at most 16 KiB with this header and up to five holdings rows:
+
+```csv
+ticker,exchange_mic,quantity,currency
+```
+
+Each row needs a ticker, supported U.S. exchange MIC, positive quantity (up to six
+decimal places), and `USD`. The page lists supported MICs. Use plain decimal
+digits without signs, exponents or thousands separators. Duplicate ticker/MIC
+pairs, formulas, controls and malformed rows are rejected. Header-only files
+require positive cash. Dates must be completed U.S. equity sessions from 2000
+through yesterday in Toronto time.
+
+Choose **Check CSV** to see normalized inputs or row-level errors. Reselect the
+file after correcting errors; it is not stored or restored on a later visit.
+The check does not verify instrument identity, save holdings, create transactions
+or request prices. A valid file is not a verified account balance or performance
+record. Instrument matching, saved snapshots and analysis remain proposed.

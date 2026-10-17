@@ -1,0 +1,54 @@
+{% extends 'research/base.html' %}
+{% block title %}Check holdings CSV · PortfolioLens{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Private input check</p>
+  <h1>Check holdings CSV</h1>
+  <p class="lead">Check the format of up to five USD holdings and preview the quantities you supplied.</p>
+  <p>This check does not save holdings, verify instruments, load prices, or calculate account performance. The file and preview are not retained.</p>
+</section>
+<section class="reference-panel account-section">
+  <h2>CSV format</h2>
+  <p>Use this exact header, then one row per holding:</p>
+  <div class="table-scroll" tabindex="0" aria-label="CSV header"><code>ticker,exchange_mic,quantity,currency</code></div>
+  <p>Enter the listing's ticker and exchange MIC, positive quantity (up to six decimals), and <code>USD</code>. Duplicate ticker/MIC pairs are rejected. A header-only file is allowed for a positive cash-only balance.</p>
+  <p class="muted">Supported MICs: XNAS, XNYS, ARCX, BATS, IEXG, XASE, XNMS, XNCM, XNGS, EDGX, EDGA. Broker exports must be reshaped to this format.</p>
+</section>
+<section class="account-section">
+  <h2>Check your inputs</h2>
+  <form method="post" enctype="multipart/form-data" class="account-form">
+    {% csrf_token %}
+    {{ form.as_div }}
+    <button class="button" type="submit">Check CSV</button>
+  </form>
+</section>
+{% if csv_issues %}
+<section class="reference-panel error-state" aria-labelledby="csv-errors">
+  <h2 id="csv-errors">CSV errors</h2>
+  <ul>{% for issue in csv_issues %}<li>{% if issue.row %}Row {{ issue.row }} · {% endif %}{{ issue.field }}: {{ issue.message }}</li>{% endfor %}</ul>
+  <p>No holdings were accepted from this file. Correct the errors and select the file again.</p>
+</section>
+{% endif %}
+{% if preview %}
+<section class="price-panel" aria-labelledby="preview-title">
+  <h2 id="preview-title">Input preview — not saved</h2>
+  <p>The file format is valid. Instruments and holdings have not been independently verified.</p>
+  <dl class="reference-grid">
+    <div><dt>Name</dt><dd>{{ preview.name }}</dd></div>
+    <div><dt>Supplied holdings date</dt><dd>{{ preview.as_of|date:'Y-m-d' }}</dd></div>
+    <div><dt>Supplied cash (USD)</dt><dd>{{ preview.cash }}</dd></div>
+  </dl>
+  {% if preview.holdings_file %}
+  <div class="table-scroll" tabindex="0" aria-label="Supplied holdings">
+    <table class="price-table">
+      <caption>Normalized input only; no prices, cost basis or gains.</caption>
+      <thead><tr><th scope="col">CSV row</th><th scope="col">Ticker</th><th scope="col">Exchange MIC</th><th scope="col">Quantity</th><th scope="col">Currency</th></tr></thead>
+      <tbody>{% for holding in preview.holdings_file %}<tr><td>{{ holding.row }}</td><td>{{ holding.ticker }}</td><td>{{ holding.exchange_mic }}</td><td>{{ holding.quantity }}</td><td>{{ holding.currency }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% else %}<p>Cash-only input; no instruments supplied.</p>{% endif %}
+  <p>Confirm these inputs against your own records. This preview does not create transaction history or establish historical returns.</p>
+</section>
+{% endif %}
+<p><a href="{% url 'portfolio_list' %}">Back to my portfolios</a></p>
+{% endblock %}

@@ -9,6 +9,8 @@ interactive charts and accessible data tables. It does not execute trades.
 - Research instruments, historical prices and volume, stock volatility and
   drawdown, company statements, margins, ROA/ROE, annual growth, selected-year
   P/E, financial trends, and dated company market capitalization.
+- Check a small USD holdings CSV and preview validated inputs without saving or
+  requesting market data.
 - Maintain private watchlists with saved display preferences and on-demand
   price/volume observations.
 - Record USD transactions, dividends and splits; preview corrections while
@@ -53,7 +55,8 @@ uv run --frozen --env-file .local/database.env python manage.py runserver 127.0.
 The helper runs a private local PostgreSQL database. Intrinio credentials are
 optional for startup and automated tests, but required for live market data.
 Configure them securely as described in [setup](docs/setup.md). Normal startup
-never substitutes test fixtures. SQLite supports research/accounts only.
+never substitutes test fixtures. SQLite supports research/accounts and the transient
+CSV checker; persisted portfolios and watchlists require PostgreSQL.
 
 ## Documentation
 
