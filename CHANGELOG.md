@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add a private holdings CSV format checker with exact input previews, row-level
+  errors and memory-only bounded uploads. No holdings are saved or priced.
+
 - Use PortfolioLens in visible branding and clarify navigation to existing
   portfolio, risk and watchlist features.
 - Replace stale feature labels and development-roadmap presentation with current

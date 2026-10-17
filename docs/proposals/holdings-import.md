@@ -1,8 +1,14 @@
 # Holdings import and dated snapshot review
 
-Status: proposed; not implemented. This document defines an initial slice within
-PortfolioLens's existing Django/PostgreSQL application. Current transaction-based
+Status: the CSV validation/preview slice is implemented. Instrument resolution,
+snapshot persistence and financial review remain proposed. This document defines
+the intended complete workflow within PortfolioLens's existing Django/PostgreSQL
+application. Current transaction-based
 portfolios and their limits remain as described in [product scope](../product-specification.md).
+
+The current **Check holdings CSV** tool validates metadata and file structure only.
+It does not request confirmations that would imply a saved/verified snapshot,
+resolve instruments, write business records or fetch prices.
 
 ## Outcome and boundary
 
@@ -38,13 +44,14 @@ holdings only; the form supplies snapshot name, date, USD cash and confirmation.
 | Cash | Required explicit USD amount, 0 through 1,000,000,000,000, at most two decimals; blank is not zero |
 | File | UTF-8 (optional BOM), comma-delimited, one header; at most 16 KiB and five nonblank data rows |
 | Header | Exactly `ticker,exchange_mic,quantity,currency`, in this order |
-| Ticker | Required bounded text, at most 32 characters; retain punctuation and case for matching; never evaluate expressions |
+| Ticker | Required bounded text, at most 32 characters; retain punctuation and case; reject formula prefixes (`=`, `+`, `-`, `@`) and literal quotes |
 | Exchange MIC | Required explicit code in the existing supported-venue set |
 | Quantity | Positive finite decimal, at most 1,000,000,000 shares and six decimals |
 | Currency | Required literal `USD` |
 
 Trim surrounding field whitespace. Accept plain decimal digits with an optional
-fraction; reject signs, exponents, thousands separators, formulas, NaN/infinity,
+fraction (at most 32 characters per numeric input); reject signs, exponents,
+thousands separators, formulas, NaN/infinity,
 excess precision, malformed quoting, extra/missing columns and embedded control
 characters. Empty lines may be ignored; every nonblank row must validate. Reject
 zero-quantity rows rather than silently discarding them. A header-only file is
