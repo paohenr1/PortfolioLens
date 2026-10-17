@@ -37,3 +37,7 @@ Snapshot diagnostics would need explicit as-of dates, price and currency bases, 
 and assumptions. A snapshot alone cannot establish actual account performance;
 historical returns require appropriate transaction and cash-flow history. Any future
 diagnostics must preserve that distinction.
+
+The [holdings-import and snapshot-review proposal](proposals/holdings-import.md)
+defines a bounded first slice, input rules and acceptance criteria. It remains a
+design proposal; no import or snapshot-review feature is implemented.
