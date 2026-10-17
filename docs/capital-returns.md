@@ -1,9 +1,8 @@
 # Annual return on average assets and equity
 
-Version 0.21 adds **View return on assets and equity** to instrument details and
-company financials. Choose a fiscal year and **Load annual returns**. Initial
-forms make no data requests. This first implementation supports annual FY
-periods; quarterly and trailing-year returns are deferred.
+Choose **View return on assets and equity** from instrument details or company
+financials, select a fiscal year, and **Load annual returns**. Initial forms make no
+data requests. Only annual FY periods are supported.
 
 ## Definitions and source observations
 
@@ -71,12 +70,12 @@ remain in force; a future fiscal-year label does not make forecasts available.
 
 ## Rounding and independent examples
 
-Opening and closing Decimal coefficients are averaged exactly, without rounding
-the denominator or using the caller's Decimal arithmetic context. The ratio is
-an exact rational number, multiplied by 100 and rounded only at presentation to
-two decimal places, half up. Displayed negative zero is normalized to `0.00%`.
-The shared `research/financial_math.py` now supplies the same percentage
-rounding to the existing profit margins, preserving their behavior.
+Opening and closing Decimal coefficients are averaged exactly, without rounding the
+denominator or using the caller's Decimal arithmetic context. The ratio is an exact
+rational number, multiplied by 100 and rounded only at presentation to two decimal
+places, half up. Displayed negative zero is normalized to `0.00%`. The shared
+`research/financial_math.py` supplies the same percentage rounding to the existing
+profit margins, preserving their behavior.
 
 | Annual net income | Opening/closing assets | Opening/closing equity | Result |
 | --- | --- | --- | --- |
@@ -100,46 +99,21 @@ visible. No as-of snapshot, original-filing reconstruction, forecast or historic
 backtest availability is claimed.
 
 One instrument lookup is reused only within the current load. Three verified
-lookup/value pairs give **at most seven requests**, each reserving the existing
-shared 10/client and 30/global requests per minute per process. The original
-single-statement workflow still uses at most three requests. Recent searches
-or statement loads can consume the remaining allowance; repeated annual loads
-within the same minute can return 429. No separate quota, retry, prefetch,
-cross-request data cache or quota bypass is added.
+lookup/value pairs give **at most seven requests**, each reserving the existing shared
+10/client and 30/global requests per minute. The original single-statement workflow
+still uses at most three requests. Recent searches or statement loads can consume the
+remaining allowance; repeated annual loads within the same minute can return 429. No
+separate quota, retry, prefetch, cross-request data cache or quota bypass is added.
 
-Any provider-stage failure stops subsequent requests and discards the bundle.
-Safe HTTP 404/429/503 errors retain forms, no-store headers and bounded
-Retry-After where applicable. No partial ratio remains on an error page. All
-supplied text is escaped. Credentials stay backend-only and provider bodies are
-not displayed. No new dependency, migration, paid service, external destination,
-market-data persistence or live API call was introduced by this work.
+Any provider-stage failure stops subsequent requests and discards the bundle. Safe HTTP
+404/429/503 errors retain forms, no-store headers and bounded Retry-After where
+applicable. No partial ratio remains on an error page. All supplied text is escaped.
+Credentials stay backend-only and provider bodies are not displayed.
 
-## Verification and journal regression
+## Limitations
 
-This module adds 38 automated cases: 20 pure calculations, six provider adapter
-cases, ten page cases and two form/service cases. They verify hand calculations,
-exact averages and rounding, Decimal-context independence, zero/loss/extreme
-values, unsupported units/numbers, source identity, FY/year/date alignment,
-partial/duplicate data, independent assets/equity availability, seven-stage
-failure/quota stops, unchanged shared limits, escaping and error cleanup.
+Only annual fiscal-year returns are supported. Quarterly and trailing-year ROA/ROE are
+not calculated. The averages use two endpoint balances, not daily averages.
 
-The first full PostgreSQL run also exposed a pre-existing duplicate-split race.
-An identical append could commit after another caller's first key check but
-before its unlocked preflight read; replay then rejected that caller before
-the existing locked duplicate check. `ledger/services.py` now rechecks the key
-when preflight fails, returning an exact matching committed retry. It still
-rejects conflicting keys/details, and every new append retains locked
-validation. A deterministic PostgreSQL regression puts a commit in that exact
-gap; existing concurrent duplicate/distinct-key and ledger checks pass.
-No financial history or immutable-storage guard is modified.
-
-The final full-suite outcomes are recorded in [setup](setup.md). Optional
-`tests/browser_capital_returns.py` exercises positive/zero/loss returns,
-nonpositive equity, date mismatch, partial data, three-source provenance,
-desktop/mobile layout and rate-limit panel cleanup through test-only loopback
-servers. Existing profitability and three-statement browsers also pass.
-Synthetic fixtures are never enabled by normal startup. No new live acceptance
-is claimed for these return measures; earlier statement access is documented
-separately in [fundamentals](fundamentals.md).
-
-[Annual revenue and earnings growth](growth.md) is implemented. [Selected-FY basic/diluted P/E](multiples.md) is implemented. [Annual statement trends](trends.md) are implemented. [Stock volatility and drawdown](stock-risk.md) are implemented. [Daily trading volume](volume.md) is implemented. Next: market capitalization with explicit dates and currency.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

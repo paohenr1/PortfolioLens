@@ -37,7 +37,7 @@ h1 { margin: 1rem 0; font-size: clamp(2.2rem, 5vw, 4rem); line-height: 1.15; let
 .availability h2 { margin: 0; font-size: 1rem; }
 .availability p { margin: .4rem 0 0; }
 .muted { color: var(--muted); font-size: .88rem; }
-.roadmap { padding-block: 3rem 4rem; }
+.workspace { padding-block: 3rem 4rem; }
 .section-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
 .section-heading h2 { font-size: 1.2rem; }
 .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }

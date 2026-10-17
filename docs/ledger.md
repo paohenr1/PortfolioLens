@@ -1,11 +1,10 @@
 # USD transaction journal
 
-Version 0.7 adds a private transaction history and entry form to each portfolio.
-Choose **View transactions**, then **Record transaction**. The journal records
-what the user supplies; it does not send orders or verify brokerage executions.
-Review entries carefully. Original entries cannot be edited or deleted. Version
-0.14 adds explicit [replacement/void corrections](corrections.md) with preview,
-confirmation and a permanent audit trail.
+Each portfolio has a private transaction history and entry form. Choose **View
+transactions**, then **Record transaction**. The journal records supplied events; it
+does not send orders or verify brokerage executions. Original entries cannot be edited
+or deleted. [Replacement/void corrections](corrections.md) require a preview and
+confirmation and preserve a permanent audit trail.
 
 ## Accounting rules
 
@@ -45,10 +44,10 @@ Margin, short selling, unsettled-funds treatment, and borrowing are unsupported.
 Deposits are contributions, not profit; the cash figure is not net asset value,
 investment performance, or a verified brokerage balance.
 
-An independent example: deposit 1,000; buy 10 shares at 25 with a 1 fee → cash
-749; sell 4 at 30 with a 2 fee → 867; withdraw 100 → 767; record a 3 fee → 764.
-Six shares remain in replay. This establishes cash/share reconciliation only;
-the [FIFO module](fifo.md) now also derives remaining cost and realized sale gains.
+An independent example: deposit 1,000; buy 10 shares at 25 with a 1 fee → cash 749; sell
+4 at 30 with a 2 fee → 867; withdraw 100 → 767; record a 3 fee → 764. Six shares remain
+in replay. This establishes cash/share reconciliation only; the [FIFO module](fifo.md)
+derives remaining cost and realized sale gains.
 
 ## Identity and request cost
 
@@ -67,11 +66,10 @@ for the same ID is blocked pending reference reconciliation. Delisted securities
 whose current lookup fails cannot currently be entered. Execution prices are
 always supplied by the user; market prices are never substituted.
 
-Deposits, withdrawals, standalone fees, history reads, invalid balance inputs,
-and exact duplicate retries make no provider request. A provider failure records
-nothing and presents a safe error. Concurrent new trade attempts can each
-consume a lookup before one wins the database lock. No provider subscription or
-dependency was added; all verification for this module used fixture transports.
+Deposits, withdrawals, standalone fees, history reads, invalid balance inputs, and exact
+duplicate retries make no provider request. A provider failure records nothing and
+presents a safe error. Concurrent new trade attempts can each consume a lookup before
+one wins the database lock.
 
 ## Ownership and write safety
 
@@ -104,44 +102,11 @@ validation with direct INSERT. Historical balance checks rely on the write
 service. Production roles, backups/restoration, retention, lock/query timeouts,
 monitoring, and recovery remain operational work.
 
-## Verification and remaining parts
+## Limitations
 
-```sh
-export UV_CACHE_DIR=/workspace/.cache/uv
-uv run --frozen --env-file .local/database-test.env python manage.py test --verbosity 2
-python3 tests/browser_ledger.py
-```
+Entries are manually supplied research records. Brokerage imports, short positions,
+margin borrowing, FX and tax reporting are unsupported. Positions and returns depend on
+a complete, correctly ordered history.
 
-The full PostgreSQL suite passes 518 tests without skips. The initial ledger part added 41:
-pure accounting examples plus real PostgreSQL validation, immutability, ownership,
-idempotency, capacity, backdating, pagination, Toronto date boundaries, provider
-failure, and concurrent duplicate/sell/withdrawal cases. PostgreSQL tests are
-explicitly skipped under SQLite; a full SQLite run skips 76 tests in total and
-does not verify the private portfolio workflow.
-
-The optional browser runner uses preinstalled Playwright/Chromium and its own
-temporary PostgreSQL database. Two accounts exercise deposit/buy/sell/fee/
-withdrawal, duplicate submission, oversell rejection, foreign-owner rejection,
-sign-out, keyboard table access, and desktop/mobile layouts. Only an explicitly
-test-enabled HTTPX fixture supplies synthetic instrument reference data. It
-makes no live provider calls, closes its child process, and removes its generated
-database. It never creates accounts or entries in development data. Screenshots:
-`/tmp/stock-ledger-*.png`; diagnostics: `/tmp/stock-portfolio-server.log`.
-
-The [FIFO module](fifo.md) now derives positions, cost basis, and realized
-sale gains from this immutable journal, with independently calculated examples.
-Recorded [net dividends and splits](corporate-actions.md) now extend the journal.
-[Market valuation and unrealized gains](valuation.md) now use explicit dates and
-prices on the same share basis as entries. [Allocation weights](allocations.md)
-now reuse the valuation. [Time-weighted returns](performance.md) now use explicit
-periods and supported end-of-day timing. Private [watchlists](watchlists.md) are implemented. Explicit [corrections](corrections.md) are implemented. Bounded [daily session returns](daily-returns.md) are implemented. Observed [volatility and drawdown](risk.md) are implemented. Next: benchmark comparison with aligned sessions.
-Corrections/reversals, cash-in-lieu, return of capital,
-interest, taxes, holding transfers, imports, complex corporate actions, FX,
-money-weighted and annualized returns are not implemented. Manually recorded actions do not establish complete action history. Journal
-quantities must be reconciled to the chosen price date/share basis before valuation.
-
-Version 0.9 adds Dividend and Split shapes. Dividends carry the security ID
-and net USD cash received; splits carry only ID and positive integer new/old
-terms, with zero cash. All appends/history reads now run FIFO-aware validation
-so per-lot split precision is checked in addition to aggregate cash/shares.
-Existing constraints and trigger protection are extended by migration 0003.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

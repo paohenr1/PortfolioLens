@@ -1,9 +1,9 @@
 # Recorded dividends and stock splits
 
-Version 0.9 extends the immutable USD journal with Dividend and Split entries.
-These record the user's supplied actions, not automatically retrieved or verified
-company announcements. Existing ordering, owner isolation, CSRF, reference
-checks, idempotency, permanent-entry rules and 1,000-entry cap still apply.
+The application extends the immutable USD journal with Dividend and Split entries. These
+record the user's supplied actions, not automatically retrieved or verified company
+announcements. Existing ordering, owner isolation, CSRF, reference checks, idempotency,
+permanent-entry rules and 1,000-entry cap still apply.
 
 ## Cash dividends
 
@@ -63,13 +63,13 @@ cost is not allocated a second time.
 
 ## Validation, reference cost, and migration
 
-All appends now run full FIFO validation before the provider lookup and again
-inside the portfolio-row lock. Backdated splits cannot create an invalid later
-sale or unrepresentable lot. An exact retry returns the recorded entry without
-another lookup or split application; concurrent duplicate submissions apply
-once. Different keys at the same date/order conflict. Fresh keys at different
-orders can intentionally record multiple actions; this is not deduplication by
-company action ID, so review dates/ratios carefully before permanent submission.
+All appends run full FIFO validation before the provider lookup and again inside the
+portfolio-row lock. Backdated splits cannot create an invalid later sale or
+unrepresentable lot. An exact retry returns the recorded entry without another lookup or
+split application; concurrent duplicate submissions apply once. Different keys at the
+same date/order conflict. Fresh keys at different orders can intentionally record
+multiple actions; this is not deduplication by company action ID, so review dates/ratios
+carefully before permanent submission.
 
 A new valid dividend or split uses one bounded instrument-reference lookup via
 the existing Intrinio adapter/budget. ID, USD and supported U.S. venue must match;
@@ -89,30 +89,12 @@ is tested on a separate PostgreSQL test database. Rolling back after action rows
 exist needs an explicit data-preservation plan; do not delete them to make a
 schema downgrade succeed.
 
-## Verification and next part
+## Limitations
 
-```sh
-export UV_CACHE_DIR=/workspace/.cache/uv
-uv run --frozen --env-file .local/database.env python manage.py migrate --noinput
-uv run --frozen --env-file .local/database-test.env python manage.py test --verbosity 2
-python3 tests/browser_actions.py
-```
+Manual entries do not prove that all historical actions are present. Mergers, spin-offs,
+cash-in-lieu, return of capital, transfers, FX and tax adjustments are unsupported. Do
+not combine dividend-adjusted portfolio prices with separately credited dividends and
+count income twice.
 
-This part adds 13 pure accounting and 11 real PostgreSQL storage/race/migration
-tests. The full PostgreSQL suite passes 518 tests without skips. The full SQLite
-run skips 216 PostgreSQL tests; it does not establish private storage readiness.
-Browser tests use an owned temporary PostgreSQL database with synthetic instrument
-reference transport and manually entered example events. They check dividend
-cash, forward/reverse splits, preserved FIFO basis, exact retries, fractional
-rejection, owner isolation, sign-out, keyboard tables and desktop/mobile layouts.
-They remove the child server/database and write no development records or live
-provider calls. Screenshots: `/tmp/stock-actions-*.png`.
-
-No dependency or paid service was added. [Market valuation and unrealized gains](valuation.md)
-now use prices on the same recorded share basis and explicit as-of dates/missing-data
-states. [Allocation weights](allocations.md) use complete inputs, and [time-weighted
-performance](performance.md) supports confirmed end-of-day flows. Private [watchlists](watchlists.md) are implemented. Explicit [corrections](corrections.md) are implemented. Bounded [daily session returns](daily-returns.md) are implemented. Observed [volatility and drawdown](risk.md) are implemented. Next: benchmark comparison with aligned sessions. Manually recorded actions do not prove that all
-historical actions are present. Mergers, spin-offs, cash-in-lieu, return of capital,
-transfers, FX and tax adjustments remain unsupported. Money-weighted
-and annualized returns remain pending; dividend-adjusted price series must not be combined
-with separately credited dividends to count income twice.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

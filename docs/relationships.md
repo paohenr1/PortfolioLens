@@ -1,11 +1,8 @@
 # Correlation and beta
 
-Version 0.18 adds observed relationship statistics to the optional benchmark
-comparison on **View daily returns**. Enter the benchmark's provider security ID,
-choose completed session dates and confirm the existing flow/share-basis rules.
-The existing confirmed load produces the comparison and these statistics from
-the same data. Calculating them adds no provider request, storage write,
-dependency, paid service or new destination.
+A complete benchmark comparison can show portfolio/benchmark correlation and beta. These
+statistics reuse the exact matched daily returns and request no additional prices. See
+[benchmark comparison](benchmarks.md) for source and session-alignment requirements.
 
 ## Definitions
 
@@ -83,33 +80,10 @@ requests and safe error handling. There is no added endpoint or background load.
 Corrections restate historical results using the current effective journal and
 retain the original permanent entries.
 
-## Validation and next work
+## Limitations
 
-33 new tests include 24 pure calculation/comparison cases and nine PostgreSQL
-page/journal cases. Independent examples cover ±2 slopes, intercept centering,
-partial/irrational/zero correlations, constant-series rules, 19/20 sample gates,
-tiny unrounded changes, exact beta rounding ties, caller Decimal settings,
-invalid/mismatched inputs and terminal loss. Page tests verify unchanged provider
-call counts and journal rows, same-instrument history reuse, missing quotes,
-funding, safe rate limits and fee-correction restatement. A fee of 100 in the
-20-return alternating-benchmark example has beta −11/210 (−0.0524); correcting it
-to 200 gives −11/105 (−0.1048), preserving the original fee.
+Correlation and beta describe the selected observed portfolio/benchmark window. They are
+not forecasts, a universal market beta, or attribution of risk to individual holdings.
 
-Full PostgreSQL: **739 passed without skips**. SQLite: **484 passed, 255 skipped**;
-SQLite does not validate PostgreSQL persistence/concurrency. Relationship and
-benchmark browsers pass desktop/mobile with explicit synthetic data in their
-own disposable PostgreSQL databases. They cover sample/variance/missing-data
-states, displayed coefficients, responsive layout, existing chart keyboard
-behavior, owner isolation, CSRF and sign-out. Ruff checks 158 Python files;
-Django, migration-drift, static and local HTTP readiness checks pass.
-
-```sh
-uv run --frozen --env-file .local/database-test.env python manage.py test --noinput
-python3 tests/browser_relationships.py
-python3 tests/browser_benchmarks.py
-```
-
-Live portfolio/benchmark acceptance, provider adjustment/index methodology,
-coverage/licensing and production deployment remain unverified. The existing
-selected-benchmark proxy limitations in [benchmarks](benchmarks.md) still apply.
-[Sharpe](sharpe.md) is implemented with a confirmed explicit annual simple-rate assumption. [Selected-period profitability](profitability.md) is implemented. [Annual return on assets/equity](capital-returns.md) is implemented. [Annual revenue and earnings growth](growth.md) is implemented. Next: valuation multiples with explicit price and earnings dates.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

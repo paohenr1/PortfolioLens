@@ -1,8 +1,8 @@
 # Selected-year earnings valuation multiples
 
-Implemented in v0.23.0, October 11, 2026. This module adds explicit annual basic
-and diluted P/E using existing Intrinio statement and historical-price endpoints.
-It adds no dependency, migration, hosted service, paid dataset or market-data cache.
+Selected-year basic and diluted P/E use Intrinio annual statements and historical raw
+closes. Earnings and price dates, source versions and share-basis assumptions remain
+explicit.
 
 ## Workflow
 
@@ -111,12 +111,12 @@ Every valid submission makes at most four backend HTTPS requests:
    identity, classification and date consistency.
 4. Request one page of daily prices for the exact selected date.
 
-The price endpoint is the existing historical daily-price route. No new endpoint,
-data subscription or extra quota allowance is introduced. Each actual request
-reserves the shared budget (10/client and 30/global requests/minute per process).
-Two full loads use eight requests; a third can consume the remaining two before
-being blocked. Invalid fields or a missing confirmation make no provider request.
-Missing credentials are checked before constructing transport or spending quota.
+The price endpoint is the existing historical daily-price route. No new endpoint, data
+subscription or extra quota allowance is introduced. Each actual request reserves the
+shared budget (10/client and 30/global requests/minute). Two full loads use eight
+requests; a third can consume the remaining two before being blocked. Invalid fields or
+a missing confirmation make no provider request. Missing credentials are checked before
+constructing transport or spending quota.
 
 Failures stop immediately with safe existing 404/429/503 pages, bounded
 Retry-After and no-store headers. No loaded statement/price/ratio context survives
@@ -125,39 +125,11 @@ price cursor is labeled incomplete without following it. There are no retries,
 prefetches, fallback providers, inferred periods or cross-request caching.
 Existing TLS, strict JSON, response-size and redacted logging rules apply.
 
-## Code and verification
+## Limitations
 
-`market_data/contracts.py` defines immutable combined inputs. The adapter in
-`intrinio.py` reuses strict statement and one-day price methods; services apply
-the existing budget. `research/multiples.py` performs pure calculations, while
-`financial_math.py` shares exact final rounding with growth/margins/annual
-returns. Forms, views and templates orchestrate the request and its presentation.
-Comments explain share-basis assumptions, exact rounding and raw-price policy.
+Ratios use selected-year earnings and a selected raw close with currently retrieved
+statements. They are not trailing, forward, live or historical-as-known P/E. Share-class
+and split-basis compatibility must be confirmed.
 
-The module adds **41 tests**: 24 calculation/alignment, five adapter, ten page
-and two form/service checks. The focused P/E/growth/margin/annual-return run
-passed **152 tests**. Full PostgreSQL passed **780 with no skips**. Full SQLite
-discovered 780, passed **525** and skipped **255 PostgreSQL-only checks**.
-Ruff lint and formatting pass for **164 Python files**; Django, migration drift
-and static collection pass. No migration was added.
-
-The first full PostgreSQL attempt failed before testing because its container
-had stopped. The recognized existing container was restarted with the supported
-helper, preserving its data; migrations and drift checks were repeated without
-connection warnings, and the subsequent full suite passed.
-
-The actual P/E browser runner passes eleven scenarios on desktop/mobile:
-positive/restated, zero/loss/null EPS, wrong EPS unit, zero/uncertain/partial/
-non-USD price and stub income. It verifies unchecked required confirmation,
-keyboard selection, dates, two source cards, responsive layout, loopback-only
-traffic and 429 cleanup. Growth, capital-return, profitability and three-statement
-browser regressions also pass. These explicitly synthetic fixture servers are
-test-only; normal startup never enables them. No new live-provider acceptance
-or production deployment is claimed.
-
-Fresh current-source HTTP readiness passed twice, without provider requests or
-account creation. All six development model counts remain zero and the original
-specification matches the supplied text after line-ending normalization. Startup instructions are saved separately
-for review; saving does not apply or publish them.
-
-[Annual statement trends](trends.md) are implemented. [Stock volatility and drawdown](stock-risk.md) are implemented. [Daily trading volume](volume.md) is implemented. Next: market capitalization with explicit dates and currency.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

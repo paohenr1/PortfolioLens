@@ -1,9 +1,8 @@
 # Watchlist market information and saved preferences
 
-Version 0.28 adds on-demand daily price/volume observations and private saved
-display preferences to the existing [watchlists](watchlists.md). It uses the
-existing Intrinio historical feed, PostgreSQL and shared request budget. There
-is no new dependency, paid service, subscription, polling or background worker.
+Private watchlists support on-demand daily price/volume observations and saved display
+preferences. Loads use the Intrinio historical feed and shared request budget; there is
+no polling or background refresh.
 
 ## Using the feature
 
@@ -63,11 +62,11 @@ conversion or monetary turnover is inferred. Price/volume responses are not stor
 
 ## Cost, failure handling and privacy
 
-Each selected instrument uses one exact-date `/securities/{stable_id}/prices`
-request through the existing backend adapter. A single page is requested, and
-any continuation is labeled incomplete without following it. Each request reserves
-the existing 10-per-client/30-total per-process minute budget. Plain list/forms,
-sorting, preference saves and bookmark removal spend no market-data quota.
+Each selected instrument uses one exact-date `/securities/{stable_id}/prices` request
+through the existing backend adapter. A single page is requested, and any continuation
+is labeled incomplete without following it. Each request reserves the existing
+10-per-client/30-total minute budget. Plain list/forms, sorting, preference saves and
+bookmark removal spend no market-data quota.
 
 Provider failures show fixed safe messages for the affected row; successful rows
 remain available. A request-limit failure stops remaining instruments, labels
@@ -90,49 +89,11 @@ order defaults; IDs, owners, bookmarks and reference timestamps remain intact.
 Earlier migrations and immutable ledger guards are unchanged. Apply it with the
 existing development setup; no data reset or database replacement is required.
 
-## Verification
+## Limitations
 
-41 new tests cover the independent observations, basis/unit/date validation,
-zero/fractional/missing values, malformed inputs, hostile decimal contexts,
-database choices, saved defaults, CSRF, owner isolation, ordering, bounded actual
-adapter calls, shared quota interruption, safe errors, authorization rechecks,
-absence of network transactions and preservation of prior bookmarks in migration.
+Preferences are per watchlist. Realtime quotes, alerts, sharing, cross-currency totals
+and caching are unsupported. Saved references and exact-date observations are not
+current quotes.
 
-- Focused watchlist regression: 77 passed.
-- Full PostgreSQL: 955 passed with no skips.
-- SQLite: 675 passed, 280 PostgreSQL-only skipped (955 discovered).
-- Ruff lint/format: 191 Python files; Django, migration drift, static collection,
-  repeated frozen setup and fresh normal startup/readiness pass.
-
-`python3 tests/browser_watchlist_market.py` passes eight explicitly synthetic
-desktop/mobile scenarios: complete, missing selected fields, empty date,
-unconfirmed row, partial response, zero, rate limit and entitlement denial.
-It checks saved-default reloads/one-load overrides, checkbox/table keyboard
-controls, connected accessible help text, no-store, owner isolation, CSRF,
-local-only browser requests, overflow and disposable database/server cleanup.
-The existing watchlist add/remove/duplicate/two-user browser regression also passes.
-Only synthetic screenshots are saved to `/tmp`; a mobile result was inspected.
-
-Live AAPL/XNAS acceptance passed on October 11, 2026 for the October 9 daily
-observation using a separate disposable PostgreSQL application, actual provider
-transport and the existing vault binding. Raw and adjusted price/volume loads,
-source/currency/completion labels, saved defaults and desktop/mobile controls
-passed. Search, details, adding the bookmark and two daily loads used five
-backend requests. No synthetic provider transport, live screenshots or raw values
-were retained. The temporary account/list/database were removed; all six
-development record counts and temporary browser database count remain zero.
-
-Normal application startup uses neither browser-test mode nor test records.
-The normal app was also restarted after UI changes and its readiness routes/assets
-checked without provider calls. Managed terminal cancellation can leave a worker
-alive even with a TTY; current-task ownership and exact process identity were
-verified before terminating that worker. Never kill a process merely by its port
-or reuse a prior-task process handle.
-
-## Remaining scope
-
-Preferences are per watchlist; account-wide settings, persistent date/selections,
-realtime quotes, alerts, sharing, cross-currency totals and caching are not added.
-Feed coverage beyond the tested instrument/date, display/storage/redistribution
-rights and production/distributed quota enforcement remain unverified. The next
-release step is broader live-data and complete user-journey acceptance testing.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

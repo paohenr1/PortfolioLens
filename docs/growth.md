@@ -1,9 +1,9 @@
 # Annual revenue and earnings growth
 
-Version 0.22 adds **View annual revenue and earnings growth** to instrument
-details and company financials. Choose the current fiscal year and **Load annual
-growth**. The load compares that annual income statement with the immediately
-preceding annual FY. Opening the form requests no provider data.
+Choose **View annual revenue and earnings growth** from instrument details or company
+financials, select the current fiscal year, and **Load annual growth**. The load
+compares that annual income statement with the immediately preceding annual FY. Opening
+the form requests no provider data.
 
 ## Definitions and base-value policy
 
@@ -81,51 +81,33 @@ business composition or acquisition effects. This is not an as-of backtest datas
 
 ## Arithmetic, requests and failures
 
-Source JSON numbers remain Decimal. `research/financial_math.py` now computes
-current-minus-prior by aligning integer Decimal coefficients, preserving the
-exact dollar change independently of caller precision/exponent bounds/traps.
-The percentage uses exact rational arithmetic and is rounded only at final
-presentation to two decimal places, half up. Displayed negative zero becomes
-`0.00%`; the raw negative dollar change is retained. Existing margin and
-average-balance calculations share the same helpers and retain their behavior.
+Source JSON numbers remain Decimal. `research/financial_math.py` computes
+current-minus-prior by aligning integer Decimal coefficients, preserving the exact
+dollar change independently of caller precision/exponent bounds/traps. The percentage
+uses exact rational arithmetic and is rounded only at final presentation to two decimal
+places, half up. Displayed negative zero becomes `0.00%`; the raw negative dollar change
+is retained. Existing margin and average-balance calculations share the same helpers and
+retain their behavior.
 
 `AnnualGrowthStatements` is an immutable provider contract.
-`IntrinioClient.annual_growth` reuses one verified instrument lookup and two
-income lookup/value pairs, for **at most five requests**. Every stage reserves
-the existing shared 10/client and 30/global requests per minute per process.
-Recent searches/research loads can use the remaining allowance. No new quota,
-cache, retries, prefetch or automatic period substitution is added. The existing
-single-statement and annual-return workflows retain their three/seven request bounds.
+`IntrinioClient.annual_growth` reuses one verified instrument lookup and two income
+lookup/value pairs, for **at most five requests**. Every stage reserves the existing
+shared 10/client and 30/global requests per minute. Recent searches/research loads can
+use the remaining allowance. No new quota, cache, retries, prefetch or automatic period
+substitution is added. The existing single-statement and annual-return workflows retain
+their three/seven request bounds.
 
-Any provider-stage failure stops remaining requests and discards the bundle.
-Safe HTTP 404/429/503 pages retain the form, no-store headers and bounded
-Retry-After where applicable. No earlier calculated context remains on an error
-page. Invalid year/period/identifier/method requests do not spend transport.
-All source text is escaped, credentials stay backend-only and provider bodies
-are not shown. No new dependency, migration, paid service, external destination,
-market-data persistence or live API call was added.
+Any provider-stage failure stops remaining requests and discards the bundle. Safe HTTP
+404/429/503 pages retain the form, no-store headers and bounded Retry-After where
+applicable. No earlier calculated context remains on an error page. Invalid
+year/period/identifier/method requests do not spend transport. All source text is
+escaped, credentials stay backend-only and provider bodies are not shown.
 
-## Code and verification
+## Limitations
 
-`research/growth.py` is independent of Django, storage and HTTP. Forms and views
-orchestrate the explicit load; `research/templates/research/growth.html` presents
-formulas, sources, dates, duration/version warnings, dollar changes and explained
-unavailable percentages. Fixtures remain confined to test-only runners.
+Growth compares adjacent annual fiscal periods, not quarterly, trailing-year or forecast
+results. Percentage changes require a positive prior value; loss transitions are labeled
+rather than assigned misleading growth percentages.
 
-The module adds **44 automated tests**: 26 independent calculations, five adapter
-cases, eleven page cases and two form/service cases. They cover hand calculations,
-loss/break-even transitions, zero/negative bases, exact/half-up arithmetic,
-extreme valid inputs and Decimal contexts, missing/unsupported sources,
-units/identity/FY/date alignment, week/leap/stub/gap/partial/version cases,
-five-stage failure/quota stops, repeated-load limits, escaping and error cleanup.
-The focused growth/annual-return/margin/statement run passed 145 tests.
-
-Full PostgreSQL: **739 passed, no skips**. SQLite: **484 passed, 255 skipped**
-(PostgreSQL-only cases). Ruff lint/format checks 158 Python files. Django,
-migration drift (none), static collection and actual HTTP readiness pass.
-Growth, annual-return, profit-margin and three-statement browser runners pass
-desktop/mobile through synthetic loopback servers, including source provenance,
-responsive layouts and error cleanup. No development user/portfolio records are
-inserted and no live provider acceptance is implied.
-
-[Selected-FY basic/diluted P/E](multiples.md) is implemented. [Annual statement trends](trends.md) are implemented. [Stock volatility and drawdown](stock-risk.md) are implemented. [Daily trading volume](volume.md) is implemented. Next: market capitalization with explicit dates and currency.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

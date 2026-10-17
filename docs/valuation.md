@@ -1,12 +1,9 @@
 # Explicit-date portfolio valuation
 
-Version 0.10 adds a private USD valuation page linked from portfolio details,
-transaction history, and positions. It uses the existing Python/Django/Intrinio
-stack, with no new package, hosted service, or database migration.
-
-Version 0.14 uses the current effective journal after explicit
-[corrections](corrections.md). Historical event-date results can be restated; the
-audit preserves original entries but does not reconstruct what was known earlier.
+The private USD valuation page is linked from portfolio details, transaction history and
+positions. It uses exact-date raw closes and recorded journal history. Calculations use
+the effective journal after [corrections](corrections.md), so historical values can be
+restated without reconstructing what was known earlier.
 
 ## Load behavior and cost
 
@@ -16,16 +13,15 @@ basis, and submit **Load valuation**. Opening the page makes no provider request
 Submissions are CSRF protected. Quotes are fetched server-side and never stored
 or cached; no scheduled polling or real-time feed is added.
 
-A load supports at most five open instruments on the selected date. More than
-five is rejected before any quote request. Each instrument uses one daily-price
-request, including the security reference supplied by that endpoint; no separate
-reference lookup or continuation request is made. A remaining cursor makes that
-instrument unavailable. Every request spends the existing shared process budget
-(10/client and 30 total/minute), including requests from research pages and journal
-entry reference lookups. A rate limit stops remaining instruments and returns
-429 with Retry-After. Other provider failures return a private 503 with fixed
-messages and unknown affected values. Missing observations in a valid response
-return 200 with an explicit incomplete valuation.
+A load supports at most five open instruments on the selected date. More than five is
+rejected before any quote request. Each instrument uses one daily-price request,
+including the security reference supplied by that endpoint; no separate reference lookup
+or continuation request is made. A remaining cursor makes that instrument unavailable.
+Every request spends the existing shared request budget (10/client and 30 total/minute),
+including requests from research pages and journal entry reference lookups. A rate limit
+stops remaining instruments and returns 429 with Retry-After. Other provider failures
+return a private 503 with fixed messages and unknown affected values. Missing
+observations in a valid response return 200 with an explicit incomplete valuation.
 
 These are application request bounds, not verified subscription allowances.
 Caching, redistribution/display rights, wider coverage, and shared production
@@ -85,7 +81,7 @@ on or before the selected date, 20 shares at that same hypothetical raw close
 give $310 market value, $59 unrealized gain/loss, $756 cash and $1,066 total value.
 These are invented arithmetic examples, not market observations.
 
-## Modules and verification
+## Implementation
 
 - `ledger/valuation.py`: immutable result types, quote validity, and pure arithmetic.
 - `ledger/analytics.py`: bounded snapshot and optional historical event cutoff.
@@ -95,33 +91,11 @@ These are invented arithmetic examples, not market observations.
 - Three test modules cover independent dollar examples, the actual HTTPX adapter,
   PostgreSQL snapshots, ownership, CSRF, errors, request limits, and repeat loads.
 
-From the repository root:
+## Limitations
 
-```sh
-export UV_CACHE_DIR=/workspace/.cache/uv
-uv run --frozen --env-file .local/database-test.env python manage.py test --noinput
-python3 tests/browser_valuation.py
-```
+Valuation uses recorded shares and exact-date raw closes. Missing inputs leave totals
+unavailable. Cash-inclusive allocations use the same result. FX, cash-in-lieu, complex
+actions and tax reporting are unsupported; this is not brokerage reconciliation.
 
-This part adds 33 tests: 12 pure valuation, three adapter/budget, and 18 PostgreSQL
-page/snapshot tests. Full PostgreSQL suite: **518 passed, no skips**. Full SQLite:
-518 discovered, 302 passed and 216 PostgreSQL tests explicitly skipped; SQLite does
-not establish private portfolio readiness. Lint, formatting, Django checks,
-migration drift, and static collection pass.
-
-The isolated PostgreSQL browser workflow uses only labeled synthetic reference/
-price transport. It checks explicit loading, dollar totals, historical action
-cutoffs, unconfirmed/missing prices, ownership, CSRF, sign-out, keyboard scrolling,
-and desktop/mobile layouts. Existing FIFO and action browser regressions pass.
-Screenshots: `/tmp/stock-valuation-*.png`. The test child and its generated database
-are removed; no development account, portfolio, or entry is written. No live price
-request was made for this part, so live valuation behavior remains unverified.
-
-Version 0.11 adds [cash-inclusive allocation weights](allocations.md), using this
-same result without further requests. All weights require complete, positive
-total value. Version 0.12 adds [time-weighted returns](performance.md) with explicit
-periods and confirmed end-of-day external flows. Money-weighted and annualized
-returns remain unavailable. Private [watchlists](watchlists.md) and [journal corrections](corrections.md) are implemented. Bounded [daily session returns](daily-returns.md) are implemented. Observed [volatility and drawdown](risk.md) are implemented. Benchmark comparison is next.
-Corrections, FX, cash-in-lieu, complex actions, tax reporting, and production
-deployment remain unsupported. These are manually recorded research calculations,
-not a brokerage reconciliation or tax statement.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

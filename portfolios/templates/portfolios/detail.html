@@ -1,20 +1,32 @@
 {% extends 'research/base.html' %}
-{% block title %}{{ portfolio.name }} · Stock Research{% endblock %}
+{% block title %}{{ portfolio.name }} · PortfolioLens{% endblock %}
 {% block content %}
 <section class="intro compact">
   <p class="eyebrow">Your private portfolio</p>
   <h1>{{ portfolio.name }}</h1>
   <p class="lead">Reporting currency: {{ portfolio.reporting_currency }} — U.S. dollar.</p>
+  <p>Analysis uses your recorded transaction history. Start with funding and trades, then review positions, value, and performance. Entries do not place trading orders.</p>
 </section>
 <section class="reference-panel account-section">
-  <h2>Transaction journal</h2>
-  <p>Record USD cash movements, buys, sells, fees, net dividends, and splits. View recorded cash and transaction history.</p>
-  <a class="button" href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a>
+  <h2>1. Transactions and positions</h2>
+  <p>Record USD cash movements, buys, sells, fees, net dividends, and splits. Review or correct entries in the transaction journal.</p>
+  <p><a class="button" href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a></p>
   <p><a class="button" href="{% url 'portfolio_positions' portfolio_id=portfolio.pk %}">View positions and gains</a></p>
-  <p><a class="button" href="{% url 'portfolio_valuation' portfolio_id=portfolio.pk %}">View market valuation</a></p>
-  <p><a class="button" href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a></p>
-  <p><a class="button" href="{% url 'portfolio_daily_returns' portfolio_id=portfolio.pk %}">View daily returns</a></p>
-  <p class="muted">Positions, FIFO cost basis, and realized sale gains come from your journal. Load valuation or time-weighted returns for explicit dates and supported cash-flow timing. Entries do not place trading orders.</p>
-  <a href="{% url 'portfolio_list' %}">Back to my portfolios</a>
+  <p class="muted">Recorded cash, FIFO cost basis, and realized sale gains come from your journal without market-data requests.</p>
 </section>
+<section class="reference-panel account-section">
+  <h2>2. Valuation and allocations</h2>
+  <p>Load dated market value, unrealized gains, and cash-inclusive allocation weights.</p>
+  <p><a class="button" href="{% url 'portfolio_valuation' portfolio_id=portfolio.pk %}">View market valuation</a></p>
+  <p class="muted">Supports up to five open instruments on the selected date. Missing required prices leave totals unavailable.</p>
+</section>
+<section class="reference-panel account-section">
+  <h2>3. Performance and risk</h2>
+  <p>Review returns with explicit cash-flow timing and share-basis assumptions.</p>
+  <p><a class="button" href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a></p>
+  <p><a class="button" href="{% url 'portfolio_daily_returns' portfolio_id=portfolio.pk %}">View daily returns and risk</a></p>
+  <p>Daily returns include volatility and drawdown, with optional benchmark comparison, correlation, beta, and Sharpe when their data requirements are met.</p>
+  <p class="muted">Daily analysis supports up to two instruments across a maximum 90-calendar-day window, including holdings sold during that period. Benchmark statistics describe portfolio-level relationships, not holding-level risk attribution.</p>
+</section>
+<p><a href="{% url 'portfolio_list' %}">Back to my portfolios</a></p>
 {% endblock %}

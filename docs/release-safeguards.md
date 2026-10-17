@@ -1,9 +1,7 @@
-# Release safeguards
+# Request admission and production safeguards
 
-Version 0.30, October 11, 2026. This closes the release-safeguards work package
-after [acceptance](release-acceptance.md). Deployment, hosting costs, real HTTPS
-ingress, hosted database TLS and off-machine backup storage remain to be verified
-on the chosen private host. The original specification is unchanged.
+Production uses shared PostgreSQL admission for market-data calls and account write
+attempts. Configuration guards reject unsupported production settings.
 
 ## Shared admission without an additional service
 
@@ -52,16 +50,14 @@ secret, debug off, PostgreSQL with a password and `verify-full` TCP TLS, secure
 session/CSRF cookies, HTTPS redirect, no-store private responses, secret-redacted
 logs and a short initial HSTS duration. SQLite cannot be production storage.
 
-New `DJANGO_TRUST_PROXY_HTTPS=false` is the default. Set it to true only in
-production after confirming that the trusted ingress strips/replaces
-`X-Forwarded-Proto` and direct external access to the application is blocked.
-This uses Django's standard HTTPS proxy setting and avoids redirect loops behind
-TLS termination. It does not trust forwarded client addresses, establish an
-ingress access rule, enable cross-origin access or verify a hosting provider.
-Do not enable it merely because a host uses a proxy.
+`DJANGO_TRUST_PROXY_HTTPS=false` is the default. Set it to true only in production after
+confirming that the trusted ingress strips/replaces `X-Forwarded-Proto` and direct
+external access to the application is blocked. This uses Django's standard HTTPS proxy
+setting and avoids redirect loops behind TLS termination. It does not trust forwarded
+client addresses, establish an ingress access rule, enable cross-origin access or verify
+a hosting provider. Do not enable it merely because a host uses a proxy.
 
 ```sh
-export UV_CACHE_DIR=/workspace/.cache/uv
 uv run --frozen python scripts/check_release_configuration.py
 ```
 
@@ -72,55 +68,17 @@ fail the command. Two findings are printed and intentionally retained:
 
 - `security.W005`: HSTS does not cover all sibling subdomains. Their HTTPS is
   not verified, so we do not force a domain-wide policy.
-- `security.W021`: browser HSTS preload is disabled. Enrollment is not justified
-  for an undeployed hostname.
+- `security.W021`: browser HSTS preload is disabled. Preload requires a separately reviewed domain policy.
 
 The checks are not silenced in normal Django settings. They are documented
 policies, not failures to fix by enabling unverified domain-wide behavior.
 Selected-host checks must repeat with its real configuration and connectivity.
 
-## CI and verification
+## Limitations
 
-The existing workflow keeps pinned actions, a pinned PostgreSQL service, frozen
-dependencies, least-privilege read access, lint/format, migrations, the full real
-PostgreSQL suite and static collection. It now runs production configuration
-guards and a separate SQLite compatibility pass with PostgreSQL options cleared.
-No market-data secret, live acceptance or new paid CI service is required.
-Commands were verified locally; remote GitHub Actions has not been executed.
+Shared admission covers processes using the same database, not every deployment sharing
+a subscription. Liveness and synthetic configuration checks do not establish hosted TLS,
+data rights, backup recovery or functional readiness.
 
-```sh
-uv run --frozen --env-file .local/database-test.env python manage.py test tests.test_release_safeguards tests.test_backups --noinput
-python3 tests/browser_release_journey.py --shared-limits
-uv run --frozen python scripts/verify_backup_restore.py --local-container
-```
-
-There are 25 new automated checks: five configuration/HTTPS cases, twelve real
-PostgreSQL admission cases and eight archive-safety cases. They include concurrent
-same-client/global floods, initial creation races, actual separate Python workers
-sharing an allowance, rollover/backward-clock behavior, durable boundaries,
-storage-failure denial before provider I/O/account mutation, malformed counters,
-exclusive private archives, interruption cleanup, replacement-file protection,
-TLS/password forwarding and safe errors. The connected browser journey passes
-with both memory and PostgreSQL admission, including corrections and funding.
-Its synthetic provider transport and generated databases remain test-only.
-
-PostgreSQL: 982 pass without skips. SQLite: 982 discovered, 690 pass and 292
-PostgreSQL-only cases skip. Focused safeguards: 25 pass. Ruff lint/format checks
-207 Python files. Frozen setup, additive migration, no migration drift,
-Django/static and fresh normal readiness checks pass. Development business
-records stay empty; owned browser/drill databases and synthetic archives are
-removed. No authenticated provider call or new dependency was needed here.
-
-## What remains
-
-The [backup export and restore drill](backups.md) now pass, including exact row
-digests, password hashes, correction links, watchlist preferences, sessions,
-schema history, restored journal immutability and private owner checks. Scheduled
-encrypted off-machine copies, retention and recovery timing remain host-specific.
-
-One planned private-MVP work package remains: choose a low-cost deployment target,
-prepare its process/static serving, HTTPS, role/TLS configuration and persistent
-storage/backups, confirm applicable Intrinio display/storage rights, then run a
-controlled private deployment and smoke checks. This is a work package, not a
-promise of a fixed duration or permanent free hosting. Broader market coverage
-and optional advanced specification features remain separate scope.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

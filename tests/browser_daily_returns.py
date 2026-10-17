@@ -32,7 +32,7 @@ def main():
             register(page, base, "daily-browser-alice")
             register(bob, base, "daily-browser-bob")
             portfolio = create(page, base, "Daily example")
-            page.get_by_role("link", name="View daily returns", exact=True).click()
+            page.get_by_role("link", name="View daily returns and risk", exact=True).click()
             url = page.url
             assert page.locator(".reference-grid").count() == 0
             load(page, url)

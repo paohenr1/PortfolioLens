@@ -1,14 +1,12 @@
 # Cash-inclusive allocation weights
 
-Version 0.11 adds allocation weights to the existing private valuation page.
-Choose **View market valuation**, select a completed date, confirm recorded share
-basis, and submit **Load valuation**. The allocation table uses that same valuation
-snapshot and prices. It makes no additional provider request or database write.
-Opening the form does not fetch prices or display claimed weights.
+The private valuation page includes cash-inclusive allocation weights. Choose **View
+market valuation**, select a completed date, confirm recorded share basis, and submit
+**Load valuation**. Weights use the same valuation snapshot and prices without
+additional provider requests or database writes.
 
-Version 0.14 uses the current effective journal after explicit
-[corrections](corrections.md). Historical event-date results can be restated; the
-audit preserves original entries but does not reconstruct what was known earlier.
+Calculations use the effective journal after [corrections](corrections.md). Historical
+results can be restated; the audit does not reconstruct what was known earlier.
 
 ## Basis and availability
 
@@ -60,41 +58,18 @@ Examples, using invented amounts:
 
 These are arithmetic examples, not real market observations or recommendations.
 
-## Modules and verification
+## Implementation
 
-`ledger/allocations.py` contains immutable rows/results and the pure calculator.
-The existing valuation view passes its completed result to that calculator and
-renders a keyboard-accessible allocation table. No new route, persisted projection,
-dependency, migration, paid service, scheduled task or price request is added.
+`ledger/allocations.py` contains immutable rows/results and the pure calculator. The
+existing valuation view passes its completed result to that calculator and renders a
+keyboard-accessible allocation table. The calculator does not persist a projection or
+request prices.
 
-This part adds 21 tests: 14 pure calculations and seven real PostgreSQL page tests.
-They cover dollar examples, exact ties, component-order independence, small/zero
-holdings, incomplete/invalid amounts, empty/cash-only portfolios, privacy and
-unchanged request/journal counts. Two hundred deterministic generated cent-value
-examples also check exact totals, weight bounds and maximum rounding error.
+## Limitations
 
-Full PostgreSQL suite: **518 passed, no skips**. Full SQLite: 518 discovered,
-302 passed and 216 PostgreSQL tests explicitly skipped; SQLite does not verify
-private portfolio storage. Ruff lint/format, Django system checks, migration drift
-and static collection pass. Expanded valuation and existing FIFO desktop/mobile
-browser checks pass with explicitly synthetic data on isolated PostgreSQL databases.
-They verify tables, weights, empty/partial states, historical cutoff, keyboard
-access, owner denial, CSRF and sign-out. Screenshots: `/tmp/stock-allocation-*.png`
-and `/tmp/stock-valuation-*.png`. Temporary test processes/databases are cleaned up;
-development users, portfolios and entries remain unchanged. No live API calls ran.
+Weights describe recorded cash and holdings. They do not infer sector exposure, fund
+look-through, target allocations, rebalancing, FX or tax adjustments. Complete manually
+recorded transactions and splits are required.
 
-From the repository root:
-
-```sh
-export UV_CACHE_DIR=/workspace/.cache/uv
-uv run --frozen --env-file .local/database-test.env python manage.py test --noinput
-python3 tests/browser_valuation.py
-```
-
-These are value weights of recorded holdings and cash. Sector/asset-class exposure,
-fund look-through, target allocations, rebalancing, FX, short positions, investment
-return percentages from weights and tax adjustments are not inferred. Completeness still depends on manually
-recorded transactions/splits. Live valuation, broader coverage, display rights,
-distributed quotas and production deployment remain unverified or incomplete.
-[Time-weighted performance](performance.md) is implemented separately with explicit
-periods and confirmed end-of-day cash-flow timing. Private [watchlists](watchlists.md) are implemented. Explicit [corrections](corrections.md) are implemented. Bounded [daily session returns](daily-returns.md) are implemented. Observed [volatility and drawdown](risk.md) are implemented. Next: benchmark comparison with aligned sessions.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

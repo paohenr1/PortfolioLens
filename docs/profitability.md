@@ -1,14 +1,8 @@
-# Selected-period profitability
+# Selected-period profit margins
 
-Version 0.29 corrects the source fields to Intrinio's `totalgrossprofit` and
-`totaloperatingincome`. Live AAPL FY2025 checks independently recompute all three
-margins; shorter tag names are not aliases. See [release evidence](release-acceptance.md).
-
-Version 0.20 adds three margin cards to **View company financials → Income
-statement → Load statement**. They use the selected company's currently retrieved
-standardized statement and its explicit fiscal period. No additional data load,
-paid service, dependency, database migration, market-data cache or persistence
-is introduced. Balance-sheet and cash-flow pages retain their existing cards.
+Income statements show gross, operating and net margins when source observations support
+them. Intrinio source tags include `totalgrossprofit` and `totaloperatingincome`;
+shorter aliases are not substituted.
 
 ## Definitions
 
@@ -84,36 +78,23 @@ Independent examples:
 | 100 USD | 1.005 USD | −1.005 USD | 0 USD | 1.01%, −1.01%, 0.00% |
 | 0 USD | 80 USD | 30 USD | −5 USD | All unavailable |
 
-## Boundaries and verification
+## Implementation boundaries
 
 `research/profitability.py` is independent of Django, storage and HTTP.
 `research/fundamentals.py` supplies its results to the existing statement view;
-`research/templates/research/profitability.html` displays formulas, source tags,
-period scope and unavailable reasons. Calculations add no provider request and
-spend no extra quota: the statement submission still uses at most three requests
-under the shared process budget, with no retries/prefetch/fallback fixtures.
+`research/templates/research/profitability.html` displays formulas, source tags, period
+scope and unavailable reasons. Calculations add no provider request and spend no extra
+quota: the statement submission still uses at most three requests under the shared
+request budget, with no retries/prefetch/fallback fixtures.
 
-Existing input validation, no-store responses and safe HTTP 404/429/503 behavior
-remain in place. Provider failures never leave a margin panel on an error page.
-Existing publication/retention/display-rights and account-quota limits remain;
-no public deployment or extra subscription is authorized by this module.
+Existing input validation, no-store responses and safe HTTP 404/429/503 behavior remain
+in place. Provider failures never leave a margin panel on an error page. Provider
+publication, retention, display rights and account quotas apply.
 
-The module adds 29 automated tests: 21 independent calculation cases and eight
-statement-page cases. They cover hand calculations, both rounding signs,
-repeating decimals, valid zero/loss/extreme values, unavailable source/unit/date
-states, supported quarters, partial/duplicate data, listing currency,
-classification, Decimal-context independence, unchanged request counts,
-raw observations, validation and provider-error cleanup.
+## Limitations
 
-Full PostgreSQL: **739 passed, no skips**. SQLite: **484 passed, 255 skipped**
-(PostgreSQL-only cases). Ruff lint and formatting (158 Python files), Django
-checks, migration drift and static collection pass. The profitability and
-existing three-statement browser runners pass on desktop/mobile using synthetic
-observations through loopback servers. They cover period scope, absent tags,
-empty income statements, layout and provider-error cleanup, without external
-data requests or development-record insertion. These results do not constitute
-live acceptance of the new margins; no live Intrinio call was made for this
-module. Earlier live statement access is documented in [fundamentals](fundamentals.md).
+Provider publication, retention and display rights must be checked for the intended
+audience. Margins describe the selected reported period, not forecasts.
 
-[Annual return on assets/equity](capital-returns.md) is now implemented as a
-separate bounded load using three aligned statements. [Annual revenue and earnings growth](growth.md) is implemented. [Selected-FY basic/diluted P/E](multiples.md) is implemented. [Annual statement trends](trends.md) are implemented. [Stock volatility and drawdown](stock-risk.md) are implemented. [Daily trading volume](volume.md) is implemented. Next: market capitalization with explicit dates and currency.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

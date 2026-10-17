@@ -1,9 +1,9 @@
 # Daily portfolio session returns
 
-Version 0.15 adds **View daily returns** on a private USD portfolio. Choose
-opening/closing dates, confirm the cash-flow timing and share basis, and
-**Load daily returns**. GET, including query flags, requests no market data.
-The POST is protected by ownership, active-account, CSRF and no-store guards.
+Open **View daily returns and risk** on a private USD portfolio. Choose opening and
+closing dates, confirm cash-flow timing and share basis, and **Load daily returns**.
+GET, including query flags, requests no market data. POST is protected by ownership,
+active-account, CSRF and no-store guards.
 
 ## Sessions and scope
 
@@ -98,31 +98,11 @@ $1,005. Friday-to-Monday wealth is $1,022.50 to $1,080, whose pre-flow ending
 value is $1,030: a **0.7335%** session return. The four-session linked return
 is **4.8600%**. Weekends are absent. Cash-only funding/withdrawals alone return 0%.
 
-## Validation and next work
+## Limitations
 
-The module adds 35 tests: 17 pure calculation/form/calendar cases, one storage
-guard case, and 17 actual PostgreSQL service/page cases. They cover independent
-wealth/flow examples, actions, holidays, exceptional closures, session gaps,
-positive/zero baselines, precision, history validity, limits, pagination quota,
-one journal read, corrections, concurrent append visibility, privacy and safe
-failures. A mock HTTPX transport exercises an actual eight-request paginated
-load; it makes no live provider request.
+Broker reconciliation, FX, intraday and money-weighted returns are unsupported. Coverage
+and benchmark adjustment methodology depend on the selected provider data. Daily risk,
+benchmark comparison and Sharpe share the same bounded series.
 
-Full PostgreSQL: **739 passed, no skips**. SQLite: **484 passed, 255 skipped**;
-SQLite does not verify PostgreSQL storage or concurrency. The desktop/mobile
-browser runs in its own disposable PostgreSQL database with explicit synthetic
-prices, checking the example, cash-only/empty state, uncertain close, invalid
-weekend date, provenance, ownership, CSRF, sign-out and keyboard table access.
-The correction and prior performance browsers also pass. Ruff, Django checks,
-migration drift and static collection pass. No migration or production data write
-is needed for this module.
-
-```sh
-uv run --frozen --env-file .local/database-test.env python manage.py test --noinput
-python3 tests/browser_daily_returns.py
-```
-
-No new live portfolio-series acceptance is claimed. Data coverage, licensing,
-distributed quotas, broker reconciliation, FX, index benchmark methodology, intraday or
-money-weighted returns and production operations remain separate work.
-Observed [volatility/drawdown](risk.md) are implemented. [Benchmark comparisons](benchmarks.md) are implemented. [Correlation and beta](relationships.md) are implemented. [Sharpe](sharpe.md) is implemented with an explicit annual simple-rate assumption. [Selected-period profitability](profitability.md) is implemented. [Annual return on assets/equity](capital-returns.md) is implemented. [Annual revenue and earnings growth](growth.md) is implemented. Next: valuation multiples with explicit price and earnings dates.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

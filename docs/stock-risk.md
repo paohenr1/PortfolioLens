@@ -1,12 +1,11 @@
 # Stock historical volatility and drawdown
 
-Version 0.25, verified October 11, 2026. Choose **View price history** on an
-instrument, select dates and raw/adjusted close, then **Load prices**. Stock
-risk uses that same bounded response without another provider call, dependency,
-migration, hosted service or retained market dataset. The initial form suggests
-90 calendar days ending on the preceding UTC day. Opening the form or changing
-a field makes no request. Today remains available for the supplied-price chart;
-risk requires a completed window before today, even after a market close.
+Choose **View price history** on an instrument, select dates and raw/adjusted close,
+then **Load prices**. Stock risk uses that same bounded response without another
+provider call, dependency, migration, hosted service or retained market dataset. The
+initial form suggests 90 calendar days ending on the preceding UTC day. Opening the form
+or changing a field makes no request. Today remains available for the supplied-price
+chart; risk requires a completed window before today, even after a market close.
 
 ## Complete session policy
 
@@ -89,32 +88,11 @@ inspection, point focus, arrows and Home/End, without data requests. Forms/table
 work without JavaScript. Focusable scroll regions contain mobile overflow. The
 drawdown axis fits observed loss with at least a one-percentage-point span.
 
-## Actual verification
+## Limitations
 
-39 new tests: 29 independent calculation/chart and ten page cases. They cover
-sample variance, thresholds, exact annualization, episode ties/recovery, fractional
-prices, extreme bounded ratios, hostile contexts, a complete leap-year window
-(253 sessions), holiday endpoints, September 2001 closures, missing/unconfirmed/
-duplicate/non-session rows, zero prices, venues/currency, paging, quotas and failures.
-Focused stock/price/portfolio-risk regression: 88 passed. Full PostgreSQL: 857
-passed without skips; SQLite: 602 passed, 255 PostgreSQL-only skipped. Ruff checks
-176 Python files. Django, migration drift, static collection, frozen setup and
-fresh current-source HTTP readiness pass.
+Results describe the selected complete historical close series. They do not establish
+intraday risk, future stability, broader feed coverage or the provider’s adjustment
+methodology.
 
-`python3 -m tests.browser_stock_risk` runs eight explicit synthetic scenarios:
-complete, split, short, gap, unconfirmed, zero, partial paging and unsupported
-venue. Desktop/mobile keyboard/pointer readouts, independent figures, table
-focus, overflow and 429 cleanup pass. Existing `tests.browser_smoke` passes
-search/details/price regressions. Test-only loopback processes create no development
-records, database or normal-startup fixture fallback.
-
-Authenticated normal-application AAPL XNAS/USD acceptance passed for both bases
-over August 12–October 10, 2026: 42 closes through October 9 and 41 returns.
-Both produced daily volatility 1.2748%, annualized 20.2375%, maximum drawdown
-3.9213%, with desktop/mobile keyboard/table checks. Four backend requests covered
-search, reference and the two price loads. No key, raw response or live screenshot
-was stored and no account was created. This verifies that listing/window, not
-wider coverage, adjustment methodology, subscription quotas, redistribution/
-caching rights or production. The original specification remains unchanged.
-
-[Daily trading volume](volume.md) is implemented. Next: market capitalization with explicit dates and currency.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

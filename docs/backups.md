@@ -1,6 +1,6 @@
 # PostgreSQL backup and restore
 
-Version 0.30 adds a private custom-format export and a disposable recovery drill.
+The repository provides a private custom-format export and a disposable recovery drill.
 It uses PostgreSQL's own tools and the existing database; there is no paid backup
 service, automatic upload, production restore or scheduled job yet.
 
@@ -12,18 +12,17 @@ existing file or symlink, creates the archive with mode 0600, obtains a consiste
 table of contents. A failed/interrupted export removes only its own partial file.
 Table-of-contents validation is not a full recovery test.
 
-For the recognized cloud development container, after the existing PostgreSQL
-helper and migrations:
+For the recognized local development container, after the existing PostgreSQL helper and
+migrations:
 
 ```sh
 install -d -m 0700 .local/backups
 uv run --frozen --env-file .local/database.env python manage.py backup_database --local-container --output .local/backups/manual-new-name.dump
 ```
 
-This is an optional real development-data export, not part of ordinary startup.
-This milestone exported only synthetic drill databases. The container mode
-verifies checkout label, expected mounts, image digest, running state, private
-network/socket, process user and absence of TCP port publishing. It cannot
+This is an optional real development-data export, not part of ordinary startup. The
+container mode verifies checkout label, expected mounts, image digest, running state,
+private network/socket, process user and absence of TCP port publishing. It cannot
 silently select a different Docker daemon, container or database host.
 
 For a separately configured PostgreSQL target, install `pg_dump`/`pg_restore`
@@ -33,13 +32,13 @@ passwords stay in the child environment, not argv, files or messages. Production
 configuration still requires `verify-full`; do not weaken TLS to export a backup.
 The target must be explicitly configured before using this path.
 
-Archives contain private account/portfolio data, password hashes and sessions.
-Keep them outside source control; `.local` and `*.dump` are ignored. File
-permissions do not encrypt an archive. On the selected host, configure encrypted
-off-machine copies, retention and access controls, and check applicable stored
-reference-data rights. No storage destination or recurring charge was selected.
+Archives contain private account/portfolio data, password hashes and sessions. Keep them
+outside source control; `.local` and `*.dump` are ignored. File permissions do not
+encrypt an archive. On the selected host, configure encrypted off-machine copies,
+retention and access controls, and check applicable stored reference-data rights. No
+scheduled off-machine backup destination is configured by the repository.
 
-## Tested recovery drill
+## Isolated recovery drill
 
 ```sh
 uv run --frozen python scripts/verify_backup_restore.py --local-container
@@ -61,11 +60,9 @@ verification, group/user permissions, decoded sessions with the same separately
 provisioned application secret, original/replacement correction links, watchlist preferences,
 journal immutability and another owner's private 404/no-store responses.
 
-Cleanup verifies the exact database OID and owner recorded at creation before
-dropping either generated database. Changed identities are left untouched and
-reported. Temporary synthetic archives/manifests are removed. The final drill
-passed with a 56,081-byte archive; size is an observation, not an expected future
-constant. Development business records stayed empty.
+Cleanup verifies the exact database OID and owner recorded at creation before dropping
+either generated database. Changed identities are left untouched and reported. Temporary
+synthetic archives/manifests are removed.
 
 ## Production recovery procedure
 

@@ -1,9 +1,8 @@
 # Company fundamentals and standardized statements
 
-Implemented and authenticated AAPL annual workflows verified on October 10,
-2026. This module displays supplied standardized observations; portfolio
-accounting, forecasts, valuation ratios, cross-period growth, and financial
-analytics remain separate parts.
+Company statement pages display standardized observations with explicit units, fiscal
+periods and source versions. Portfolio accounting and cross-period analysis are
+documented separately in the [methodology index](methodology.md).
 
 ## Workflow and provider boundary
 
@@ -48,14 +47,14 @@ not the original as-reported filing layout.
 | Investing cash flow | `netcashfrominvestingactivities` | Provider-standardized net cash from investing activities for the selected period |
 | Financing cash flow | `netcashfromfinancingactivities` | Provider-standardized net cash from financing activities for the selected period |
 
-Cards display only the requested statement's relevant tags, alongside exact
-values, units, source tags, and definitions. Income statements now include explicitly calculated selected-period gross,
-operating and net margins; see [profitability](profitability.md) for source, unit,
-period and completeness requirements. No P/E, annualization, trailing figures,
-estimates or growth rates are inferred. Absent tags
-and supplied null values have different unavailable descriptions; neither is
-zero. The table contains all supplied standardized values, ordered by provider
-sequence when known and then by tag, without reconstructing accounting totals.
+Cards display only the requested statement's relevant tags, alongside exact values,
+units, source tags, and definitions. Income statements include explicitly calculated
+selected-period gross, operating and net margins; see [profitability](profitability.md)
+for source, unit, period and completeness requirements. No P/E, annualization, trailing
+figures, estimates or growth rates are inferred. Absent tags and supplied null values
+have different unavailable descriptions; neither is zero. The table contains all
+supplied standardized values, ordered by provider sequence when known and then by tag,
+without reconstructing accounting totals.
 
 JSON numbers remain Decimal. Exact values use grouping commas but no rounding,
 currency conversion, scaling into millions, or floating-point arithmetic.
@@ -112,41 +111,15 @@ continuation was supplied, not that all company metrics exist. A bounded explici
 cursor marks the response partial; no unsupported continuation request is
 invented, and missing tags in a partial response are clearly qualified.
 
-No market-data persistence/cache, fallback fixtures, new dependencies, or paid
-services were added. Result/error pages use Cache-Control no-store. Display,
-redistribution, retention/caching rights and actual account quotas remain to be
-verified before public deployment.
+No market-data cache or fallback fixture path is implemented. Result/error pages use
+Cache-Control no-store. Display, redistribution, retention/caching rights and actual
+account quotas remain to be verified before public deployment.
 
-## Code and verification
+## Limitations
 
-Immutable contracts live in `market_data/contracts.py`; shared bounded fields
-are in `fields.py`, fundamental validation in `fundamentals.py`, and the HTTPS
-workflow in `intrinio.py`. Application services reserve quota for every stage.
-Forms/views/templates orchestrate the UI; `research/fundamentals.py` presents
-values and metadata independently of Django, persistence, and the network.
+Standardized observations may differ from issuer presentation. Units, period boundaries
+and currently retrieved statement versions remain explicit. Coverage and display rights
+depend on provider entitlements.
 
-The module adds 34 tests, bringing that milestone to 119 (the project now has 884). They cover explicit
-identity/period selection, endpoint codes, optional cursor behavior, restated
-periods, exact decimals, negatives/zeros/nulls, dates/timezones, units, row bounds,
-partial/empty/missing data, all-stage failures/quotas, escaping/redaction, and
-the acceptance command. All pass. Both optional browser runners pass; the
-fundamentals runner covers all statement types at desktop/mobile sizes with
-keyboard tables and unavailable/denied/rate-limit states. Its invented values
-are [test-only fixtures](../tests/fixtures/README.md), never production data.
-
-Authenticated browser checks passed AAPL 2025 FY income (22 rows), balance-sheet
-(30 rows, restated), and cash-flow (22 rows) pages, including metrics, metadata,
-and desktop/mobile layouts. The final three-statement browser check used one
-search plus three three-stage submissions, within the process client limit.
-`verify_fundamentals` separately passed income and balance-sheet access. No
-raw responses or credential values were recorded. Other companies and fiscal
-periods, account quotas, coverage/freshness, and licensing remain unverified.
-
-User authentication and private PostgreSQL portfolio metadata are now
-implemented. The [USD transaction journal](ledger.md) and [FIFO positions/gains](fifo.md)
-are also implemented. Recorded [dividends and splits](corporate-actions.md) are also supported.
-Explicit-date [market valuation/unrealized gains](valuation.md) are implemented.
-[Allocation weights](allocations.md) and end-of-day [time-weighted performance](performance.md)
-are implemented. Private [watchlists](watchlists.md) and [journal corrections](corrections.md) are implemented. Bounded [daily session returns](daily-returns.md) are implemented. Observed [volatility and drawdown](risk.md) are implemented. [Benchmark comparisons](benchmarks.md), [correlation/beta](relationships.md),
-[Sharpe](sharpe.md) and [selected-period profitability](profitability.md) are implemented.
-[Annual return on assets/equity](capital-returns.md) is implemented. [Annual revenue and earnings growth](growth.md) is implemented. [Selected-FY basic/diluted P/E](multiples.md) is implemented. [Annual statement trends](trends.md) are implemented. [Stock volatility and drawdown](stock-risk.md) are implemented. [Daily trading volume](volume.md) is implemented. Next: market capitalization with explicit dates and currency.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.

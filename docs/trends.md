@@ -1,15 +1,10 @@
 # Annual financial statement trends
 
-Version 0.29 corrects the operating-income tag to `totaloperatingincome`. Live
-AAPL FY2024/2025 income trends now pass independent arithmetic, chart/table and
-source checks. See [release evidence](release-acceptance.md); the original v0.24
-verification below predates this live acceptance.
-
-Implemented in v0.24.0, October 11, 2026. Choose **View annual financial statement
-trends** from instrument details or company financials. Select one statement,
-the last fiscal year and two to four consecutive FY periods, then **Load annual
-trends**. Defaults suggest income, the preceding calendar year and three periods;
-they do not guarantee available filings. Opening the form makes no provider call.
+Choose **View annual financial statement trends** from instrument details or company
+financials. Select one statement, the last fiscal year and two to four consecutive FY
+periods, then **Load annual trends**. Defaults suggest income, the preceding calendar
+year and three periods; they do not guarantee available filings. Opening the form makes
+no provider call.
 
 ## Definitions and scope
 
@@ -114,13 +109,13 @@ There are no list scans, continuation requests, prefetches or duplicate referenc
 lookups. Missing requested statement resources stop the entire load with an
 explained 404, rather than shortening the range or choosing an earlier FY.
 
-Every attempted HTTP call reserves the existing shared per-process budget of
-10/client and 30/global per minute, also used by search, details, prices and
-other research modules. Earlier actions can therefore exhaust a load's remaining
-allowance, including the four-year view. A default seven-request load followed
-by another consumes at most the remaining three before 429. The module does not
-grant a new quota. Invalid fields/periods/ranges make no provider request; missing
-credentials are checked before constructing transport or reserving quota.
+Every attempted HTTP call reserves the existing shared request budget of 10/client and
+30/global per minute, also used by search, details, prices and other research modules.
+Earlier actions can therefore exhaust a load's remaining allowance, including the
+four-year view. A default seven-request load followed by another consumes at most the
+remaining three before 429. The module does not grant a new quota. Invalid
+fields/periods/ranges make no provider request; missing credentials are checked before
+constructing transport or reserving quota.
 
 Existing safe 404/429/503, bounded Retry-After, no-store and redacted logging apply.
 A stage error clears all loaded series/chart/source context. Partial standardized
@@ -130,7 +125,7 @@ fixtures are used in normal application paths. Existing TLS, Decimal/JSON and
 per-response bounds remain unchanged (200 rows, 256 KiB and bounded numbers).
 No market-data persistence or licensing permission is inferred.
 
-## Implementation and verification
+## Implementation
 
 `AnnualStatementSeries` is an immutable provider-independent contract.
 `market_data/fundamentals.py` validates range bounds; `intrinio.py` reuses one
@@ -139,26 +134,10 @@ verified identity and strict statement methods. Services reserve the shared quot
 changes and builds chart geometry. Forms, views and templates present the data.
 Comments explain full-range validation, unavailable-year boundaries and geometry.
 
-The module adds **38 tests**: 22 calculation/chart checks, five adapter, nine
-page and two form/service checks. The focused trends/growth/statements suite
-passes **116**. Full PostgreSQL passes **818 with no skips**. Full SQLite
-discovers 818, passes **563** and skips **255 PostgreSQL-only cases**. Ruff
-lint/format checks **170 Python files**; Django, migration drift (none) and
-static collection pass. No dependency or migration was added.
+## Limitations
 
-The first browser check found that the script was placed in a template block
-the base layout does not render. Its inclusion was corrected and a page assertion
-added. Browser acceptance verifies all three statement types plus mixed versions,
-week years, gaps, stub years, partial middle data and missing tags, including
-chart keyboard/pointer interactions, exact readouts, tables, source metadata,
-responsive layouts and error cleanup. Existing three-statement and search/
-selection/price-chart browser regressions also run with explicit synthetic
-test-only fixtures. New live-provider acceptance and production are unverified.
+Comparisons use currently retrieved annual statements and their source versions. They
+are not forecasts or historical-as-known reports. Missing years are not bridged.
 
-Fresh current-source startup readiness passed twice and after repeating frozen
-setup/database startup, without provider calls or account creation. All six
-development model counts and temporary browser database counts remain zero;
-the original specification checksum is unchanged. Reusable startup instructions
-are saved for review; draft saving does not apply or publish the environment.
-
-[Stock volatility and drawdown](stock-risk.md) are implemented. [Daily trading volume](volume.md) is implemented. Next: market capitalization with explicit dates and currency.
+See [setup and checks](setup.md#automated-checks) and the [methodology
+index](methodology.md) for related calculations.
