@@ -107,6 +107,26 @@ cannot be edited; import a new one to correct inputs, or confirm **Delete this
 snapshot** to remove it. Repeated save submissions return the original snapshot.
 
 Snapshots are separate from transaction portfolios. They do not create trades,
-cost basis or returns, and pricing/analysis is not yet available. PostgreSQL is
+cost basis or returns. PostgreSQL is
 required for saving; each account can keep up to 50 snapshots. See the
 [snapshot input and storage rules](holdings-snapshots.md).
+
+
+## Review a holdings snapshot
+
+Open a saved snapshot, choose **Review snapshot value and concentration**, then
+**Load snapshot review**. Opening either page makes no provider requests. The load
+uses the saved date; it cannot substitute a different date or an earlier close.
+It requests up to five exact-date raw closes through the shared provider budget.
+
+The review shows supplied cash, individual market values, cash-inclusive allocation,
+and largest-holding/top-three concentration. Missing or unsuitable prices leave
+all totals, weights and concentration unavailable while retaining known row values.
+A valid zero close remains zero. Cash-only snapshots need no price requests and
+have 100.00% cash weight; holding concentration is not applicable.
+
+These diagnostics do not establish gains, historical account performance or
+holding-level risk attribution. Saved share-basis confirmation is a user assertion,
+not broker reconciliation. Prices and results are not stored; a subsequent explicit
+load may reflect provider corrections. Read the [review methodology](holdings-snapshots.md#review-methodology)
+for rounding, availability and source rules.

@@ -1,8 +1,8 @@
 # Holdings import and dated snapshot review
 
 Status: CSV validation/preview, explicit instrument resolution and private snapshot
-persistence are implemented. Financial review remains proposed. This document defines
-the intended complete workflow within PortfolioLens's existing Django/PostgreSQL
+persistence and dated value/allocation/concentration review are implemented. This
+document defines the bounded workflow within PortfolioLens's existing Django/PostgreSQL
 application. Current transaction-based
 portfolios and their limits remain as described in [product scope](../product-specification.md).
 

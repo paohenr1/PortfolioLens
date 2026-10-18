@@ -11,7 +11,7 @@ market/reference data through backend HTTP requests.
 | --- | --- |
 | `config` | Settings, routing, middleware and runtime configuration |
 | `accounts` | Django session authentication, account forms and attempt limits |
-| `portfolios` | Owner-scoped portfolio metadata, CSV validation, snapshot resolution and storage |
+| `portfolios` | Owner-scoped portfolio metadata, CSV validation, snapshot resolution/storage and dated review |
 | `ledger` | Immutable transactions, corrections, FIFO, valuation, returns and risk |
 | `watchlists` | Private bookmarks, preferences and bounded market-information loads |
 | `market_data` | Provider-independent contracts, Intrinio transport and validation |
@@ -36,10 +36,14 @@ to calculations; they are separate from supplied holdings snapshots.
 The snapshot workflow validates CSV locally, then performs explicit bounded search
 and reference-validation actions. A signed, user-bound payload carries inputs for
 15 minutes without session or raw-file storage. Separate snapshot/holding models
-store only confirmed inputs; no journal entries, prices or results are created.
+store only confirmed inputs; no journal entries are created. Snapshot review copies
+inputs consistently before provider I/O, then computes values and concentration
+in a separate pure contract. Prices and calculated results are never persisted.
 Owner-row locks serialize saves, capacity checks and deletion. Unique submission
 receipts provide retry identity and prevent stale retries from restoring a deleted
-snapshot. See [snapshot contracts](holdings-snapshots.md).
+snapshot. Review reads use the same owner lock only while copying inputs, then
+release it before price requests; post-load authorization detects deletion during I/O.
+See [snapshot contracts](holdings-snapshots.md).
 
 Money uses Decimal and defined rounding. Statistical calculations use exact rational
 inputs where appropriate, with rounding at the display boundary. Chart coordinates never

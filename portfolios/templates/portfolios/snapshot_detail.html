@@ -1,7 +1,8 @@
 {% extends 'research/base.html' %}
 {% block title %}{{ snapshot.name }} · Holdings snapshot · PortfolioLens{% endblock %}
 {% block content %}
-<section class="intro compact"><p class="eyebrow">Private saved inputs · USD</p><h1>{{ snapshot.name }}</h1><p class="lead">Holdings snapshot as of {{ snapshot.as_of|date:'Y-m-d' }}</p><p>Supplied holdings, not transaction history or account performance. Pricing and snapshot analysis are not available yet.</p></section>
+<section class="intro compact"><p class="eyebrow">Private saved inputs · USD</p><h1>{{ snapshot.name }}</h1><p class="lead">Holdings snapshot as of {{ snapshot.as_of|date:'Y-m-d' }}</p><p>Supplied holdings, not transaction history or account performance. Load an exact-date review to see market value, allocation and concentration.</p></section>
+<p><a class="button" href="{% url 'snapshot_review' snapshot.pk %}">Review snapshot value and concentration</a></p>
 <section class="reference-panel">
   <h2>Confirmed inputs</h2>
   <p>Supplied cash: USD {{ snapshot.cash }}. Saved {{ snapshot.created_at|date:'Y-m-d H:i:s T' }}.</p>

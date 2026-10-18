@@ -9,7 +9,7 @@ brokerage accounts or produce tax statements.
 
 - Instrument search, price/volume history, stock risk and company financial analysis.
 - Private CSV validation, explicit instrument matching and saved dated holdings snapshots.
-  Snapshots store supplied inputs; they do not yet offer pricing or analysis.
+  Explicit loads show exact-date value, cash-inclusive allocation and concentration.
 - Private watchlists with saved preferences and on-demand market information.
 - Transaction accounting, explicit corrections, dividends/splits and FIFO positions.
 - Dated valuation and allocations, supported time-weighted/daily returns and risk.
@@ -30,15 +30,15 @@ synthetic market data appears in normal operation.
 
 ## Proposed direction
 
-The holdings-input workflow can now save snapshots. Snapshot-based diagnostics,
-holding-level risk attribution, stress testing and report generation remain proposals
-without implemented analysis UI or a delivery commitment.
+The holdings-input workflow saves snapshots and supports a bounded on-screen review.
+Holding-level risk attribution, stress testing and report generation remain proposals
+without implemented UI or a delivery commitment.
 
-Snapshot diagnostics would need explicit as-of dates, price and currency bases, coverage
+Snapshot diagnostics keep explicit as-of dates, raw-price/USD bases, coverage
 and assumptions. A snapshot alone cannot establish actual account performance;
-historical returns require appropriate transaction and cash-flow history. Any future
+historical returns require appropriate transaction and cash-flow history. Future
 diagnostics must preserve that distinction.
 
 The [holdings-import and snapshot-review proposal](proposals/holdings-import.md)
-defines the input rules, implemented import slices and proposed review calculations.
+defines the input rules, implemented import and review calculations.
 See [snapshot storage](holdings-snapshots.md) for current behavior and limits.
