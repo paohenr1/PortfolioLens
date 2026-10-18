@@ -1,13 +1,17 @@
 {% extends 'research/base.html' %}
+{% load static %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'research/snapshot-print.css' %}">{% endblock %}
+{% block body_class %}snapshot-review-page{% endblock %}
 {% block title %}Holdings snapshot review · {{ snapshot.as_of|date:'Y-m-d' }} · PortfolioLens{% endblock %}
 {% block content %}
 <section class="intro compact">
+  <p class="print-only">PortfolioLens · Private holdings review</p>
   <p class="eyebrow">Private snapshot diagnostics · USD · Raw close basis</p>
   <h1>Holdings snapshot review · {{ snapshot.as_of|date:'Y-m-d' }}</h1>
   <p class="lead">{{ snapshot.name }}</p>
   <p>Values describe your supplied holdings and cash at the saved date's close. They are not account performance, gains, broker reconciliation or a recommendation.</p>
 </section>
-<section class="account-section">
+<section class="account-section screen-only">
   <form method="post" class="account-form" aria-label="Load snapshot review">{% csrf_token %}
     {{ form.as_div }}<button class="button" type="submit">Load snapshot review</button>
   </form>
@@ -15,6 +19,13 @@
 </section>
 {% if provider_error %}<div class="error-state" role="alert"><p>{{ provider_error.message }}</p>{% if provider_error.retry_after %}<p>Retry after {{ provider_error.retry_after }} seconds.</p>{% endif %}<p>Affected holdings remain unavailable below. No automatic retry occurs.</p></div>{% endif %}
 {% if review %}
+<div class="screen-only print-controls">
+  <button type="button" class="button" id="print-snapshot-review" hidden>Print / save PDF</button>
+  <p>Print this loaded review or choose Save as PDF in your browser’s print dialog. Printing does not reload prices.</p>
+  <noscript><p>Use your browser’s Print command to print or save this loaded review as PDF.</p></noscript>
+</div>
+<p class="review-load-time">Review loaded {{ review_loaded_at|date:'Y-m-d H:i:s T' }}. Values and availability reflect this load; this is not a frozen provider report.</p>
+<script src="{% static 'research/snapshot-print.js' %}" defer></script>
 <section class="reference-panel">
   <h2>Dated value and input coverage</h2>
   <dl class="reference-grid">
@@ -60,7 +71,7 @@
   <h2>Input basis and limitations</h2>
   <p>Confirmation saved with these inputs: {{ confirmation }}</p>
   <p>This is your assertion, not independent verification. Current reference metadata cannot prove historical identity. Only an exact-date, matching instrument/MIC/USD, confirmed raw close with complete pagination is accepted. Adjusted, earlier or later closes never substitute.</p>
-  <p>A snapshot cannot establish cost basis, gains, historical returns, volatility, beta or Sharpe. This review does not include sector/fund look-through, risk attribution, stress tests or report exports.</p>
+  <p>A snapshot cannot establish cost basis, gains, historical returns, volatility, beta or Sharpe. This review does not include sector/fund look-through, risk attribution, stress tests or server-generated report files.</p>
 </section>
-<p><a href="{% url 'snapshot_detail' snapshot.pk %}">Back to saved inputs</a> · <a href="{% url 'snapshot_list' %}">My holdings snapshots</a></p>
+<p class="screen-only"><a href="{% url 'snapshot_detail' snapshot.pk %}">Back to saved inputs</a> · <a href="{% url 'snapshot_list' %}">My holdings snapshots</a></p>
 {% endblock %}

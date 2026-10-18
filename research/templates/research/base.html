@@ -7,8 +7,9 @@
     <meta name="description" content="A workspace for stock research and portfolio analytics.">
     <title>{% block title %}PortfolioLens · Portfolio Analytics{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'research/site.css' %}">
+    {% block extra_head %}{% endblock %}
   </head>
-  <body>
+  <body class="{% block body_class %}{% endblock %}">
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="header">
       <a class="brand" href="{% url 'home' %}"><span class="brand-mark" aria-hidden="true">P</span> PortfolioLens</a>

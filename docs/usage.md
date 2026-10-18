@@ -130,3 +130,19 @@ holding-level risk attribution. Saved share-basis confirmation is a user asserti
 not broker reconciliation. Prices and results are not stored; a subsequent explicit
 load may reflect provider corrections. Read the [review methodology](holdings-snapshots.md#review-methodology)
 for rounding, availability and source rules.
+
+
+## Print or save a snapshot review
+
+After loading a snapshot review, choose **Print / save PDF**. Select a printer or
+Save as PDF in your browser’s dialog. Without JavaScript, use the browser’s Print
+command. Printing uses the currently loaded values and makes no new price request.
+
+The printed review retains the holdings date, load time, provider retrieval times,
+values, unavailable states, confirmation and methodology limits. Navigation and
+load controls are omitted, and table columns wrap to fit the page. Incomplete and
+cash-only reviews can also be printed. Page size, headers, footers and PDF support
+ultimately depend on the browser and print settings.
+
+This creates a local copy through your browser; the application does not store or
+serve a report file. A later review load may show different provider observations.

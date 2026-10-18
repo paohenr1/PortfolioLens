@@ -75,3 +75,9 @@ same isolated synthetic setup to verify explicit price loads, fixed dates, exact
 values and weights, concentration, missing-price suppression, cash-only inputs,
 keyboard tables and two-user desktop/mobile access. It does not establish live
 provider coverage, entitlements or deployment readiness.
+
+The snapshot-review browser runner also checks keyboard activation of the print
+button, absence of navigation/requests while printing, and print-media visibility.
+It writes synthetic complete, incomplete and cash-only PDFs under `/tmp` for visual
+inspection. Verify that values, source/retrieval details and limitations survive
+printing; browser headers/footers and paper settings can vary.

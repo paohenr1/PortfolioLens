@@ -24,6 +24,33 @@ def create_snapshot(page, base, *, cash_only=False, as_of="2020-01-02"):
     return page.url
 
 
+def verify_print(page, label, requests):
+    """Print the existing DOM: no navigation, form submission or resource reload."""
+    button = page.get_by_role("button", name="Print / save PDF", exact=True)
+    button.wait_for(state="visible")
+    before, url = len(requests), page.url
+    page.evaluate("""() => {
+        window.originalPrint = window.print;
+        window.printCalls = 0;
+        window.print = () => { window.printCalls += 1; };
+    }""")
+    button.focus()
+    page.keyboard.press("Enter")
+    assert page.evaluate("window.printCalls") == 1
+    page.evaluate("window.print = window.originalPrint")
+    assert page.url == url and len(requests) == before
+    page.emulate_media(media="print")
+    assert not button.is_visible()
+    assert not page.locator(".header").is_visible()
+    assert not page.get_by_role("button", name="Load snapshot review", exact=True).is_visible()
+    assert page.get_by_role("heading", name="Input basis and limitations", exact=True).is_visible()
+    assert page.locator(".review-load-time").is_visible()
+    assert page.locator(".price-table").evaluate("el => el.scrollWidth <= el.clientWidth + 1")
+    page.pdf(path=f"/tmp/snapshot-print-{label}.pdf", prefer_css_page_size=True)
+    assert len(requests) == before and page.url == url
+    page.emulate_media(media="screen")
+
+
 def main():
     from playwright.sync_api import sync_playwright
 
@@ -44,6 +71,7 @@ def main():
                 page.set_viewport_size({"width": width, "height": height})
                 page.goto(url + "?action=load")
                 page.get_by_role("heading", name="No review loaded", exact=True).wait_for()
+                assert page.get_by_role("button", name="Print / save PDF", exact=True).count() == 0
                 page.get_by_role("button", name="Load snapshot review", exact=True).click()
                 page.get_by_role(
                     "heading", name="Dated value and input coverage", exact=True
@@ -65,6 +93,7 @@ def main():
                 assert table.evaluate("el => el === document.activeElement")
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
                 page.screenshot(path=f"/tmp/snapshot-review-{label}.png", full_page=True)
+                verify_print(page, label, requests)
                 response = bob.goto(url)
                 assert response.status == 404
                 assert "no-store" in response.headers["cache-control"]
@@ -80,6 +109,7 @@ def main():
             )
             page.screenshot(path="/tmp/snapshot-review-missing-mobile.png", full_page=True)
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+            verify_print(page, "incomplete", requests)
             page.goto(missing_url)
             page.get_by_role("heading", name="No review loaded", exact=True).wait_for()
             create_snapshot(page, base, cash_only=True)
@@ -87,6 +117,7 @@ def main():
             assert "Cash-only snapshot" in page.locator("main").inner_text()
             assert "100.00%" in page.locator("main").inner_text()
             assert "Not applicable" in page.locator("main").inner_text()
+            verify_print(page, "cash-only", requests)
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(url)
             assert "/sign-in/?next=" in page.url
@@ -95,7 +126,8 @@ def main():
             print(
                 "Snapshot review browser PASS: exact dated values, reconciled allocation, "
                 "concentration, explicit loads, two-user isolation, missing prices, cash-only, "
-                "keyboard tables and desktop/mobile; synthetic local fixtures only."
+                "keyboard tables, desktop/mobile and request-free browser PDF printing; "
+                "synthetic local fixtures only."
             )
         finally:
             owner.close()

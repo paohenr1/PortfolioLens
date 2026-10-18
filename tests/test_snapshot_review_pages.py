@@ -58,6 +58,7 @@ class SnapshotReviewPagesTests(TestCase):
     def test_get_flags_empty_post_and_unsafe_methods_spend_no_requests(self):
         response = self.client.get(self.url, {"action": "load", "load": "1"})
         self.assertContains(response, "No review loaded")
+        self.assertNotContains(response, 'id="print-snapshot-review"')
         self.assertIsNone(response.context["review"])
         self.assertIn("no-store", response.headers["Cache-Control"])
         self.assertEqual(self.client.post(self.url).status_code, 400)
@@ -78,6 +79,9 @@ class SnapshotReviewPagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Holdings snapshot review · 2020-01-02")
         self.assertEqual(response.context["review"].total_value, Decimal("32.34"))
+        self.assertContains(response, 'id="print-snapshot-review"')
+        self.assertContains(response, "Review loaded")
+        self.assertIsNotNone(response.context["review_loaded_at"])
         self.assertEqual(response.context["review"].cash, Decimal("12.34"))
         self.prices.assert_called_once_with(self.identifier, AS_OF, "127.0.0.1")
         self.assertEqual(

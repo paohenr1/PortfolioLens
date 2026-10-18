@@ -9,7 +9,8 @@ brokerage accounts or produce tax statements.
 
 - Instrument search, price/volume history, stock risk and company financial analysis.
 - Private CSV validation, explicit instrument matching and saved dated holdings snapshots.
-  Explicit loads show exact-date value, cash-inclusive allocation and concentration.
+  Explicit loads show exact-date value, cash-inclusive allocation and concentration,
+  with browser printing/PDF saving of the loaded review.
 - Private watchlists with saved preferences and on-demand market information.
 - Transaction accounting, explicit corrections, dividends/splits and FIFO positions.
 - Dated valuation and allocations, supported time-weighted/daily returns and risk.
@@ -31,7 +32,7 @@ synthetic market data appears in normal operation.
 ## Proposed direction
 
 The holdings-input workflow saves snapshots and supports a bounded on-screen review.
-Holding-level risk attribution, stress testing and report generation remain proposals
+Holding-level risk attribution, stress testing and server-generated report exports remain proposals
 without implemented UI or a delivery commitment.
 
 Snapshot diagnostics keep explicit as-of dates, raw-price/USD bases, coverage
