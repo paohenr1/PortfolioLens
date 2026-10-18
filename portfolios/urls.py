@@ -3,10 +3,18 @@ from django.urls import include, path
 from ledger.daily_return_views import daily_returns
 from ledger.performance_views import performance
 from ledger.views import positions, valuation
-from portfolios import views
+from portfolios import snapshot_views, views
 from portfolios.holdings_views import holdings_preview
 
 urlpatterns = [
+    path("snapshots/", snapshot_views.snapshot_list, name="snapshot_list"),
+    path("snapshots/import/", snapshot_views.snapshot_import, name="snapshot_import"),
+    path("snapshots/<uuid:snapshot_id>/", snapshot_views.snapshot_detail, name="snapshot_detail"),
+    path(
+        "snapshots/<uuid:snapshot_id>/delete/",
+        snapshot_views.snapshot_delete,
+        name="snapshot_delete",
+    ),
     path("", views.portfolio_list, name="portfolio_list"),
     path("check-holdings/", holdings_preview, name="holdings_preview"),
     path("create/", views.portfolio_create, name="portfolio_create"),

@@ -6,6 +6,7 @@
   <h1>My portfolios</h1>
   <p class="lead">Organize your investments in portfolios that belong to your account.</p>
   <a class="button" href="{% url 'portfolio_create' %}">Create portfolio</a>
+  <p><a href="{% url 'snapshot_list' %}">My holdings snapshots</a> — dated saved inputs, separate from transaction history.</p>
   <p><a href="{% url 'holdings_preview' %}">Check a holdings CSV</a> — validate inputs without saving a portfolio.</p>
 </section>
 <section class="results" aria-label="Your portfolios">

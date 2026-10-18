@@ -1,0 +1,17 @@
+{% extends 'research/base.html' %}
+{% block title %}{{ snapshot.name }} · Holdings snapshot · PortfolioLens{% endblock %}
+{% block content %}
+<section class="intro compact"><p class="eyebrow">Private saved inputs · USD</p><h1>{{ snapshot.name }}</h1><p class="lead">Holdings snapshot as of {{ snapshot.as_of|date:'Y-m-d' }}</p><p>Supplied holdings, not transaction history or account performance. Pricing and snapshot analysis are not available yet.</p></section>
+<section class="reference-panel">
+  <h2>Confirmed inputs</h2>
+  <p>Supplied cash: USD {{ snapshot.cash }}. Saved {{ snapshot.created_at|date:'Y-m-d H:i:s T' }}.</p>
+  <div class="table-scroll" tabindex="0" aria-label="Saved snapshot holdings"><table class="price-table">
+  <caption>Raw share quantities and saved Intrinio reference metadata</caption>
+  <thead><tr><th scope="col">Ticker</th><th scope="col">MIC</th><th scope="col">Quantity</th><th scope="col">Instrument</th><th scope="col">Reference retrieved</th></tr></thead>
+  <tbody>{% for row in snapshot.holdings.all %}<tr><td>{{ row.ticker }}</td><td>{{ row.exchange_mic }}</td><td>{{ row.quantity }}</td><td>{{ row.security_id }} · {{ row.name|default:'Name unavailable' }}</td><td>{{ row.reference_retrieved_at|date:'Y-m-d H:i:s T' }}</td></tr>{% empty %}<tr><td colspan="5">Cash-only snapshot</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <h2>Your confirmation</h2><p>{{ confirmation }}</p>
+  <p class="muted">This is your assertion, not broker reconciliation. Current reference metadata cannot prove historical identity. Saved inputs cannot be edited; import a new snapshot to correct them. Viewing this page makes no provider requests.</p>
+</section>
+<p><a href="{% url 'snapshot_delete' snapshot.pk %}">Delete this snapshot</a> · <a href="{% url 'snapshot_list' %}">My holdings snapshots</a></p>
+{% endblock %}

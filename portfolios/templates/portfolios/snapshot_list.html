@@ -1,0 +1,12 @@
+{% extends 'research/base.html' %}
+{% block title %}My holdings snapshots · PortfolioLens{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Private saved inputs</p><h1>My holdings snapshots</h1>
+  <p class="lead">Dated holdings and cash supplied by you, separate from transaction history.</p>
+  <p>Up to 50 snapshots per account, each with at most five instruments. Pricing and snapshot analysis are not available yet.</p>
+  <a class="button" href="{% url 'holdings_preview' %}">Import a holdings CSV</a>
+</section>
+<ul class="result-list">{% for snapshot in snapshots %}<li class="result-card"><div><h2><a href="{% url 'snapshot_detail' snapshot.pk %}">{{ snapshot.name }}</a></h2><p>Holdings as of {{ snapshot.as_of|date:'Y-m-d' }} · USD</p></div></li>{% empty %}<li class="empty-state">No saved holdings snapshots yet.</li>{% endfor %}</ul>
+<p><a href="{% url 'portfolio_list' %}">My transaction portfolios</a></p>
+{% endblock %}

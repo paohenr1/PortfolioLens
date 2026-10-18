@@ -99,6 +99,8 @@ def main():
                     settings.INTRINIO_API_KEY = TEST_KEY
 
                     def transport(request):
+                        if request.url.path == "/securities/search":
+                            return httpx.Response(200, json=fixture("security_search.json"))
                         if (
                             watchlist_market_fixtures
                             and request.url.path == "/securities/sec_fixture_primary/prices"

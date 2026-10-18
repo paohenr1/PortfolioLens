@@ -1,0 +1,7 @@
+{% extends 'research/base.html' %}
+{% block title %}Delete snapshot · PortfolioLens{% endblock %}
+{% block content %}
+<section class="intro compact"><h1>Delete {{ snapshot.name }}?</h1><p>This removes the saved snapshot and its holdings. Transaction portfolios and journal entries are unaffected.</p></section>
+<form method="post" class="account-form">{% csrf_token %}{{ form.as_div }}<button class="button" type="submit">Delete snapshot</button></form>
+<p><a href="{% url 'snapshot_detail' snapshot.pk %}">Keep snapshot</a></p>
+{% endblock %}

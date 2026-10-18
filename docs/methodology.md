@@ -5,8 +5,9 @@ malformed or incompatible inputs stay unavailable. Chart coordinates and rounded
 values do not feed back into financial arithmetic.
 
 Portfolio analysis uses the current corrected transaction journal. A journal snapshot is
-an internal consistency boundary, not a holdings-import feature or proof of actual
-performance from a static holdings list. Corrections can restate past event-date
+an internal consistency boundary, separate from [supplied holdings
+snapshots](holdings-snapshots.md). Neither a journal snapshot nor a static holdings
+list is by itself proof of actual account performance. Corrections can restate past event-date
 results. Benchmark statistics do not attribute risk to holdings.
 
 ## Accounting and valuation

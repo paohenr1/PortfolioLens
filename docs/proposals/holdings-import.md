@@ -1,14 +1,15 @@
 # Holdings import and dated snapshot review
 
-Status: the CSV validation/preview slice is implemented. Instrument resolution,
-snapshot persistence and financial review remain proposed. This document defines
+Status: CSV validation/preview, explicit instrument resolution and private snapshot
+persistence are implemented. Financial review remains proposed. This document defines
 the intended complete workflow within PortfolioLens's existing Django/PostgreSQL
 application. Current transaction-based
 portfolios and their limits remain as described in [product scope](../product-specification.md).
 
 The current **Check holdings CSV** tool validates metadata and file structure only.
-It does not request confirmations that would imply a saved/verified snapshot,
-resolve instruments, write business records or fetch prices.
+Checking alone does not resolve instruments, write business records or fetch prices.
+Users can then explicitly continue to matching, reference verification and confirmed
+saving. See [current snapshot behavior](../holdings-snapshots.md).
 
 ## Outcome and boundary
 
@@ -37,7 +38,7 @@ stress tests, recommendations and report exports are outside this slice.
 Use one CSV template, with no automatic column guessing. The upload contains
 holdings only; the form supplies snapshot name, date, USD cash and confirmation.
 
-| Input | Proposed rule |
+| Input | Rule |
 | --- | --- |
 | Name | Required, 1–100 characters after trimming; no control characters |
 | As-of date | Required completed XNYS session, from 2000 through yesterday in America/Toronto; no default that implies the holdings date is known |
@@ -77,7 +78,7 @@ metadata cannot prove historical identity. Keep that limitation in the review.
    all validation errors. No provider requests or business-record writes occur.
 2. **Find instrument matches:** on explicit submission, run one bounded existing
    search per unresolved row, at most five calls per action. Show only exact
-   ticker/MIC matches returned by that search. Each choice includes stable provider
+   ticker/MIC matches returned by that search. More than five exact candidates per row remains unresolved. Each choice includes stable provider
    ID, name, MIC and currency. Require explicit selection even for one candidate.
 3. **Validate selections:** on explicit submission, retrieve each selected stable
    ID once, at most five calls. Require exact ID, ticker/MIC and USD agreement.
@@ -92,7 +93,7 @@ Ticker renames, historical ticker ambiguity or references that cannot be resolve
 leave import blocked with an explanation. No manual unverified provider-ID bypass
 is included. The resolver uses the existing backend adapter and safe error policy.
 
-Use a bounded, expiring, user-bound signed preview payload (proposed lifetime:
+Use a bounded, expiring, user-bound signed preview payload (lifetime:
 15 minutes) carrying validated inputs and references. Validate structure, scope,
 age and confirmation again on save. Recheck all non-provider invariants before
 writing. An expired or changed preview requires revalidation; possession of a
@@ -161,8 +162,8 @@ is missing, total value and all these percentages are unavailable.
 
 ## Persistence, privacy and request limits
 
-Use separate owner-scoped snapshot and holding models within the existing
-`portfolios` app, with additive migrations. Proposed fields include owner, UUID,
+Separate owner-scoped snapshot and holding models use the existing
+`portfolios` app, with additive migrations. Stored fields include owner, UUID,
 name, as-of date, explicit USD cash, confirmation/schema version, creation time,
 submission key/input digest, and normalized holdings with stable IDs and reference
 retrieval timestamps. Store only the minimal selected reference fields already

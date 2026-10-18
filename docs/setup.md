@@ -70,7 +70,7 @@ portfolios and watchlists. Opening lists and accounting pages does not request m
 prices; pricing and analysis loads are explicit.
 
 For research/accounts-only experimentation, omit the PostgreSQL environment file and
-migrate SQLite. Persistent portfolio/watchlist routes then return an explicit unavailable
+migrate SQLite. Persistent portfolio/snapshot/watchlist routes then return an explicit unavailable
 response. The transient holdings CSV checker requires authentication but not PostgreSQL.
 SQLite cannot verify PostgreSQL integrity or concurrency.
 

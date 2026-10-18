@@ -1,0 +1,12 @@
+<dl class="reference-grid">
+  <div><dt>Name</dt><dd>{{ preview.name }}</dd></div>
+  <div><dt>Supplied close date</dt><dd>{{ preview.as_of }}</dd></div>
+  <div><dt>Supplied cash (USD)</dt><dd>{{ preview.cash }}</dd></div>
+</dl>
+<div class="table-scroll" tabindex="0" aria-label="Snapshot holdings">
+  <table class="price-table">
+    <caption>Supplied holdings · USD · no prices or cost basis</caption>
+    <thead><tr><th scope="col">Ticker</th><th scope="col">MIC</th><th scope="col">Quantity</th><th scope="col">Selected instrument</th><th scope="col">Reference retrieved</th></tr></thead>
+    <tbody>{% for row in preview.rows %}<tr><td>{{ row.ticker }}</td><td>{{ row.exchange_mic }}</td><td>{{ row.quantity }}</td><td>{% if row.reference %}{{ row.reference.security_id }} · {{ row.reference.name|default:'Name unavailable' }}{% else %}Not yet verified{% endif %}</td><td>{{ row.reference.retrieved_at|default:'Unavailable' }}</td></tr>{% empty %}<tr><td colspan="5">Cash-only input</td></tr>{% endfor %}</tbody>
+  </table>
+</div>

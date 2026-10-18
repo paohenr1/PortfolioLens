@@ -5,7 +5,7 @@
   <p class="eyebrow">Private input check</p>
   <h1>Check holdings CSV</h1>
   <p class="lead">Check the format of up to five USD holdings and preview the quantities you supplied.</p>
-  <p>This check does not save holdings, verify instruments, load prices, or calculate account performance. The file and preview are not retained.</p>
+  <p>This check does not save holdings, verify instruments, load prices, or calculate account performance. The file is not retained. After checking, you can explicitly resolve instruments and save a private snapshot.</p>
 </section>
 <section class="reference-panel account-section">
   <h2>CSV format</h2>
@@ -47,6 +47,13 @@
     </table>
   </div>
   {% else %}<p>Cash-only input; no instruments supplied.</p>{% endif %}
+  {% if snapshot_token %}
+  <form method="post" action="{% url 'snapshot_import' %}">{% csrf_token %}
+    <input type="hidden" name="preview" value="{{ snapshot_token }}"><input type="hidden" name="action" value="find">
+    <button class="button" type="submit">Find instrument matches</button>
+  </form>
+  <p class="muted">Continue within 15 minutes. Finding matches makes up to five searches using the shared request budget. Saving requires a separate confirmation.</p>
+  {% else %}<p class="muted">Saving snapshots requires PostgreSQL.</p>{% endif %}
   <p>Confirm these inputs against your own records. This preview does not create transaction history or establish historical returns.</p>
 </section>
 {% endif %}

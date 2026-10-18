@@ -92,4 +92,21 @@ Choose **Check CSV** to see normalized inputs or row-level errors. Reselect the
 file after correcting errors; it is not stored or restored on a later visit.
 The check does not verify instrument identity, save holdings, create transactions
 or request prices. A valid file is not a verified account balance or performance
-record. Instrument matching, saved snapshots and analysis remain proposed.
+record.
+
+To save inputs, continue with **Find instrument matches** within 15 minutes.
+Choose each exact ticker/MIC/USD match explicitly, then **Validate selections**.
+Search and reference validation are separate provider actions, each using up to
+five requests from the shared budget. An incomplete search or mismatched reference
+blocks the import. Current metadata cannot prove historical identity.
+
+Review the date, cash, quantities and selected instruments; confirm the close-date
+raw share basis, then choose **Save private snapshot**. **My holdings snapshots**
+lists your saved inputs. Opening a snapshot makes no provider requests. Snapshots
+cannot be edited; import a new one to correct inputs, or confirm **Delete this
+snapshot** to remove it. Repeated save submissions return the original snapshot.
+
+Snapshots are separate from transaction portfolios. They do not create trades,
+cost basis or returns, and pricing/analysis is not yet available. PostgreSQL is
+required for saving; each account can keep up to 50 snapshots. See the
+[snapshot input and storage rules](holdings-snapshots.md).

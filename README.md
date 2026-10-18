@@ -9,8 +9,8 @@ interactive charts and accessible data tables. It does not execute trades.
 - Research instruments, historical prices and volume, stock volatility and
   drawdown, company statements, margins, ROA/ROE, annual growth, selected-year
   P/E, financial trends, and dated company market capitalization.
-- Check a small USD holdings CSV and preview validated inputs without saving or
-  requesting market data.
+- Check a small USD holdings CSV, explicitly match instruments, and save private
+  dated holdings snapshots. Saved snapshots contain inputs only; analysis is not yet available.
 - Maintain private watchlists with saved display preferences and on-demand
   price/volume observations.
 - Record USD transactions, dividends and splits; preview corrections while
@@ -28,6 +28,7 @@ history, source coverage, and the confirmations shown on each calculation page.
 
 | Area | Current limit or assumption |
 | --- | --- |
+| Holdings snapshots | Up to five USD instruments and explicit cash; 50 snapshots per account; no snapshot pricing or performance |
 | Accounting | Manually recorded USD transaction history; long positions and nonnegative cash |
 | Valuation | At most five open instruments on the selected date |
 | Daily returns and risk | At most two instruments held across a maximum 90-calendar-day window, including positions sold during the period |
@@ -35,9 +36,8 @@ history, source coverage, and the confirmations shown on each calculation page.
 | Benchmark statistics | Portfolio-versus-benchmark relationships; no holding-level risk attribution |
 | Data availability | Missing or unsuitable observations remain unavailable; no fabricated or silently filled prices |
 
-Holdings import, snapshot-based diagnostics, holding-level risk attribution,
-stress testing, and report generation are proposed capabilities, not implemented
-features. A holdings snapshot alone cannot establish actual account performance.
+Snapshot-based diagnostics, holding-level risk attribution, stress testing, and
+report generation remain proposed capabilities. A holdings snapshot alone cannot establish actual account performance.
 See [product scope](docs/product-specification.md) and the
 [methodology index](docs/methodology.md).
 
@@ -56,7 +56,7 @@ The helper runs a private local PostgreSQL database. Intrinio credentials are
 optional for startup and automated tests, but required for live market data.
 Configure them securely as described in [setup](docs/setup.md). Normal startup
 never substitutes test fixtures. SQLite supports research/accounts and the transient
-CSV checker; persisted portfolios and watchlists require PostgreSQL.
+CSV checker; persisted portfolios, snapshots and watchlists require PostgreSQL.
 
 ## Documentation
 
