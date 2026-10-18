@@ -1,0 +1,49 @@
+/* Loaded only by the snapshot review. Printing keeps the current rendered result. */
+.print-only { display: none; }
+.print-controls { margin-bottom: 1.5rem; }
+.print-controls [hidden] { display: none; }
+
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  body.snapshot-review-page {
+    background: white;
+    color: black;
+    font: 9pt/1.35 system-ui, sans-serif;
+    --ink: #000;
+    --muted: #333;
+    --accent: #000;
+    --line: #aaa;
+  }
+  .snapshot-review-page .header,
+  .snapshot-review-page footer,
+  .snapshot-review-page .skip-link,
+  .snapshot-review-page .screen-only { display: none !important; }
+  .snapshot-review-page .print-only { display: block; font-weight: 700; }
+  .snapshot-review-page main { width: 100%; max-width: none; padding: 0; }
+  .snapshot-review-page .intro { max-width: none; padding: 0; }
+  .snapshot-review-page h1 { font-size: 18pt; margin: 6pt 0; }
+  .snapshot-review-page h2 { font-size: 12pt; margin: 8pt 0 5pt; break-after: avoid; }
+  .snapshot-review-page .lead { font-size: 11pt; margin: 5pt 0; }
+  .snapshot-review-page .eyebrow { font-size: 8pt; }
+  .snapshot-review-page p { margin: 6pt 0; orphans: 3; widows: 3; }
+  .snapshot-review-page .reference-panel,
+  .snapshot-review-page .results,
+  .snapshot-review-page .error-state { padding: 0; margin: 10pt 0; border: 0; border-radius: 0; }
+  .snapshot-review-page .reference-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6pt 12pt; }
+  .snapshot-review-page .reference-grid > div { break-inside: avoid; }
+  .snapshot-review-page dt, .snapshot-review-page .muted { font-size: 8pt; }
+  .snapshot-review-page .data-warning { border: 1pt solid #555; padding: 6pt; background: white; }
+  .snapshot-review-page .table-scroll { overflow: visible; max-width: none; outline: none; }
+  .snapshot-review-page .price-table { table-layout: fixed; width: 100%; font-size: 8pt; }
+  .snapshot-review-page .price-table caption { padding: 4pt 0; font-size: 8pt; }
+  .snapshot-review-page .price-table th,
+  .snapshot-review-page .price-table td { white-space: normal; overflow-wrap: anywhere; vertical-align: top; padding: 5pt 3pt; }
+  .snapshot-review-page .price-table th:nth-child(1) { width: 18%; }
+  .snapshot-review-page .price-table th:nth-child(2) { width: 12%; }
+  .snapshot-review-page .price-table th:nth-child(3) { width: 16%; }
+  .snapshot-review-page .price-table th:nth-child(4) { width: 17%; }
+  .snapshot-review-page .price-table th:nth-child(5) { width: 10%; }
+  .snapshot-review-page .price-table th:nth-child(6) { width: 27%; }
+  .snapshot-review-page thead { display: table-header-group; }
+  .snapshot-review-page tr { break-inside: avoid; }
+}

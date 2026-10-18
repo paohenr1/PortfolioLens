@@ -16,7 +16,8 @@ saving. See [current snapshot behavior](../holdings-snapshots.md).
 A signed-in user can supply a small holdings CSV, resolve instruments, confirm an
 as-of date and cash balance, and save a private snapshot. An explicit analysis
 load shows dated market value, allocation/concentration and input-quality findings.
-The first deliverable is an on-screen review, not an exported report.
+The on-screen review also supports browser printing/PDF saving. Server-generated
+report files remain outside this workflow.
 
 A snapshot records supplied holdings at one date. It does not create deposits,
 buys, lots, trades, corrections or other journal entries. It cannot establish
@@ -31,7 +32,7 @@ transaction-based daily-return workflow retains its two-instrument/90-day limit.
 
 Broker-specific formats, spreadsheets/PDFs, transaction imports, shorts, options,
 FX, historical snapshot comparisons, sector/fund look-through, risk attribution,
-stress tests, recommendations and report exports are outside this slice.
+stress tests, recommendations and server-generated report exports are outside this slice.
 
 ## Input contract
 

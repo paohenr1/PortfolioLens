@@ -72,7 +72,7 @@ historical ticker changes and truncated searches may block import. Five holdings
 is a deliberate initial capacity, not silent truncation.
 
 A snapshot cannot establish actual account performance or gains. Risk attribution,
-stress tests and report exports remain outside the implemented workflow. The
+stress tests and server-generated report exports remain outside the implemented workflow. The
 [workflow specification](proposals/holdings-import.md) records the bounded design.
 
 
@@ -137,3 +137,19 @@ Implementation: `portfolios/snapshot_review.py` is pure arithmetic;
 `snapshot_review_views.py` renders the explicit-load page. Only the reusable
 allocation arithmetic is shared with `ledger/allocations.py`; snapshots never
 manufacture FIFO/cost-basis objects. Existing journal valuation remains separate.
+
+
+## Browser printing
+
+Loaded reviews offer **Print / save PDF**, backed by the browser’s print dialog.
+Print styles retain all values, missing-price warnings, raw-price/source details,
+retrieval times and input limitations while removing navigation and form controls.
+Tables wrap within the printable page and repeat column headings across pages.
+A load timestamp identifies when this displayed review was prepared; it is not a
+price-observation timestamp or a frozen provider report.
+
+Printing reads the existing document. It does not reload prices, submit a form,
+create a database record or send a report to another user. Browser Print also works
+without JavaScript. PDF creation and paper settings are browser capabilities, not
+a server-side export endpoint. Printed/local copies remain independent of later
+snapshot deletion or provider corrections.

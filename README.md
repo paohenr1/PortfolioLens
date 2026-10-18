@@ -10,7 +10,8 @@ interactive charts and accessible data tables. It does not execute trades.
   drawdown, company statements, margins, ROA/ROE, annual growth, selected-year
   P/E, financial trends, and dated company market capitalization.
 - Check a small USD holdings CSV, explicitly match instruments, and save private
-  dated holdings snapshots; load exact-date raw-close value, allocation and concentration.
+  dated holdings snapshots; load exact-date raw-close value, allocation and concentration,
+  then print the loaded review or save it as PDF through the browser.
 - Maintain private watchlists with saved display preferences and on-demand
   price/volume observations.
 - Record USD transactions, dividends and splits; preview corrections while
@@ -36,8 +37,8 @@ history, source coverage, and the confirmations shown on each calculation page.
 | Benchmark statistics | Portfolio-versus-benchmark relationships; no holding-level risk attribution |
 | Data availability | Missing or unsuitable observations remain unavailable; no fabricated or silently filled prices |
 
-Holding-level risk attribution, stress testing and report generation remain
-proposed capabilities. A holdings snapshot alone cannot establish actual account
+Holding-level risk attribution, stress testing and server-generated report exports
+remain proposed capabilities. A holdings snapshot alone cannot establish actual account
 performance.
 See [product scope](docs/product-specification.md) and the
 [methodology index](docs/methodology.md).

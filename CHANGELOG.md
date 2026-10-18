@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add browser printing/PDF saving for loaded snapshot reviews, preserving source
+  times, incomplete states and limitations without requesting prices again.
+
 - Add on-demand exact-date holdings snapshot value, cash-inclusive allocation and
   concentration, with explicit incomplete/zero states and no saved prices or results.
 

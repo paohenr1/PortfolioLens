@@ -4,6 +4,7 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.shortcuts import render
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
@@ -57,6 +58,7 @@ def snapshot_review(request, snapshot_id):
             "snapshot": snapshot,
             "form": form,
             "review": result,
+            "review_loaded_at": timezone.now() if result is not None else None,
             "provider_error": provider_error,
             "confirmation": CONFIRMATION,
         },
