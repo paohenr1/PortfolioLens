@@ -81,21 +81,31 @@ def allocation_weights(valuation: Valuation) -> Allocation:
     if total == 0:
         return unavailable(ZERO_TOTAL, total=valuation.total_value)
 
+    weights = reconciled_percentages(values)
+    return Allocation(
+        valuation.as_of,
+        valuation.total_value,
+        tuple(
+            AllocationRow(identifier, value, weight)
+            for (identifier, value), weight in zip(components, weights, strict=True)
+        ),
+        None,
+    )
+
+
+def reconciled_percentages(values):
+    """Apportion 100.00% from nonnegative integer cents in caller-defined tie order."""
+    if not values or any(type(value) is not int or value < 0 for value in values):
+        raise ValueError("Allocation requires nonnegative integer cents.")
+    total = sum(values)
+    if total <= 0:
+        raise ValueError("Allocation requires positive total value.")
     divisions = [divmod(value * BASIS_POINTS, total) for value in values]
     points = [floor for floor, _ in divisions]
     residual = BASIS_POINTS - sum(points)
-    # Components already have a stable cash/ID order, so index breaks exact ties.
     ranked = sorted(range(len(points)), key=lambda index: (-divisions[index][1], index))
     for index in ranked[:residual]:
         points[index] += 1
     with localcontext() as context:
         context.prec = 64
-        return Allocation(
-            valuation.as_of,
-            valuation.total_value,
-            tuple(
-                AllocationRow(identifier, value, Decimal(point).scaleb(-2))
-                for (identifier, value), point in zip(components, points, strict=True)
-            ),
-            None,
-        )
+        return tuple(Decimal(point).scaleb(-2) for point in points)
