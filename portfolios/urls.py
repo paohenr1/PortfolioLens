@@ -5,8 +5,10 @@ from ledger.performance_views import performance
 from ledger.views import positions, valuation
 from portfolios import snapshot_views, views
 from portfolios.holdings_views import holdings_preview
+from portfolios.snapshot_review_views import snapshot_review
 
 urlpatterns = [
+    path("snapshots/<uuid:snapshot_id>/review/", snapshot_review, name="snapshot_review"),
     path("snapshots/", snapshot_views.snapshot_list, name="snapshot_list"),
     path("snapshots/import/", snapshot_views.snapshot_import, name="snapshot_import"),
     path("snapshots/<uuid:snapshot_id>/", snapshot_views.snapshot_detail, name="snapshot_detail"),

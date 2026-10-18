@@ -1,0 +1,66 @@
+{% extends 'research/base.html' %}
+{% block title %}Holdings snapshot review · {{ snapshot.as_of|date:'Y-m-d' }} · PortfolioLens{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Private snapshot diagnostics · USD · Raw close basis</p>
+  <h1>Holdings snapshot review · {{ snapshot.as_of|date:'Y-m-d' }}</h1>
+  <p class="lead">{{ snapshot.name }}</p>
+  <p>Values describe your supplied holdings and cash at the saved date's close. They are not account performance, gains, broker reconciliation or a recommendation.</p>
+</section>
+<section class="account-section">
+  <form method="post" class="account-form" aria-label="Load snapshot review">{% csrf_token %}
+    {{ form.as_div }}<button class="button" type="submit">Load snapshot review</button>
+  </form>
+  <p class="muted">Up to five Intrinio daily-price requests, one per holding, using the shared request budget. The saved date stays fixed. Cash-only inputs need no price requests. Prices and results are not saved; another load may reflect provider corrections.</p>
+</section>
+{% if provider_error %}<div class="error-state" role="alert"><p>{{ provider_error.message }}</p>{% if provider_error.retry_after %}<p>Retry after {{ provider_error.retry_after }} seconds.</p>{% endif %}<p>Affected holdings remain unavailable below. No automatic retry occurs.</p></div>{% endif %}
+{% if review %}
+<section class="reference-panel">
+  <h2>Dated value and input coverage</h2>
+  <dl class="reference-grid">
+    <div><dt>Supplied cash (USD)</dt><dd>{{ review.cash }}</dd></div>
+    <div><dt>Holdings value (USD)</dt><dd>{{ review.holdings_value|default_if_none:'Unavailable' }}</dd></div>
+    <div><dt>Total value including cash (USD)</dt><dd>{{ review.total_value|default_if_none:'Unavailable' }}</dd></div>
+    <div><dt>Individually priced holdings</dt><dd>{{ review.priced_count }} of {{ review.rows|length }}</dd></div>
+  </dl>
+  {% if review.issue %}<p class="data-warning" role="status">{{ review.issue }}</p>{% else %}<p role="status">Complete valuation. Every supplied holding has a usable exact-date raw close.</p>{% endif %}
+  <p>Each holding value is quantity × raw close, rounded half up once to USD cents. Totals sum those cents and supplied cash. The count of priced rows is not value coverage; a priced subset is never shown as the total.</p>
+</section>
+<section class="results">
+  <h2>Holdings and cash allocation</h2>
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Snapshot valuation and allocation">
+  <table class="price-table">
+    <caption>USD values for {{ review.as_of|date:'Y-m-d' }}. Price source: Intrinio historical stock prices. Retrieval times describe data access, not exchange quote timestamps.</caption>
+    <thead><tr><th scope="col">Component</th><th scope="col">Quantity</th><th scope="col">Raw close (USD/share)</th><th scope="col">Value (USD)</th><th scope="col">Weight (%)</th><th scope="col">Availability and retrieval</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Supplied cash</th><td>Not applicable</td><td>Not applicable</td><td>{{ review.cash }}</td><td>{% if review.cash_weight == None %}Unavailable{% else %}{{ review.cash_weight }}%{% endif %}</td><td>User-supplied balance; no price request</td></tr>
+      {% for row in review.rows %}<tr>
+        <th scope="row">{{ row.holding.ticker }} · {{ row.holding.exchange_mic }}<br><span class="muted">{{ row.holding.security_id }}</span></th>
+        <td>{{ row.holding.quantity }}</td><td>{{ row.raw_close|default_if_none:'Unavailable' }}</td><td>{{ row.market_value|default_if_none:'Unavailable' }}</td>
+        <td>{% if row.weight == None %}Unavailable{% else %}{{ row.weight }}%{% endif %}</td>
+        <td>{% if row.issue %}{{ row.issue }}{% else %}Confirmed daily raw close · {{ review.as_of|date:'Y-m-d' }}{% endif %}<br>{% if row.retrieved_at %}Retrieved {{ row.retrieved_at|date:'Y-m-d H:i:s T' }}{% else %}Retrieval time unavailable{% endif %}</td>
+      </tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if not review.rows %}<p>Cash-only snapshot: total equals supplied cash; holding concentration is not applicable.</p>{% endif %}
+  <p class="muted">Weights include cash and reconcile to 100.00% when total value is positive and every holding is priced. Rounding ties go to cash first, then instrument ID. A displayed 0.00% can represent a small positive value. An observed zero close remains distinct from a missing price.</p>
+</section>
+<section class="reference-panel">
+  <h2>Concentration</h2>
+  <dl class="reference-grid">
+    <div><dt>Cash weight</dt><dd>{% if review.cash_weight == None %}Unavailable{% else %}{{ review.cash_weight }}%{% endif %}</dd></div>
+    <div><dt>Largest holding / total value</dt><dd>{% if not review.rows %}Not applicable{% elif review.largest_weight == None %}Unavailable{% else %}{{ review.largest_weight }}% · {{ review.largest_security_id }}{% endif %}</dd></div>
+    <div><dt>Largest three holdings / total value</dt><dd>{% if not review.rows %}Not applicable{% elif review.top_three_weight == None %}Unavailable{% else %}{{ review.top_three_weight }}%{% endif %}</dd></div>
+  </dl>
+  <p>Holdings rank by their rounded USD values, with instrument ID breaking ties. Cash is excluded from the ranking and included in the denominator. With fewer than three holdings, the combined measure includes all holdings. Concentration rounds the direct value ratio to two decimals; it does not add rounded allocation weights. These are descriptive amounts, not risk scores or holding-level risk attribution.</p>
+</section>
+{% else %}<div class="empty-state"><h2>No review loaded</h2><p>Submit to request exact-date prices for the saved holdings. Opening this page makes no provider requests.</p></div>{% endif %}
+<section class="reference-panel">
+  <h2>Input basis and limitations</h2>
+  <p>Confirmation saved with these inputs: {{ confirmation }}</p>
+  <p>This is your assertion, not independent verification. Current reference metadata cannot prove historical identity. Only an exact-date, matching instrument/MIC/USD, confirmed raw close with complete pagination is accepted. Adjusted, earlier or later closes never substitute.</p>
+  <p>A snapshot cannot establish cost basis, gains, historical returns, volatility, beta or Sharpe. This review does not include sector/fund look-through, risk attribution, stress tests or report exports.</p>
+</section>
+<p><a href="{% url 'snapshot_detail' snapshot.pk %}">Back to saved inputs</a> · <a href="{% url 'snapshot_list' %}">My holdings snapshots</a></p>
+{% endblock %}

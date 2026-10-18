@@ -49,10 +49,7 @@ def main():
                 saved_url = page.url
                 assert "USD 100.01" in page.locator("main").inner_text()
                 assert "0.000001" in page.locator("main").inner_text()
-                assert (
-                    "Pricing and snapshot analysis are not available yet"
-                    in page.locator("main").inner_text()
-                )
+                assert "Load an exact-date review" in page.locator("main").inner_text()
                 page.locator('[aria-label="Saved snapshot holdings"]').focus()
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
                 page.screenshot(path=f"/tmp/snapshot-saved-{label}.png", full_page=True)

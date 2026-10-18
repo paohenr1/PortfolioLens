@@ -19,6 +19,7 @@ results. Benchmark statistics do not attribute risk to holdings.
 - [FIFO positions, cost basis, and realized sale gains](fifo.md)
 - [Explicit-date portfolio valuation](valuation.md)
 - [Cash-inclusive allocation weights](allocations.md)
+- [Holdings snapshot value, allocation and concentration](holdings-snapshots.md#review-methodology)
 
 ## Portfolio performance and risk
 

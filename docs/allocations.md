@@ -63,7 +63,9 @@ These are arithmetic examples, not real market observations or recommendations.
 `ledger/allocations.py` contains immutable rows/results and the pure calculator. The
 existing valuation view passes its completed result to that calculator and renders a
 keyboard-accessible allocation table. The calculator does not persist a projection or
-request prices.
+request prices. Its integer-cent percentage apportionment helper is also used by
+[holdings snapshot reviews](holdings-snapshots.md#review-methodology); their inputs
+and result contracts remain separate from journal/FIFO valuation.
 
 ## Limitations
 

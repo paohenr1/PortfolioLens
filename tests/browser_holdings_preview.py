@@ -9,9 +9,9 @@ HEADER = b"ticker,exchange_mic,quantity,currency\n"
 VALID = HEADER + b"TSTF,XNAS,0.000001,USD\nTST-B,XNYS,2.500000,USD\n"
 
 
-def submit(page, data=VALID, cash="100.00"):
+def submit(page, data=VALID, cash="100.00", as_of="2020-01-02"):
     page.get_by_label("Snapshot name:", exact=True).fill("Synthetic holdings check")
-    page.get_by_label("Holdings as-of date:", exact=True).fill("2020-01-02")
+    page.get_by_label("Holdings as-of date:", exact=True).fill(as_of)
     page.get_by_label("Cash balance (USD):", exact=True).fill(cash)
     page.get_by_label("Holdings CSV:", exact=True).set_input_files(
         {"name": "synthetic.csv", "mimeType": "text/csv", "buffer": data}

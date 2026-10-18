@@ -69,3 +69,9 @@ It uses a disposable local PostgreSQL database and synthetic Intrinio transport 
 check explicit selection, confirmation, exact quantities, private save/reload,
 two-user isolation, deletion, cash-only inputs and desktop/mobile layout. It makes
 no live-provider requests and does not verify provider entitlements.
+
+For the dated review, run `python3 tests/browser_snapshot_review.py`. It uses the
+same isolated synthetic setup to verify explicit price loads, fixed dates, exact
+values and weights, concentration, missing-price suppression, cash-only inputs,
+keyboard tables and two-user desktop/mobile access. It does not establish live
+provider coverage, entitlements or deployment readiness.

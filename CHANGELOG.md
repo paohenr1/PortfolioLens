@@ -2,9 +2,12 @@
 
 ## Unreleased
 
+- Add on-demand exact-date holdings snapshot value, cash-inclusive allocation and
+  concentration, with explicit incomplete/zero states and no saved prices or results.
+
 - Add explicit holdings instrument resolution and private immutable snapshot inputs,
   with atomic retry-safe saves, owner-only deletion and a 50-snapshot account limit.
-  Snapshot pricing and analysis remain unimplemented.
+  Saved inputs remain separate from journal accounting.
 
 - Add a private holdings CSV format checker with exact input previews, row-level
   errors and memory-only bounded uploads. No holdings are saved or priced.
