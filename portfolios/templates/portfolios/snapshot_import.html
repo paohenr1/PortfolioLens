@@ -1,0 +1,39 @@
+{% extends 'research/base.html' %}
+{% block title %}Import holdings snapshot · PortfolioLens{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">Private snapshot import</p>
+  <h1>{% if preview.stage == 'verified' %}Confirm snapshot inputs{% else %}Choose instrument matches{% endif %}</h1>
+  <p class="lead">Save supplied holdings separately from transaction portfolios.</p>
+  <p>Current Intrinio reference metadata cannot prove historical identity or reconcile your holdings. No prices, gains or account performance are calculated. This import expires 15 minutes after the CSV check.</p>
+</section>
+{% if issues %}<div class="error-state" role="alert"><ul>{% for issue in issues %}<li>{{ issue }}</li>{% endfor %}</ul></div>{% endif %}
+{% if provider_error %}<div class="error-state" role="alert"><p>{{ provider_error.message }}</p>{% if provider_error.retry_after %}<p>Retry after {{ provider_error.retry_after }} seconds.</p>{% endif %}<p>Your inputs remain below. Retry explicitly when ready; no partial snapshot has been saved.</p></div>{% endif %}
+{% if preview %}
+<section class="reference-panel">
+  <h2>Input preview — not saved</h2>
+  {% include 'portfolios/snapshot_inputs.html' %}
+</section>
+<section class="account-section">
+  {% if preview.stage == 'verified' %}
+  <h2>Confirm the date and share basis</h2>
+  <p>Saving makes these inputs immutable. Correct a saved snapshot by importing a new one.</p>
+  <form method="post" class="account-form">{% csrf_token %}
+    <input type="hidden" name="preview" value="{{ token }}"><input type="hidden" name="action" value="save">
+    {{ form.as_div }}<button class="button" type="submit">Save private snapshot</button>
+  </form>
+  {% elif complete %}
+  <h2>Select each instrument</h2>
+  <p>Choose explicitly even when only one match appears. Validation makes at most one reference request per holding, up to five, using the shared request budget.</p>
+  <form method="post" class="account-form">{% csrf_token %}
+    <input type="hidden" name="preview" value="{{ token }}"><input type="hidden" name="action" value="verify">
+    {{ form.as_div }}<button class="button" type="submit">Validate selections</button>
+  </form>
+  {% else %}
+  <p>Every row needs an exact ticker, MIC and USD match. A truncated search cannot confirm a match. Retry searches only unresolved rows, with at most five requests.</p>
+  <form method="post">{% csrf_token %}<input type="hidden" name="preview" value="{{ token }}"><input type="hidden" name="action" value="find"><button class="button" type="submit">Retry unresolved searches</button></form>
+  {% endif %}
+</section>
+{% endif %}
+<p><a href="{% url 'holdings_preview' %}">Start a new CSV check</a> · <a href="{% url 'snapshot_list' %}">My holdings snapshots</a></p>
+{% endblock %}

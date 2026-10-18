@@ -51,8 +51,11 @@ class HoldingsUploadMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.path_info == PREVIEW_PATH:
+        if request.path_info == PREVIEW_PATH or request.path_info.startswith(
+            "/portfolios/snapshots/"
+        ):
             request.sensitive_post_parameters = "__ALL__"
+        if request.path_info == PREVIEW_PATH:
             handler = BoundedHoldingsUpload(request)
             request.holdings_upload = handler
             # No temporary-file fallback, even for forged sizes or extra files.

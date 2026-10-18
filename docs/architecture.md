@@ -2,7 +2,7 @@
 
 PortfolioLens is one Django application with server-rendered templates and local
 CSS/JavaScript. PostgreSQL stores accounts, private portfolios, journal entries,
-correction audits, watchlists and shared request counters. Intrinio supplies
+correction audits, holdings snapshots, watchlists and shared request counters. Intrinio supplies
 market/reference data through backend HTTP requests.
 
 ## Module responsibilities
@@ -11,7 +11,7 @@ market/reference data through backend HTTP requests.
 | --- | --- |
 | `config` | Settings, routing, middleware and runtime configuration |
 | `accounts` | Django session authentication, account forms and attempt limits |
-| `portfolios` | Owner-scoped portfolio metadata and creation rules |
+| `portfolios` | Owner-scoped portfolio metadata, CSV validation, snapshot resolution and storage |
 | `ledger` | Immutable transactions, corrections, FIFO, valuation, returns and risk |
 | `watchlists` | Private bookmarks, preferences and bounded market-information loads |
 | `market_data` | Provider-independent contracts, Intrinio transport and validation |
@@ -31,7 +31,15 @@ Portfolio calculations read the current effective journal after corrections. FIF
 historical cutoff logic derive positions and cash; prices are loaded only when required
 by an explicit valuation or performance action. Totals are derived rather than stored as
 independently editable balances. Internal journal snapshots provide a consistent input
-to calculations; they are not a user-facing holdings-import feature.
+to calculations; they are separate from supplied holdings snapshots.
+
+The snapshot workflow validates CSV locally, then performs explicit bounded search
+and reference-validation actions. A signed, user-bound payload carries inputs for
+15 minutes without session or raw-file storage. Separate snapshot/holding models
+store only confirmed inputs; no journal entries, prices or results are created.
+Owner-row locks serialize saves, capacity checks and deletion. Unique submission
+receipts provide retry identity and prevent stale retries from restoring a deleted
+snapshot. See [snapshot contracts](holdings-snapshots.md).
 
 Money uses Decimal and defined rounding. Statistical calculations use exact rational
 inputs where appropriate, with rounding at the display boundary. Chart coordinates never
@@ -50,7 +58,7 @@ existing entry. The service rechecks that key after a failed preflight, because 
 request may have committed between the initial key lookup and replay. Conflicting keys
 or invalid downstream balances remain errors.
 
-SQLite supports the research/account foundation only. It cannot substitute for
+SQLite supports the research/account foundation and transient CSV checking. It cannot substitute for
 PostgreSQL tests of row locking, concurrency or ledger integrity.
 
 ## Data access and serving

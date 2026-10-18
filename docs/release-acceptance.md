@@ -61,3 +61,11 @@ redistribution rights.
 Use the [operations guide](render-deployment.md) to verify the actual branch, commit,
 TLS, configuration and private workflow before a release. Synthetic runtime smoke does
 not prove hosted database connectivity or recovery readiness.
+
+## Holdings snapshot acceptance
+
+Run `python3 tests/browser_snapshots.py` with Playwright and Chromium installed.
+It uses a disposable local PostgreSQL database and synthetic Intrinio transport to
+check explicit selection, confirmation, exact quantities, private save/reload,
+two-user isolation, deletion, cash-only inputs and desktop/mobile layout. It makes
+no live-provider requests and does not verify provider entitlements.

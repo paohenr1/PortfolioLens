@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add explicit holdings instrument resolution and private immutable snapshot inputs,
+  with atomic retry-safe saves, owner-only deletion and a 50-snapshot account limit.
+  Snapshot pricing and analysis remain unimplemented.
+
 - Add a private holdings CSV format checker with exact input previews, row-level
   errors and memory-only bounded uploads. No holdings are saved or priced.
 

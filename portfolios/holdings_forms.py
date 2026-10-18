@@ -10,7 +10,7 @@ from ledger.forms import ledger_today
 from portfolios.holdings_csv import has_control, parse_decimal, parse_holdings_csv
 
 
-class HoldingsPreviewForm(forms.Form):
+class HoldingsMetadataForm(forms.Form):
     name = forms.CharField(max_length=100, label="Snapshot name")
     as_of = forms.DateField(
         label="Holdings as-of date",
@@ -22,11 +22,6 @@ class HoldingsPreviewForm(forms.Form):
         max_length=32,
         label="Cash balance (USD)",
         help_text="Enter zero explicitly if there is no cash; blank does not mean zero.",
-    )
-    holdings_file = forms.FileField(
-        label="Holdings CSV",
-        widget=forms.ClearableFileInput(attrs={"accept": ".csv,text/csv"}),
-        help_text="UTF-8 CSV, up to 16 KiB and five holdings rows. Select it again after an error.",
     )
 
     def clean_name(self):
@@ -58,6 +53,14 @@ class HoldingsPreviewForm(forms.Form):
                 "Choose a completed U.S. equity session, not a closure date."
             )
         return value
+
+
+class HoldingsPreviewForm(HoldingsMetadataForm):
+    holdings_file = forms.FileField(
+        label="Holdings CSV",
+        widget=forms.ClearableFileInput(attrs={"accept": ".csv,text/csv"}),
+        help_text="UTF-8 CSV, up to 16 KiB and five holdings rows. Select it again after an error.",
+    )
 
     def clean_holdings_file(self):
         result = parse_holdings_csv(self.cleaned_data["holdings_file"])
