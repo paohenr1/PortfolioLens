@@ -23,6 +23,8 @@ class Security:
 class SearchResult:
     securities: tuple[Security, ...]
     retrieved_at: datetime
+    # A full bounded page cannot establish an exhaustive match set.
+    pagination_complete: bool = True
 
 
 @dataclass(frozen=True)

@@ -202,7 +202,11 @@ class IntrinioClient:
         securities = tuple(normalize_security(item) for item in items)
         if len({security.id for security in securities}) != len(securities):
             raise InvalidResponse()
-        return SearchResult(securities=securities, retrieved_at=datetime.now(UTC))
+        return SearchResult(
+            securities=securities,
+            retrieved_at=datetime.now(UTC),
+            pagination_complete=len(items) < SEARCH_LIMIT and payload.get("next_page") is None,
+        )
 
     def security(self, security_id: str) -> SecurityResult:
         if not valid_security_id(security_id):

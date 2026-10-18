@@ -52,6 +52,22 @@ class IntrinioTests(SimpleTestCase):
         self.assertIsNone(result.securities[1].currency)
         self.assertEqual(result.retrieved_at.tzinfo, UTC)
 
+    def test_search_exposes_truncation_without_following_pages(self):
+        for count, cursor, complete in ((1, None, True), (20, None, False), (1, "next", False)):
+            payload = {
+                "securities": [{"id": f"sec_{i}"} for i in range(count)],
+                "next_page": cursor,
+            }
+            requests = []
+
+            def handler(request, requests=requests, payload=payload):
+                requests.append(request)
+                return httpx.Response(200, json=payload)
+
+            with self.subTest(count=count, cursor=cursor), self.provider_client(handler) as client:
+                self.assertEqual(client.search("Synthetic").pagination_complete, complete)
+                self.assertEqual(len(requests), 1)
+
     def test_empty_results_are_a_valid_observation(self):
         with self.provider_client(
             lambda request: httpx.Response(200, json={"securities": []})
