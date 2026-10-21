@@ -100,3 +100,32 @@ figures:
 - [Render health checks](https://render.com/docs/health-checks)
 - [Neon connection security](https://neon.com/docs/connect/connect-securely)
 - [Neon connection pooling](https://neon.com/docs/connect/connection-pooling)
+
+## Runtime-role permissions before deployment
+
+After the selected release's migrations have been applied separately, load the exact
+runtime database settings securely and run from that release checkout:
+
+```sh
+uv run --frozen --no-dev python manage.py check_runtime_permissions
+```
+
+Run this as the web application's runtime role, not the migration owner or an
+administrator: an owner passing the check does not establish runtime access. Repeat
+after migrations or role/grant changes, before directing traffic to the release.
+A nonzero exit blocks this verification; have the database operator review the named
+missing permissions through the normal controlled process, then rerun. This command
+never issues grants, migrations, writes, or sequence increments and prints no connection
+credentials or user records. Do not run the automated test suite against production.
+
+The check inspects effective privileges (including inherited and PUBLIC grants) on
+managed Django model tables, including automatically created relationship tables, in
+the connection's search path. Its baseline requires SELECT/INSERT/UPDATE/DELETE on
+mutable application and session tables; SELECT/INSERT on immutable journal and
+correction tables; and SELECT on Django permission/group/content-type reference tables.
+It also checks schema USAGE and USAGE or UPDATE on serial/identity sequences needed
+for generated IDs. It does not require schema CREATE, table ownership, TRUNCATE, or
+administrative rights. It excludes migration history and does not certify row-level
+security policies, trigger/function permissions, provider availability, or every
+application operation. Follow it with the representative functional release checks
+above. A process-only healthy response cannot detect missing table or sequence grants.
