@@ -1,0 +1,76 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Markets · PortfolioLens design preview</title>
+  <link rel="stylesheet" href="{% static 'research/markets.css' %}">
+  <script src="{% static 'research/market-preferences.js' %}" defer></script>
+  <script src="{% static 'research/markets-preview.js' %}" defer></script>
+</head>
+<body class="market-page">
+<a class="skip-link" href="#main">Skip to markets</a>
+<div class="preview-shell">
+  {% include 'research/market_header.html' %}
+  <main id="main">
+    <div class="preview-note"><span class="preview-badge">Design preview</span><span>Illustrative data only. Quotes, events and headlines are fictional. App links open the existing application.</span></div>
+    <section aria-labelledby="market-title">
+      <div class="market-heading">
+        <div><h1 id="market-title" class="market-title">Markets at a glance</h1><p class="market-subtitle">Thursday, October 22, 2026 <span aria-hidden="true">·</span> Sample session, not live</p></div>
+        <div class="market-actions"><span>Index charts</span><div class="segmented" role="group" aria-label="Index chart period"><button type="button" data-period="1D" aria-pressed="true">1D</button><button type="button" data-period="1W" aria-pressed="false">1W</button><button type="button" data-period="1M" aria-pressed="false">1M</button><button type="button" data-period="1Y" aria-pressed="false">1Y</button></div></div>
+      </div>
+      <div class="index-grid">
+        <article class="index-card" data-index="sp"><div class="index-copy"><h2 class="index-name">S&amp;P 500</h2><p class="index-value">5,842.47</p><p class="index-change positive">+28.36 <span>(+0.49%)</span></p></div><svg class="sparkline positive" viewBox="0 0 200 72" role="img" aria-label="S&amp;P 500 illustrative one-day chart"><path d="M2 62 12 53 20 56 29 48 37 50 46 41 54 46 63 38 72 40 80 32 89 37 97 28 106 30 116 22 124 25 133 18 141 23 149 15 159 18 167 10 177 13 187 5 198 8"/></svg></article>
+        <article class="index-card" data-index="dow"><div class="index-copy"><h2 class="index-name">Dow Jones</h2><p class="index-value">42,318.60</p><p class="index-change negative">−68.42 <span>(−0.16%)</span></p></div><svg class="sparkline negative" viewBox="0 0 200 72" role="img" aria-label="Dow Jones illustrative one-day chart"><path d="M2 19 11 27 20 20 29 35 38 31 48 43 57 38 67 52 76 46 85 58 95 51 104 55 114 40 123 44 133 29 143 36 152 30 163 41 173 32 184 36 198 28"/></svg></article>
+        <article class="index-card" data-index="nasdaq"><div class="index-copy"><h2 class="index-name">Nasdaq Composite</h2><p class="index-value">18,624.35</p><p class="index-change positive">+142.18 <span>(+0.77%)</span></p></div><svg class="sparkline positive" viewBox="0 0 200 72" role="img" aria-label="Nasdaq Composite illustrative one-day chart"><path d="M2 64 11 54 20 59 29 47 38 50 47 43 57 48 67 33 76 39 85 31 95 34 104 22 113 30 123 19 133 24 143 14 153 17 163 9 174 15 185 6 198 3"/></svg></article>
+      </div>
+      <p id="period-description" class="sr-only" role="status">Showing illustrative one-day index changes. Heatmap shows the sample session.</p>
+      <div class="watchbar" aria-label="Market watchbar">
+        <div class="watch-item" data-watch="10y"><span class="watch-label">U.S. 10Y yield</span><div><strong class="watch-value">4.24%</strong><span class="watch-change positive">+3 bps</span></div></div>
+        <div class="watch-item" data-watch="2y"><span class="watch-label">U.S. 2Y yield</span><div><strong class="watch-value">4.08%</strong><span class="watch-change positive">+2 bps</span></div></div>
+        <div class="watch-item" data-watch="btc"><span class="watch-label">BTC / USD</span><div><strong class="watch-value">67,420</strong><span class="watch-change positive">+1.24%</span></div></div>
+        <div class="watch-item" data-watch="eur"><span class="watch-label">EUR / USD</span><div><strong class="watch-value">1.0824</strong><span class="watch-change negative">−0.12%</span></div></div>
+        <div class="watch-item" data-watch="cad"><span class="watch-label">USD / CAD</span><div><strong class="watch-value">1.3782</strong><span class="watch-change positive">+0.08%</span></div></div>
+        <button class="watch-customize" id="customize-watch" type="button" hidden><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="7" r="3" fill="currentColor"/><circle cx="15" cy="17" r="3" fill="currentColor"/></svg>Customize</button>
+      </div>
+    </section>
+    <div class="market-grid">
+      <section class="panel heatmap-panel" aria-labelledby="heatmap-title">
+        <div class="panel-header"><div><h2 id="heatmap-title" class="panel-title">S&amp;P 500 heatmap</h2><p class="panel-subtitle">Illustrative companies and sizes · sample daily change</p></div><div class="segmented" role="group" aria-label="Heatmap view"><button type="button" data-map="companies" aria-pressed="true">Companies</button><button type="button" data-map="sectors" aria-pressed="false">Sectors</button></div></div>
+        <p class="sr-only" id="map-instructions">Select a company to inspect its sample details below the map. These are selected illustrative companies, not the complete S&amp;P 500.</p>
+        <div class="heatmap-grid" aria-describedby="map-instructions">
+          {% for sector in sectors %}<section class="sector sector-{{ sector.key }}" data-direction="{{ sector.direction }}" aria-labelledby="sector-{{ sector.key }}">
+            <h3 class="sector-heading" id="sector-{{ sector.key }}">{{ sector.name }}<span>{{ sector.weight }}%</span></h3>
+            <p class="sector-summary">{{ sector.change }} <span>sample daily change</span></p>
+            <div class="sector-tiles">{% for stock in sector.stocks %}<button type="button" class="heat-tile {{ stock.movement }} {% if stock.size == 3 %}tile-large weight-4{% elif stock.size == 2 %}tile-medium weight-4{% else %}tile-small weight-2{% endif %}" data-symbol="{{ stock.symbol }}" data-company="{{ stock.company }}" data-price="{{ stock.price }}" data-change="{{ stock.change }}" data-cap="{{ stock.cap }}" data-direction="{{ stock.direction }}" aria-pressed="{% if stock.symbol == 'NVDA' %}true{% else %}false{% endif %}" aria-label="{{ stock.company }}, {{ stock.symbol }}, {{ stock.change }}, illustrative"><span class="tile-symbol">{{ stock.symbol }}</span><span class="tile-change">{{ stock.change }}</span></button>{% endfor %}</div>
+          </section>{% endfor %}
+        </div>
+        <div class="heatmap-legend" aria-label="Illustrative color scale from minus three to plus three percent"><div class="legend-scale" aria-hidden="true"><span class="loss-3"></span><span class="loss-2"></span><span class="loss-1"></span><span class="unchanged"></span><span class="gain-1"></span><span class="gain-2"></span><span class="gain-3"></span></div><div class="legend-labels"><span>−3%</span><span>−1%</span><span>0%</span><span>+1%</span><span>+3%</span></div></div>
+        <div class="selection-detail" id="selection-detail" role="status" aria-live="polite" aria-atomic="true"><div><h3 class="selection-name">NVIDIA <span>NVDA</span></h3><p class="selection-price">$138.24 <span class="positive">+1.82%</span></p></div><div class="selection-meta"><span>Sample market cap</span><strong>$3.39T</strong></div><div class="selection-meta"><span>Illustrative snapshot</span><strong>12:45 PM ET</strong></div></div>
+      </section>
+      <aside class="side-column" aria-label="Calendar and market news">
+        <section class="panel" aria-labelledby="calendar-title"><div class="panel-header"><div><h2 class="panel-title" id="calendar-title">Economic calendar</h2><p class="panel-subtitle">Fictional schedule · Eastern time (UTC−4)</p></div></div>
+          <div class="event-list">
+            <details class="event-item"><summary><span class="event-time">Thu, Oct 22<small>8:30 AM</small></span><span class="event-title">Consumer prices<small>CPI · month over month</small></span><span class="event-status">Scheduled</span></summary><p class="event-detail">Illustrative release only. Previous: 0.3% · Consensus: 0.3% · Actual: not released. This is not an actual economic calendar.</p></details>
+            <details class="event-item"><summary><span class="event-time">Fri, Oct 23<small>8:30 AM</small></span><span class="event-title">Employment report<small>Nonfarm payrolls</small></span><span class="event-status">Scheduled</span></summary><p class="event-detail">Illustrative release only. Previous: +180K · Consensus: +160K · Actual: not released.</p></details>
+            <details class="event-item"><summary><span class="event-time">Wed, Oct 28<small>2:00 PM</small></span><span class="event-title">Federal Reserve<small>Interest-rate decision</small></span><span class="event-status">Scheduled</span></summary><p class="event-detail">Illustrative release only. No live central-bank schedule or consensus data is connected.</p></details>
+          </div><p class="panel-footnote">Select an event for sample details.</p>
+        </section>
+        <section class="panel" aria-labelledby="headlines-title"><div class="panel-header"><div><h2 class="panel-title" id="headlines-title">Market headlines</h2><p class="panel-subtitle">Illustrative stories · not current news</p></div></div>
+          <ul class="headline-list">
+            <li class="headline-item"><p class="headline-title">Stocks edge higher as technology strength offsets rate jitters</p><p class="headline-meta">Sample source <span>·</span> 1h ago</p></li>
+            <li class="headline-item"><p class="headline-title">Chipmakers rise as investors assess demand outlook</p><p class="headline-meta">Sample source <span>·</span> 2h ago</p></li>
+            <li class="headline-item"><p class="headline-title">Treasury yields hold steady ahead of inflation data</p><p class="headline-meta">Sample source <span>·</span> 3h ago</p></li>
+            <li class="headline-item"><p class="headline-title">Oil slips as inventories rise and traders weigh demand</p><p class="headline-meta">Sample source <span>·</span> 4h ago</p></li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+    <footer class="market-footer"><p>Design preview · no live quotes or provider requests.</p><details><summary>About this preview</summary><p>All market values, company sizes, sector weights, charts, events and headlines are illustrative design fixtures. This is not a complete S&amp;P 500 constituent map. Index-period controls change sample chart data only; heatmap values remain tied to the sample session. Preferences are saved in this browser when available.</p></details></footer>
+  </main>
+</div>
+{% include 'research/market_watch_dialog.html' %}
+</body>
+</html>

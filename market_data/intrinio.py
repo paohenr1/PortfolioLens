@@ -42,6 +42,7 @@ from market_data.fundamentals import (
     validate_annual_series_request,
     validate_statement_request,
 )
+from market_data.indices import INDEX_CATALOG, MAX_INDEX_OBSERVATIONS, normalize_index_history
 from market_data.prices import (
     MAX_PRICE_DAYS,
     MAX_PRICE_PAGES,
@@ -187,6 +188,25 @@ class IntrinioClient:
             raise ProviderError() from None
         except (ValueError, UnicodeError, RecursionError):
             raise InvalidResponse() from None
+
+    def index_history(self, key: str, start_date: date, end_date: date):
+        if key not in INDEX_CATALOG:
+            raise ValueError("Unsupported market index.")
+        if not isinstance(start_date, date) or not isinstance(end_date, date):
+            raise ValueError("Index history requires dates.")
+        if not 0 <= (end_date - start_date).days <= 375:
+            raise ValueError("Index history supports at most 375 calendar days.")
+        symbol = INDEX_CATALOG[key][0]
+        payload = self._request_json(
+            f"/indices/stock_market/{symbol}/historical_data/level",
+            {
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "sort_order": "asc",
+                "page_size": MAX_INDEX_OBSERVATIONS,
+            },
+        )
+        return normalize_index_history(payload, key, start_date, end_date)
 
     def search(self, query: str) -> SearchResult:
         if not query.strip() or len(query) > 100:

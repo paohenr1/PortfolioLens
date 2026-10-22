@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Connect the default watchbar to Treasury daily yields, Bank of Canada reference
+  FX and Coinbase Bitcoin statistics with source-specific dates and bounded loads.
+
+- Add a responsive market homepage with light/dark/system themes, on-demand dated
+  index levels, observation tables, and explicit unavailable states for unconnected
+  feeds. Keep fictional design fixtures behind a development-only preview.
+
 - Add browser printing/PDF saving for loaded snapshot reviews, preserving source
   times, incomplete states and limitations without requesting prices again.
 

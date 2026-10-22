@@ -6,6 +6,10 @@ interactive charts and accessible data tables. It does not execute trades.
 
 ## What you can do
 
+- Load dated S&P 500, Dow Jones and Nasdaq Composite index levels on the market
+  homepage, alongside sourced Treasury yields, reference FX rates and Bitcoin
+  statistics, with explicit dates and no automatic provider refresh.
+
 - Research instruments, historical prices and volume, stock volatility and
   drawdown, company statements, margins, ROA/ROE, annual growth, selected-year
   P/E, financial trends, and dated company market capitalization.
@@ -64,6 +68,7 @@ CSV checker; persisted portfolios, snapshots and watchlists require PostgreSQL.
 
 - [Setup and checks](docs/setup.md)
 - [Usage](docs/usage.md)
+- [Market overview](docs/market-overview.md)
 - [Architecture](docs/architecture.md)
 - [Methodology and limitations](docs/methodology.md)
 - [Intrinio integration](docs/intrinio.md)
