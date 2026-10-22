@@ -1,14 +1,12 @@
 import logging
 from datetime import UTC, datetime, timedelta
 
-from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
 from django.views.decorators.http import require_GET, require_safe
 
 from market_data.errors import InstrumentNotFound, ProviderError
 from market_data.intrinio import valid_security_id
-from market_data.status import provider_status
 from research import services
 from research.charts import build_price_chart
 from research.forms import PriceHistoryForm, SearchForm, StatementForm
@@ -22,9 +20,9 @@ logger = logging.getLogger("research")
 
 @require_safe
 def home(request):
-    # Pass only a readiness description to templates, never provider credentials.
-    status = provider_status(credential_present=bool(settings.INTRINIO_API_KEY))
-    return render(request, "research/home.html", {"provider_status": status})
+    from research.market_views import render_markets
+
+    return render_markets(request)
 
 
 def _error_page(request, template, context, error):

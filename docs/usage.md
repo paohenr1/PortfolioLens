@@ -1,5 +1,14 @@
 # Using PortfolioLens
 
+## Review markets
+
+The homepage provides dated S&P 500, Dow Jones and Nasdaq Composite index cards.
+Choose a range and select **Load daily levels**. Data loads only on request, with
+actual observation dates; these are historical index levels, not live quotes.
+Expand **Dates, values and sources** for the supplied observations and comparison
+dates. Watchbar, heatmap, calendar and news feeds remain explicitly unconnected.
+See [market overview](market-overview.md) for the calculation and request limits.
+
 ## Start a private portfolio
 
 Sign in, open **My portfolios**, and create a USD portfolio. Registration may be closed

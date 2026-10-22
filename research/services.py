@@ -193,3 +193,9 @@ def market_capitalization(security_id, valuation_date, client_address):
             valuation_date,
             before_request=lambda: _reserve_request(client_address),
         )
+
+
+def market_index_history(key, start_date, end_date, client_address):
+    """Exactly one page for a fixed index, sharing the existing admission budget."""
+    with IntrinioClient(_key_and_budget(client_address)) as provider:
+        return provider.index_history(key, start_date, end_date)

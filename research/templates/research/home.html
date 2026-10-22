@@ -1,43 +1,62 @@
-{% extends "research/base.html" %}
-{% block content %}
-  <section class="intro" aria-labelledby="page-title">
-    <p class="eyebrow">Research with clarity</p>
-    <h1 id="page-title">Understand your holdings.<br>Review your portfolio.</h1>
-    <p class="lead">A focused workspace for understanding companies and tracking your portfolio, with clear sources and transparent calculations.</p>
-    <a class="button" href="{% url 'search' %}">Search stocks</a>
-  </section>
-  <section class="availability" aria-labelledby="availability-title">
-    <span class="status-dot" aria-hidden="true"></span>
-    <div>
-      <h2 id="availability-title">Data connection</h2>
-      <p role="status" data-provider-status="{{ provider_status.code }}">{{ provider_status.message }}</p>
-      <p class="muted">Market prices and company financials require provider access. Recorded cash, FIFO positions, and realized gains come from your transaction journal.</p>
+{% load static %}
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A private market overview and portfolio research workspace.">
+  <title>Markets · PortfolioLens</title>
+  <link rel="stylesheet" href="{% static 'research/markets.css' %}">
+  <script src="{% static 'research/market-preferences.js' %}" defer></script>
+</head>
+<body class="market-page">
+<a class="skip-link" href="#main">Skip to markets</a>
+<div class="preview-shell">
+{% include 'research/market_header.html' %}
+<main id="main">
+  <section aria-labelledby="market-title">
+    <div class="market-heading"><div><h1 id="market-title" class="market-title">Markets at a glance</h1><p class="market-subtitle">{{ today|date:"l, F j, Y" }} · Daily index levels, not live quotes</p></div></div>
+    <form class="market-load-form" method="post" action="{% url 'load_market_indices' %}">
+      {% csrf_token %}
+      <div><label for="index-period">Index chart range</label><select id="index-period" name="period">{% for choice in periods %}<option value="{{ choice }}"{% if choice == period %} selected{% endif %}>{{ choice }}</option>{% endfor %}</select></div>
+      <button type="submit">{% if loaded %}Reload daily levels{% else %}Load daily levels{% endif %}</button>
+      <p>Loads on demand through {{ requested_end|date:"M j, Y" }}. No automatic refresh.</p>
+    </form>
+    {% if input_error %}<p class="market-notice" role="alert">{{ input_error }}</p>{% endif %}
+    <p class="market-notice" data-provider-status="{{ provider_status.code }}">{% if provider_status.code == 'not_configured' %}{{ provider_status.message }}{% else %}Index access is checked when you load daily levels.{% endif %}</p>
+    <div class="index-grid">
+      {% for index in indices %}<article class="index-card" data-index="{{ index.key }}"><div class="index-copy"><h2 class="index-name">{{ index.name }}</h2>
+        {% if index.available %}<p class="index-value">{{ index.level }}</p>
+          {% if index.previous_date %}<p class="index-change {{ index.direction }}">{{ index.change }} <span>({{ index.percent }})</span></p><p class="index-date">vs {{ index.previous_date|date:"M j" }}</p>{% else %}<p class="index-date">Change unavailable</p>{% endif %}
+          <p class="index-date">As of {{ index.as_of|date:"M j, Y" }}</p>
+        {% else %}<p class="index-placeholder">{% if loaded %}Unavailable{% else %}Not loaded{% endif %}</p><p class="index-date">{% if index.issue %}{{ index.issue }}{% else %}Load a dated market overview.{% endif %}</p>{% endif %}
+        </div>
+        {% if index.paths %}<svg class="sparkline {{ index.direction }}" viewBox="0 0 200 72" role="img" aria-label="{{ index.name }} supplied daily index levels; dates and values in the table below">{% for path in index.paths %}<path d="{{ path }}"/>{% endfor %}</svg>{% endif %}
+      </article>{% endfor %}
+    </div>
+    <div class="watchbar" aria-label="Market watchbar">
+      <div class="watch-item" data-watch="10y"><span class="watch-label">U.S. 10Y yield</span><strong class="watch-unavailable">Not connected</strong></div>
+      <div class="watch-item" data-watch="2y"><span class="watch-label">U.S. 2Y yield</span><strong class="watch-unavailable">Not connected</strong></div>
+      <div class="watch-item" data-watch="btc"><span class="watch-label">BTC / USD</span><strong class="watch-unavailable">Not connected</strong></div>
+      <div class="watch-item" data-watch="eur"><span class="watch-label">EUR / USD</span><strong class="watch-unavailable">Not connected</strong></div>
+      <div class="watch-item" data-watch="cad"><span class="watch-label">USD / CAD</span><strong class="watch-unavailable">Not connected</strong></div>
+      <button class="watch-customize" id="customize-watch" type="button" hidden>Customize</button>
     </div>
   </section>
-  <section class="workspace" aria-labelledby="workspace-title">
-    <div class="section-heading">
-      <h2 id="workspace-title">Your research workspace</h2>
-      <span class="muted">Research, portfolios, and watchlists.</span>
-    </div>
-    <div class="cards">
-      <article class="card">
-        <span class="step">01 / Research</span>
-        <h3>Find an instrument</h3>
-        <p>Search by ticker or company name, then explore prices, volume, stock risk, company financials, and valuation multiples. Market data loads on demand.</p>
-        <a href="{% url 'search' %}">Open stock search</a>
-      </article>
-      <article class="card">
-        <span class="step">02 / Portfolios</span>
-        <h3>Track your investments</h3>
-        <p>Record transactions, review FIFO positions and dated valuation, then explore returns, volatility, and drawdown. Portfolio analysis requires transaction history.</p>
-        <a href="{% url 'portfolio_list' %}">Open my portfolios</a>
-      </article>
-      <article class="card">
-        <span class="step">03 / Watchlists</span>
-        <h3>Keep your research organized</h3>
-        <p>Save instruments in private watchlists and load closing prices and volume for up to five selected instruments on an exact date.</p>
-        <a href="{% url 'watchlist_list' %}">Open my watchlists</a>
-      </article>
-    </div>
-  </section>
-{% endblock %}
+  <div class="market-grid">
+    <section class="panel" aria-labelledby="heatmap-title"><div class="panel-header"><div><h2 class="panel-title" id="heatmap-title">S&amp;P 500 heatmap</h2><p class="panel-subtitle">Constituent feed not connected</p></div></div><div class="market-empty"><svg width="64" height="48" viewBox="0 0 64 48" aria-hidden="true"><rect x="2" y="2" width="26" height="44" rx="3"/><rect x="32" y="2" width="30" height="20" rx="3"/><rect x="32" y="26" width="14" height="20" rx="3"/><rect x="50" y="26" width="12" height="20" rx="3"/></svg><h3>A broader view of the market</h3><p>Sector and company movement will appear here when constituent, size and price coverage is connected. No sample market values are shown.</p></div></section>
+    <aside class="side-column" aria-label="Calendar and market news">
+      <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Economic calendar</h2><p class="panel-subtitle">Release feed not connected</p></div></div><p class="market-empty-copy">Upcoming releases will appear here with their source and timezone when calendar data is available.</p></section>
+      <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Market headlines</h2><p class="panel-subtitle">News feed not connected</p></div></div><p class="market-empty-copy">No news source is connected yet. Headlines will link to the original reporting.</p></section>
+    </aside>
+  </div>
+  {% if loaded %}<section class="panel observation-panel" aria-labelledby="observations-title"><div class="panel-header"><div><h2 class="panel-title" id="observations-title">Dates, values and sources</h2><p class="panel-subtitle">Intrinio stock-market index historical levels · no ETF proxies</p></div></div>
+    {% for index in indices %}{% if index.rows %}<details class="index-observations"><summary>{{ index.name }} · supplied observations</summary><p>Retrieved {{ index.retrieved_at|date:"Y-m-d H:i:s T" }}. Change compares the latest supplied close with the immediately preceding supplied observation; its date is shown on the card. The chart range does not change that comparison.</p><div class="observation-scroll" tabindex="0" role="region" aria-label="{{ index.name }} observations"><table><caption>{{ index.name }} supplied daily levels, including baseline observations</caption><thead><tr><th scope="col">Date</th><th scope="col">Index level</th></tr></thead><tbody>{% for row in index.rows %}<tr><th scope="row">{{ row.date|date:"Y-m-d" }}</th><td>{{ row.value|default_if_none:"Unavailable" }}</td></tr>{% endfor %}</tbody></table></div></details>{% endif %}{% endfor %}
+    <p class="market-empty-copy">Explicitly missing levels break chart lines and are never filled. Omitted dates are not reconstructed. Dates shown on the cards describe the supplied data; retrieval time does not establish freshness or real-time access.</p>
+  </section>{% endif %}
+  <section class="workspace-links" aria-label="Your workspace"><a href="{% url 'portfolio_list' %}">Open my portfolios <span aria-hidden="true">↗</span></a><a href="{% url 'search' %}">Research a stock <span aria-hidden="true">↗</span></a><a href="{% url 'watchlist_list' %}">My watchlists <span aria-hidden="true">↗</span></a></section>
+  <footer class="market-footer"><p>PortfolioLens · Research tools · No trading execution</p><details><summary>Data and calculations</summary><p>Market prices and company financials require provider access. Recorded cash, FIFO positions, and realized gains come from your transaction journal. This market overview does not show personal portfolio performance. Daily index levels may be delayed; request times and observation dates remain separate.</p></details></footer>
+</main>
+</div>
+{% include 'research/market_watch_dialog.html' %}
+</body>
+</html>

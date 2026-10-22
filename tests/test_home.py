@@ -17,7 +17,7 @@ class LandingPageTests(SimpleTestCase):
     @override_settings(INTRINIO_API_KEY="test-only-never-send-to-browser")
     def test_configured_key_never_claims_verified_data_or_reaches_browser(self):
         response = self.client.get(reverse("home"))
-        self.assertContains(response, "data access is checked when you search.")
+        self.assertContains(response, "Index access is checked when you load daily levels.")
         self.assertContains(response, 'data-provider-status="configured_unverified"')
         self.assertNotContains(response, "test-only-never-send-to-browser")
         self.assertNotIn("test-only-never-send-to-browser", str(dict(response.headers)))
@@ -45,7 +45,8 @@ class LandingPageTests(SimpleTestCase):
 
     def test_page_has_local_assets_and_accessible_structure(self):
         response = self.client.get(reverse("home"))
-        self.assertContains(response, '<html lang="en">')
+        self.assertContains(response, '<html lang="en"')
         self.assertContains(response, 'href="#main"')
-        self.assertContains(response, 'href="/static/research/site.css"')
-        self.assertNotContains(response, "<script")
+        self.assertContains(response, 'href="/static/research/markets.css"')
+        self.assertContains(response, 'src="/static/research/market-preferences.js"')
+        self.assertNotContains(response, "markets-preview.js")

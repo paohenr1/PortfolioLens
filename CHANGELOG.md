@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add a responsive market homepage with light/dark/system themes, on-demand dated
+  index levels, observation tables, and explicit unavailable states for unconnected
+  feeds. Keep fictional design fixtures behind a development-only preview.
+
 - Add browser printing/PDF saving for loaded snapshot reviews, preserving source
   times, incomplete states and limitations without requesting prices again.
 

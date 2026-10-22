@@ -177,4 +177,6 @@ def preview_sectors():
 def markets_preview(request):
     if not settings.DEBUG or settings.ENVIRONMENT.production:
         raise Http404
-    return render(request, "research/markets_preview.html", {"sectors": preview_sectors()})
+    return render(
+        request, "research/markets_preview.html", {"sectors": preview_sectors(), "is_preview": True}
+    )

@@ -6,32 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Markets · PortfolioLens design preview</title>
-  <link rel="stylesheet" href="{% static 'research/markets-preview.css' %}">
+  <link rel="stylesheet" href="{% static 'research/markets.css' %}">
+  <script src="{% static 'research/market-preferences.js' %}" defer></script>
   <script src="{% static 'research/markets-preview.js' %}" defer></script>
 </head>
-<body class="markets-preview">
+<body class="market-page">
 <a class="skip-link" href="#main">Skip to markets</a>
 <div class="preview-shell">
-  <header class="market-header">
-    <a class="market-brand" href="{% url 'markets_preview' %}" aria-label="PortfolioLens markets preview"><span class="brand-symbol" aria-hidden="true"></span>PortfolioLens</a>
-    <nav class="market-nav" aria-label="Main navigation">
-      <a class="is-active" href="{% url 'markets_preview' %}" aria-current="page">Markets</a>
-      <a href="{% url 'portfolio_list' %}">My portfolio</a>
-      <a href="{% url 'search' %}">Research</a>
-      <a href="{% url 'watchlist_list' %}">Watchlists</a>
-    </nav>
-    <form class="header-search" action="{% url 'search' %}" method="get" role="search">
-      <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.5"/></svg>
-      <label class="sr-only" for="market-search">Search stocks or companies</label>
-      <input id="market-search" name="q" type="search" placeholder="Search stocks or companies…" maxlength="100" required>
-      <button class="sr-only" type="submit">Search</button>
-    </form>
-    <div class="header-tools">
-      <label class="sr-only" for="theme-select">Color theme</label>
-      <select id="theme-select" class="theme-select" aria-label="Color theme"><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select>
-      <a class="account-link" href="{% url 'account' %}" aria-label="My account"><svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
-    </div>
-  </header>
+  {% include 'research/market_header.html' %}
   <main id="main">
     <div class="preview-note"><span class="preview-badge">Design preview</span><span>Illustrative data only. Quotes, events and headlines are fictional. App links open the existing application.</span></div>
     <section aria-labelledby="market-title">
@@ -89,6 +71,6 @@
     <footer class="market-footer"><p>Design preview · no live quotes or provider requests.</p><details><summary>About this preview</summary><p>All market values, company sizes, sector weights, charts, events and headlines are illustrative design fixtures. This is not a complete S&amp;P 500 constituent map. Index-period controls change sample chart data only; heatmap values remain tied to the sample session. Preferences are saved in this browser when available.</p></details></footer>
   </main>
 </div>
-<dialog class="watch-dialog" id="watch-dialog" aria-labelledby="watch-dialog-title"><form method="dialog"><div class="dialog-heading"><h2 id="watch-dialog-title">Your market watchbar</h2><p>Choose what appears in this browser.</p></div><div class="watch-options"><label><input type="checkbox" name="watch" value="10y" checked>U.S. 10-year Treasury yield</label><label><input type="checkbox" name="watch" value="2y" checked>U.S. 2-year Treasury yield</label><label><input type="checkbox" name="watch" value="btc" checked>Bitcoin / USD</label><label><input type="checkbox" name="watch" value="eur" checked>EUR / USD</label><label><input type="checkbox" name="watch" value="cad" checked>USD / CAD</label></div><div class="dialog-actions"><button value="cancel" type="submit" formnovalidate>Cancel</button><button value="save" type="submit">Save preferences</button></div></form></dialog>
+{% include 'research/market_watch_dialog.html' %}
 </body>
 </html>

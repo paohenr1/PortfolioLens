@@ -14,7 +14,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 
 @contextmanager
-def preview_application():
+def preview_application(*, index_fixtures=False):
     with (ROOT / ".local/markets-preview-server.log").open("w") as diagnostics:
         process = subprocess.Popen(
             [str(ROOT / ".venv/bin/python"), __file__, "--serve"],
@@ -27,7 +27,8 @@ def preview_application():
                 "DJANGO_ENV": "development",
                 "DJANGO_DEBUG": "true",
                 "DJANGO_PRIVATE_SITE": "false",
-                "INTRINIO_API_KEY": "",
+                "INTRINIO_API_KEY": "index-browser-fixture-key" if index_fixtures else "",
+                "STOCK_INDEX_BROWSER_FIXTURES": "1" if index_fixtures else "0",
             },
         )
         try:
@@ -56,8 +57,42 @@ def serve():
     with make_server(
         "127.0.0.1", 0, StaticFilesHandler(get_wsgi_application()), handler_class=QuietHandler
     ) as server:
-        print(server.server_port, flush=True)
-        server.serve_forever()
+        from contextlib import nullcontext
+        from unittest.mock import patch
+
+        context = nullcontext()
+        if os.environ.get("STOCK_INDEX_BROWSER_FIXTURES") == "1":
+            from datetime import date, timedelta
+
+            import httpx
+
+            from market_data.indices import INDEX_CATALOG
+            from market_data.intrinio import IntrinioClient
+
+            def transport(request):
+                symbol = request.url.path.split("/")[3]
+                key = next(key for key, spec in INDEX_CATALOG.items() if spec[0] == symbol)
+                end = date.fromisoformat(request.url.params["end_date"])
+                values = [100, 101, None, 102, 103]
+                return httpx.Response(
+                    200,
+                    json={
+                        "index": {"symbol": symbol, "id": INDEX_CATALOG[key][1]},
+                        "historical_data": [
+                            {"date": (end - timedelta(days=4 - i)).isoformat(), "value": value}
+                            for i, value in enumerate(values)
+                        ],
+                        "next_page": None,
+                    },
+                )
+
+            def factory(key):
+                return IntrinioClient(key, transport=httpx.MockTransport(transport))
+
+            context = patch("research.services.IntrinioClient", side_effect=factory)
+        with context:
+            print(server.server_port, flush=True)
+            server.serve_forever()
 
 
 def main():
