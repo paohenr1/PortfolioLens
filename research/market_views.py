@@ -36,6 +36,10 @@ def base_context(period="1M"):
     }
 
 
+def _level(value):
+    return f"{value.quantize(Decimal('.01'), rounding=ROUND_HALF_UP):,.2f}"
+
+
 def index_presentation(history, chart_start, *, single_session=False):
     """Changes explicitly compare supplied dates; null observations break chart lines."""
     observations = history.observations
@@ -75,6 +79,7 @@ def index_presentation(history, chart_start, *, single_session=False):
                     "percent": f"{percent.quantize(Decimal('.01'), rounding=ROUND_HALF_UP):+.2f}%",
                     "direction": "negative" if change < 0 else "positive",
                     "previous_date": previous.date,
+                    "previous_level": _level(previous.value),
                 }
             )
         else:
@@ -86,6 +91,56 @@ def index_presentation(history, chart_start, *, single_session=False):
         if len(chart_rows) == 1 and previous is not None:
             chart_rows.insert(0, previous)
         values = [row.value for row in chart_rows if row.value is not None]
+        result.update(
+            {
+                "chart_start": chart_rows[0].date,
+                "chart_end": chart_rows[-1].date,
+                "observation_count": len(values),
+                "range_low": _level(min(values)),
+                "range_high": _level(max(values)),
+                "detail_paths": [],
+                "points": [],
+            }
+        )
+        # A single level still has an inspectable point; no second level is invented.
+        minimum, maximum = min(values), max(values)
+        span = maximum - minimum or Decimal(1)
+        days = Decimal(max(1, (chart_rows[-1].date - chart_rows[0].date).days))
+        detail_segment = []
+        for row in chart_rows:
+            if row.value is None:
+                if detail_segment:
+                    result["detail_paths"].append(" ".join(detail_segment))
+                    detail_segment = []
+                continue
+            x = Decimal(100) + Decimal((row.date - chart_rows[0].date).days) / days * 760
+            y = (
+                Decimal(260) - (row.value - minimum) / span * 230
+                if maximum != minimum
+                else Decimal(145)
+            )
+            result["points"].append(
+                {
+                    "x": f"{x:.2f}",
+                    "y": f"{y:.2f}",
+                    "date": row.date,
+                    "value": f"{row.value.quantize(Decimal('.01'), rounding=ROUND_HALF_UP):,.2f}",
+                }
+            )
+            detail_segment.append(f"{'L' if detail_segment else 'M'}{x:.2f} {y:.2f}")
+        if detail_segment:
+            result["detail_paths"].append(" ".join(detail_segment))
+        result["axis_ticks"] = (
+            [
+                {
+                    "y": f"{Decimal(260) - fraction * 230:.2f}",
+                    "label": _level(minimum + (maximum - minimum) * fraction),
+                }
+                for fraction in (Decimal(0), Decimal(".5"), Decimal(1))
+            ]
+            if maximum != minimum
+            else [{"y": "145", "label": result["range_low"]}]
+        )
         if len(values) >= 2:
             minimum, maximum = min(values), max(values)
             span = maximum - minimum or Decimal(1)

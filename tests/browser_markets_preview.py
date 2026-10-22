@@ -209,12 +209,15 @@ def main():
                 page.reload(wait_until="networkidle")
                 assert page.get_by_role("combobox", name="Color theme").input_value() == "light"
                 page.screenshot(path=str(output / "markets-light-desktop.png"), full_page=True)
-                page.get_by_role("combobox", name="Color theme").select_option("system")
-                page.emulate_media(color_scheme="dark")
-                dark = page.locator("body").evaluate("el => getComputedStyle(el).backgroundColor")
+                # Migrate the former System preference to a fixed explicit theme.
+                page.evaluate("localStorage.setItem('portfoliolens-theme', 'system')")
                 page.emulate_media(color_scheme="light")
-                light = page.locator("body").evaluate("el => getComputedStyle(el).backgroundColor")
-                assert dark != light, "System theme did not follow device setting"
+                page.reload(wait_until="networkidle")
+                assert page.get_by_role("combobox", name="Color theme").input_value() == "light"
+                assert page.evaluate("localStorage.getItem('portfoliolens-theme')") == "light"
+                page.emulate_media(color_scheme="dark")
+                assert page.locator("html").get_attribute("data-theme") == "light"
+                assert page.locator("#theme-select option").count() == 2
 
                 page.get_by_role("button", name="Customize", exact=True).click()
                 dialog = page.get_by_role("dialog")
@@ -243,7 +246,7 @@ def main():
                 assert not violations, violations
                 assert all(urlsplit(url).hostname == "127.0.0.1" for url in requests)
                 print(
-                    "Markets preview PASS: themes/system preference, period charts, "
+                    "Markets preview PASS: themes/legacy preference migration, period charts, "
                     "keyboard selection, sector view, watchbar persistence, CSP, "
                     "local requests only, and 1440/1024/768/390px layouts."
                 )

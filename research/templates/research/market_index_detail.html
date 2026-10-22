@@ -1,0 +1,20 @@
+<dialog class="index-detail-dialog" id="index-detail-{{ index.key }}" aria-labelledby="index-title-{{ index.key }}">
+  <div class="index-detail-heading"><div><h2 id="index-title-{{ index.key }}">{{ index.name }}</h2><p class="index-date">{{ period }} · Supplied daily index levels · Intrinio</p></div><form method="dialog"><button type="submit" aria-label="Close index details">Close</button></form></div>
+  <p class="index-value">{{ index.level }} <span class="index-change {{ index.direction }}">{% if index.previous_date %}{{ index.change }} ({{ index.percent }}){% endif %}</span></p>
+  <p class="index-date">As of {{ index.as_of|date:"M j, Y" }}{% if index.previous_date %} · Change vs {{ index.previous_date|date:"M j, Y" }}{% endif %}</p>
+  <figure class="chart-figure">
+    <div class="index-chart-scroll"><svg class="index-detail-chart {{ index.direction }}" viewBox="0 0 900 310" role="group" aria-label="{{ index.name }} daily levels. Use arrow keys to inspect dates and values.">
+      {% for tick in index.axis_ticks %}<line class="index-gridline" x1="100" x2="860" y1="{{ tick.y }}" y2="{{ tick.y }}"/><text x="88" y="{{ tick.y }}" text-anchor="end" dominant-baseline="middle">{{ tick.label }}</text>{% endfor %}
+      <text x="100" y="295">{{ index.chart_start|date:"M j, Y" }}</text><text x="860" y="295" text-anchor="end">{{ index.chart_end|date:"M j, Y" }}</text>
+      {% for path in index.detail_paths %}<path class="index-detail-line" d="{{ path }}"/>{% endfor %}
+      {% for point in index.points %}<circle class="chart-point" cx="{{ point.x }}" cy="{{ point.y }}" r="4" tabindex="{% if forloop.first %}0{% else %}-1{% endif %}" role="button" aria-label="{{ point.date|date:'M j, Y' }} · {{ point.value }}" data-label="{{ point.date|date:'M j, Y' }} · {{ point.value }}"/>{% endfor %}
+    </svg></div>
+    <figcaption class="chart-readout" aria-live="polite">Hover, tap or use arrow keys to inspect a daily level.</figcaption>
+  </figure>
+  <dl class="index-detail-stats">
+    <div><dt>Previous level{% if index.previous_date %} · {{ index.previous_date|date:"M j" }}{% endif %}</dt><dd>{{ index.previous_level|default:"Unavailable" }}</dd></div>
+    <div><dt>Range low</dt><dd>{{ index.range_low }}</dd></div><div><dt>Range high</dt><dd>{{ index.range_high }}</dd></div>
+    <div><dt>Supplied levels</dt><dd>{{ index.observation_count }}</dd></div>
+  </dl>
+  <p class="index-detail-note">Range figures use the daily levels shown, not intraday highs or lows. Missing levels break the line; absent dates are not filled. Choose another range on the overview and reload to see a different period.</p>
+</dialog>

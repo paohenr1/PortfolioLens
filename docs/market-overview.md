@@ -10,7 +10,8 @@ not ETF prices, intraday quotes or a constructed total-return series.
 
 Requests exclude the current UTC date. Each card shows its actual latest supplied
 observation date, which may be older than the requested cutoff. Retrieval timestamps
-are separate and appear with the observation tables; they do not establish freshness.
+remain separate in the provider result and do not establish freshness; they are not
+shown on the overview.
 The site does not call a dataset current simply because the credential is configured.
 
 The point change is the latest level minus the immediately preceding supplied
@@ -27,7 +28,8 @@ Other windows show supplied observations inside their selected calendar window. 
 comparison on the card remains between the latest two supplied observations regardless
 of chart window. Missing values break chart paths. Absent dates are not reconstructed;
 there is no forward fill, earlier-date substitution for an explicitly missing value,
-or adjusted-price fallback. Tables retain the supplied dates and unavailable values.
+or adjusted-price fallback. Provider results retain the supplied dates and
+unavailable values.
 
 The request includes ten preceding calendar days for comparison/baseline discovery.
 A response without usable observations in the selected window stays unavailable.
@@ -85,10 +87,11 @@ is a browser-local visibility preference and does not trigger requests.
   and does not establish freshness. This is a single venue's rolling-window statistic,
   not a consolidated crypto quote or a daily-close comparison.
 
-Source labels, observation/comparison dates and retrieval times appear under **Dates,
-values and sources**. Different sources have different bases and are not presented as
-one synchronized live feed. Yield changes use one decimal in basis points; FX values
-use four decimals; BTC price and percentage changes use two. Display rounding is half-up.
+The overview shows values, changes and observation dates, with a concise source note
+in the footer. Raw observation tables and retrieval timestamps are omitted from the
+page. Different sources have different bases and are not presented as one synchronized
+live feed. Detailed calculation and source semantics are documented here. Yield
+changes use one decimal in basis points; FX values use four decimals; BTC price and percentage changes use two. Display rounding is half-up.
 
 Public-source requests use fixed HTTPS destinations, normal proxy/CA trust, no credentials,
 no redirects and a 2 MiB decoded response limit. JSON rejects duplicate fields and
@@ -111,3 +114,25 @@ Source access must be established before those sections are populated.
 The development design preview remains separately available at `/design/markets/`
 only with debug enabled outside production. It contains clearly labeled fictional
 fixtures. Its controls are not live-provider controls.
+
+The overview has one main navigation and explicit Dark/Light theme choices. A formerly
+saved System preference resolves once to the device theme and is saved as Dark or Light.
+
+## Detailed index charts
+
+Loaded cards keep the compact chart and show the previous supplied level and date.
+**View chart** opens an accessible dialog with a larger chart, date/value axes and
+pointer, touch or arrow-key inspection. Escape/Close returns focus to the opener.
+Opening or inspecting a chart makes no additional requests. The selected overview
+range also applies to the detailed chart; change it on the overview and reload.
+
+Previous level, range low/high and supplied-level count use the same unrounded daily
+observations as the chart. Low/high are extrema of supplied daily index levels,
+not intraday trading extremes. They do not imply complete coverage. For 1D, the
+previous supplied observation is included as the comparison baseline. A flat series
+has one value-axis tick; a single supplied value remains inspectable without an
+invented second observation. Explicit null levels break both chart paths.
+
+Theme colors and the browser-local Dark/Light preference are shared by Markets,
+Portfolio, Research, Watchlists and account screens. The preference is applied by
+a local script in the document head before page content renders.
