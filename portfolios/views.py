@@ -6,10 +6,15 @@ from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from ledger.domain import LedgerRuleError
+from ledger.performance_forms import PerformanceForm
+from ledger.services import PortfolioUnavailable
+from ledger.valuation_services import ValuationLimitError
 from portfolios import services
 from portfolios.forms import PortfolioForm
+from portfolios.overview import overview_context
 
 
 def unavailable(request):
@@ -62,4 +67,62 @@ def portfolio_detail(request, portfolio_id):
     portfolio = queryset.filter(pk=portfolio_id).first()
     if portfolio is None:
         return render(request, "portfolios/not_found.html", status=404)
-    return render(request, "portfolios/detail.html", {"portfolio": portfolio})
+    context = {"portfolio": portfolio}
+    try:
+        context, _ = overview_context(request.user, portfolio_id)
+    except LedgerRuleError:
+        # Keep correction tools reachable when journal calculations cannot run.
+        context["summary_unavailable"] = True
+    except services.PortfolioStorageUnavailable:
+        return unavailable(request)
+    except PortfolioUnavailable:
+        return render(request, "portfolios/not_found.html", status=404)
+    context["overview_form"] = PerformanceForm()
+    return render(request, "portfolios/detail.html", context)
+
+
+@never_cache
+@login_required
+@require_POST
+def portfolio_overview_load(request, portfolio_id):
+    # Resolve ownership before validating dates or requesting any market data.
+    from ledger.services import private_portfolio
+
+    try:
+        portfolio = private_portfolio(request.user, portfolio_id)
+    except services.PortfolioStorageUnavailable:
+        return unavailable(request)
+    except PortfolioUnavailable:
+        return render(request, "portfolios/not_found.html", status=404)
+    form = PerformanceForm(request.POST)
+    status, provider_error = 200, None
+    try:
+        dates = None
+        if form.is_valid():
+            dates = (form.cleaned_data["start_date"], form.cleaned_data["end_date"])
+        else:
+            status = 400
+        context, provider_error = overview_context(
+            request.user,
+            portfolio_id,
+            dates=dates,
+            client_address=request.META.get("REMOTE_ADDR", "unknown"),
+        )
+    except services.PortfolioStorageUnavailable:
+        return unavailable(request)
+    except PortfolioUnavailable:
+        return render(request, "portfolios/not_found.html", status=404)
+    except LedgerRuleError:
+        context = {"portfolio": portfolio, "summary_unavailable": True}
+        status = 503
+    except ValuationLimitError as error:
+        context = {"portfolio": portfolio, "summary_unavailable": True}
+        form.add_error(None, str(error))
+        status = 400
+    if provider_error:
+        status = 429 if provider_error.status == 429 else 503
+    context.update(overview_form=form, provider_error=provider_error)
+    response = render(request, "portfolios/detail.html", context, status=status)
+    if provider_error and provider_error.retry_after:
+        response.headers["Retry-After"] = str(provider_error.retry_after)
+    return response

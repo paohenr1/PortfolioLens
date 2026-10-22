@@ -74,3 +74,26 @@ implemented.
 
 See [setup and checks](setup.md#automated-checks) and the [methodology
 index](methodology.md) for related calculations.
+
+## Portfolio overview
+
+The portfolio overview shows recorded cash, remaining FIFO cost, realized sale gain/loss
+and the first five open holdings directly from one effective journal snapshot. Opening
+it makes no provider request and writes no totals. A separate inline section updates
+closing market value, unrealized gains and time-weighted returns with one CSRF-protected
+submission. Opening/closing dates and the existing cash-flow/share-basis confirmation
+are explicit; detailed valuation and risk pages remain available for deeper analysis.
+
+The combined load takes one owner-scoped journal snapshot and uses the existing
+performance plan and bounded prices. Its closing valuation is reused without an extra
+price request. If timing or performance-plan limits fail before price I/O, closing
+valuation alone is attempted with its existing five-instrument limit, and the return
+stays unavailable with an explanation. A supported plan retains the eight-request
+limit and stops after rate exhaustion, preserving Retry-After. Missing closes withhold
+unknown totals. Recorded journal totals include all entries; market values explicitly
+stop at the selected closing date. No pricing cache or automatic refresh is introduced.
+
+The transaction entry form shows type-specific inputs when JavaScript is available,
+retaining values when switching types but omitting inactive inputs on submission.
+Field errors remain visible. Without JavaScript the full server-validated form remains
+usable. Submission identity, exact arithmetic, CSRF and correction behavior are unchanged.

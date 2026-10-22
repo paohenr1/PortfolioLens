@@ -126,3 +126,28 @@ figcaption { color: var(--muted); font-size: .85rem; margin-top: .7rem; }
 
 input, select, textarea { background: var(--mp-surface); color: var(--ink); }
 .theme-select { font: inherit; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: .4rem; }
+
+.portfolio-heading { max-width: none; }
+.portfolio-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; }
+.portfolio-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.portfolio-summary h2 { font-size: .9rem; color: var(--muted); }
+.portfolio-number { font-size: clamp(1.3rem, 2.4vw, 2rem); font-weight: 650; margin: .75rem 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.portfolio-number small { font-size: .75rem; color: var(--muted); }
+.portfolio-gain { color: var(--mp-up); }
+.portfolio-loss { color: var(--mp-down); }
+.portfolio-holdings, .portfolio-import-tools { margin-block: 2rem; }
+.portfolio-empty { color: var(--muted); max-width: 650px; }
+.portfolio-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-block: 2rem; }
+.portfolio-tools h2, .portfolio-import-tools h2 { font-size: 1.15rem; }
+.transaction-guidance { padding: .8rem 1rem; border-left: 3px solid var(--accent); background: var(--mp-surface-soft); }
+[hidden] { display: none !important; }
+@media (max-width: 720px) { .portfolio-summary, .portfolio-tools { grid-template-columns: 1fr; } .portfolio-holdings .section-heading { align-items: flex-start; } }
+
+.portfolio-market-overview { margin-block: 2rem; }
+.portfolio-overview-form { max-width: 760px; margin-bottom: 1rem; }
+.portfolio-inline-values { gap: 1.5rem; margin: 1.5rem 0; }
+.portfolio-inline-values dd { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+
+.portfolio-overview-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; margin-top: 1.5rem; }
+.portfolio-overview-form > div:has(input[type="checkbox"]), .portfolio-overview-form > .errorlist, .portfolio-overview-form > button { grid-column: 1 / -1; }
+@media (max-width: 540px) { .portfolio-overview-form { grid-template-columns: 1fr; } }
