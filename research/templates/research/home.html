@@ -5,8 +5,12 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="A private market overview and portfolio research workspace.">
   <title>Markets · PortfolioLens</title>
-  <link rel="stylesheet" href="{% static 'research/markets.css' %}">
+  <link rel="stylesheet" href="{% static 'research/theme.css' %}">
+    <script src="{% static 'research/theme.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'research/markets.css' %}">
   <script src="{% static 'research/market-preferences.js' %}" defer></script>
+  <script src="{% static 'research/market-indices.js' %}" defer></script>
+  <script src="{% static 'research/prices.js' %}" defer></script>
 </head>
 <body class="market-page">
 <a class="skip-link" href="#main">Skip to markets</a>
@@ -27,11 +31,12 @@
     <div class="index-grid">
       {% for index in indices %}<article class="index-card" data-index="{{ index.key }}"><div class="index-copy"><h2 class="index-name">{{ index.name }}</h2>
         {% if index.available %}<p class="index-value">{{ index.level }}</p>
-          {% if index.previous_date %}<p class="index-change {{ index.direction }}">{{ index.change }} <span>({{ index.percent }})</span></p><p class="index-date">vs {{ index.previous_date|date:"M j" }}</p>{% else %}<p class="index-date">Change unavailable</p>{% endif %}
+          {% if index.previous_date %}<p class="index-change {{ index.direction }}">{{ index.change }} <span>({{ index.percent }})</span></p><p class="index-date">Previous {{ index.previous_level }} · {{ index.previous_date|date:"M j" }}</p>{% else %}<p class="index-date">Change unavailable</p>{% endif %}
           <p class="index-date">As of {{ index.as_of|date:"M j, Y" }}</p>
+          <button class="index-detail-open" type="button" data-index-dialog="index-detail-{{ index.key }}" aria-haspopup="dialog" hidden>View {{ period }} chart <span class="sr-only">for {{ index.name }}</span><span aria-hidden="true"> ↗</span></button>
         {% else %}<p class="index-placeholder">{% if loaded %}Unavailable{% else %}Not loaded{% endif %}</p><p class="index-date">{% if index.issue %}{{ index.issue }}{% else %}Load a dated market overview.{% endif %}</p>{% endif %}
         </div>
-        {% if index.paths %}<svg class="sparkline {{ index.direction }}" viewBox="0 0 200 72" role="img" aria-label="{{ index.name }} supplied daily index levels; dates and values in the table below">{% for path in index.paths %}<path d="{{ path }}"/>{% endfor %}</svg>{% endif %}
+        {% if index.paths %}<svg class="sparkline {{ index.direction }}" viewBox="0 0 200 72" role="img" aria-label="{{ index.name }} supplied daily index levels">{% for path in index.paths %}<path d="{{ path }}"/>{% endfor %}</svg>{% endif %}
       </article>{% endfor %}
     </div>
     <div class="watchbar" aria-label="Market watchbar">
@@ -49,15 +54,10 @@
       <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Market headlines</h2><p class="panel-subtitle">News feed not connected</p></div></div><p class="market-empty-copy">No news source is connected yet. Headlines will link to the original reporting.</p></section>
     </aside>
   </div>
-  {% if loaded %}<section class="panel observation-panel" aria-labelledby="observations-title"><div class="panel-header"><div><h2 class="panel-title" id="observations-title">Dates, values and sources</h2><p class="panel-subtitle">Intrinio indices · Treasury yields · Bank of Canada reference FX · Coinbase statistics</p></div></div>
-    <div class="watch-sources">{% for item in watchbar %}<details class="watch-source"><summary>{{ item.label }} · {% if item.available %}{{ item.source }}{% else %}Unavailable{% endif %}</summary>{% if item.available %}<p>{{ item.note }}</p><p>{% if item.as_of %}Observation: {{ item.as_of|date:"Y-m-d" }}.{% endif %}{% if item.previous_date %} Change compares {{ item.previous_date|date:"Y-m-d" }} with {{ item.as_of|date:"Y-m-d" }}.{% endif %} Retrieved {{ item.retrieved_at|date:"Y-m-d H:i:s T" }}.</p>{% else %}<p>{{ item.issue|default:"No data was returned for this indicator." }}</p>{% endif %}</details>{% endfor %}</div>
-    {% for index in indices %}{% if index.rows %}<details class="index-observations"><summary>{{ index.name }} · supplied observations</summary><p>Retrieved {{ index.retrieved_at|date:"Y-m-d H:i:s T" }}. Change compares the latest supplied close with the immediately preceding supplied observation; its date is shown on the card. The chart range does not change that comparison.</p><div class="observation-scroll" tabindex="0" role="region" aria-label="{{ index.name }} observations"><table><caption>{{ index.name }} supplied daily levels, including baseline observations</caption><thead><tr><th scope="col">Date</th><th scope="col">Index level</th></tr></thead><tbody>{% for row in index.rows %}<tr><th scope="row">{{ row.date|date:"Y-m-d" }}</th><td>{{ row.value|default_if_none:"Unavailable" }}</td></tr>{% endfor %}</tbody></table></div></details>{% endif %}{% endfor %}
-    <p class="market-empty-copy">Explicitly missing levels break chart lines and are never filled. Omitted dates are not reconstructed. Dates shown on the cards describe the supplied data; retrieval time does not establish freshness or real-time access.</p>
-  </section>{% endif %}
-  <section class="workspace-links" aria-label="Your workspace"><a href="{% url 'portfolio_list' %}">Open my portfolios <span aria-hidden="true">↗</span></a><a href="{% url 'search' %}">Research a stock <span aria-hidden="true">↗</span></a><a href="{% url 'watchlist_list' %}">My watchlists <span aria-hidden="true">↗</span></a></section>
-  <footer class="market-footer"><p>PortfolioLens · Research tools · No trading execution</p><details><summary>Data and calculations</summary><p>Market prices and company financials require provider access. Recorded cash, FIFO positions, and realized gains come from your transaction journal. This market overview does not show personal portfolio performance. Watchbar values use daily government/reference rates or venue-specific Bitcoin statistics, not a synchronized live feed. Daily index levels may be delayed; request times and observation dates remain separate.</p></details></footer>
+  <footer class="market-footer"><p>Sources: Intrinio · U.S. Treasury · Bank of Canada · Coinbase Exchange.</p><p>Daily data may be delayed. EUR/USD is a derived reference rate; Bitcoin shows exchange-specific 24h statistics.</p></footer>
 </main>
 </div>
 {% include 'research/market_watch_dialog.html' %}
+{% for index in indices %}{% if index.available %}{% include 'research/market_index_detail.html' %}{% endif %}{% endfor %}
 </body>
 </html>

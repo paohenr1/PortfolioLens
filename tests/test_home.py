@@ -10,9 +10,7 @@ class LandingPageTests(SimpleTestCase):
         self.assertTemplateUsed(response, "research/home.html")
         self.assertContains(response, "Market data unavailable: Intrinio is not configured.")
         self.assertContains(response, 'data-provider-status="not_configured"')
-        self.assertContains(
-            response, "Market prices and company financials require provider access."
-        )
+        self.assertContains(response, "Daily data may be delayed.")
 
     @override_settings(INTRINIO_API_KEY="test-only-never-send-to-browser")
     def test_configured_key_never_claims_verified_data_or_reaches_browser(self):

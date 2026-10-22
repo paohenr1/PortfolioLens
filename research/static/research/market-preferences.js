@@ -1,17 +1,7 @@
 /* Browser-local appearance and watchbar preferences. No network requests. */
 (() => {
-  const root = document.documentElement;
   const getPreference = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
   const setPreference = (key, value) => { try { localStorage.setItem(key, value); } catch { /* Storage may be unavailable. */ } };
-  const theme = document.getElementById('theme-select');
-  const savedTheme = getPreference('portfoliolens-theme');
-  if (['dark', 'light', 'system'].includes(savedTheme)) theme.value = savedTheme;
-  root.dataset.theme = theme.value;
-  theme.addEventListener('change', () => {
-    root.dataset.theme = theme.value;
-    setPreference('portfoliolens-theme', theme.value);
-  });
-
   const dialog = document.getElementById('watch-dialog');
   const customize = document.getElementById('customize-watch');
   const checkboxes = [...dialog.querySelectorAll('input[name="watch"]')];

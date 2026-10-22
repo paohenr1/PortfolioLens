@@ -1,0 +1,31 @@
+/* Shared PortfolioLens colors across all pages. */
+:root {
+  color-scheme: dark;
+  --mp-bg: #0b1420;
+  --mp-surface: #111e2c;
+  --mp-surface-soft: #142332;
+  --mp-surface-raised: #1b2b3c;
+  --mp-text: #edf3fa;
+  --mp-muted: #a5b4c6;
+  --mp-line: #293c4d;
+  --mp-accent: #4bd6d3;
+  --mp-accent-bg: #123d45;
+  --mp-up: #73deb6;
+  --mp-down: #ff9b9f;
+  --mp-shadow: 0 16px 48px #02081026;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --mp-bg: #f3f6f7;
+  --mp-surface: #ffffff;
+  --mp-surface-soft: #f8fafb;
+  --mp-surface-raised: #eaf0f3;
+  --mp-text: #152b3d;
+  --mp-muted: #566c7b;
+  --mp-line: #d7e1e6;
+  --mp-accent: #08777d;
+  --mp-accent-bg: #e2f4f3;
+  --mp-up: #11734f;
+  --mp-down: #b83745;
+  --mp-shadow: 0 16px 48px #18334308;
+}

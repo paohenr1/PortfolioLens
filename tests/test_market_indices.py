@@ -108,6 +108,11 @@ class IndexContractTests(SimpleTestCase):
         self.assertNotIn("change", result)
         self.assertEqual(len(result["paths"]), 2)
         self.assertTrue(all("L" not in segment for segment in result["paths"]))
+        self.assertEqual(len(result["detail_paths"]), 2)
+        self.assertEqual([point["value"] for point in result["points"]], ["100.00", "102.00"])
+        self.assertEqual(result["range_low"], "100.00")
+        self.assertEqual(result["range_high"], "102.00")
+        self.assertEqual(result["observation_count"], 2)
 
     def test_change_has_independent_arithmetic_and_actual_comparison_date(self):
         history = normalize_index_history(payload(), "sp500", date(2026, 10, 1), date(2026, 10, 21))
@@ -131,6 +136,23 @@ class IndexContractTests(SimpleTestCase):
         self.assertEqual(result["as_of"], date(2026, 10, 16))
         self.assertEqual(result["previous_date"], date(2026, 10, 15))
         self.assertTrue(result["paths"])
+
+    def test_single_and_flat_levels_remain_inspectable_without_fabricated_spread(self):
+        for dates in ((20,), (20, 21)):
+            with self.subTest(dates=dates):
+                history = IndexHistory(
+                    "sp500",
+                    tuple(
+                        IndexObservation(date(2026, 10, day), Decimal("100.005")) for day in dates
+                    ),
+                    datetime.now(UTC),
+                )
+                result = index_presentation(history, date(2026, 10, 19))
+                self.assertEqual(result["range_low"], "100.01")
+                self.assertEqual(result["range_high"], "100.01")
+                self.assertEqual(len(result["points"]), len(dates))
+                self.assertEqual({point["y"] for point in result["points"]}, {"145.00"})
+                self.assertEqual(len(result["axis_ticks"]), 1)
 
     def test_range_without_usable_observations_is_unavailable(self):
         item = payload()
@@ -175,7 +197,7 @@ class IndexHomepageTests(SimpleTestCase):
         self.assertEqual([call.args[0] for call in provider.call_args_list], list(INDEX_CATALOG))
         self.assertContains(response, "102.50")
         self.assertContains(response, "+2.50%")
-        self.assertContains(response, "Dates, values and sources")
+        self.assertContains(response, "Sources: Intrinio")
         self.assertNotContains(response, TEST_KEY)
         self.assertNotContains(response, "markets-preview.js")
         self.assertNotContains(response, "5,842.47")
@@ -191,7 +213,7 @@ class IndexHomepageTests(SimpleTestCase):
         with patch("research.services.market_index_history", side_effect=history):
             response = self.client.post(reverse("load_market_indices"), {"period": "1M"})
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "102.50", count=2)
+        self.assertContains(response, 'class="index-value">102.50</p>', count=2)
         self.assertContains(response, EntitlementDenied.message)
 
     def test_rate_limit_stops_remaining_requests_and_preserves_retry_after(self):
