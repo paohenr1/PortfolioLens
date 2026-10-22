@@ -110,3 +110,29 @@ Live-provider checks are opt-in and consume provider requests.
   process; the production entry point validates the manifest.
 - **Database helper refuses to start:** inspect its ownership/container mismatch
   message. Do not delete existing data to bypass the guard.
+
+## Markets homepage design preview
+
+The isolated `/design/markets/` route is available only with development settings and
+`DJANGO_DEBUG=true`. It uses explicitly labeled fictional market data and makes no
+provider requests. The normal homepage and portfolio workflows do not use these
+fixtures. The preview returns 404 with debug disabled or in production.
+
+Start the normal local development server and open that route to inspect the design.
+It includes browser-local light/dark/system preferences, sample index periods,
+company/sector heatmap views and watchbar selection. It is not a live market feed.
+
+With the optional Playwright/Chromium browser runtime installed, run:
+
+```sh
+python3 tests/browser_markets_preview.py
+```
+
+The runner starts its own local preview server using `.venv/bin/python`, exercises
+controls and responsive layouts, and stops that server on completion. Screenshots
+are written to ignored `.local/design-preview/`. No database setup is needed for
+this runner. Preview isolation tests run with:
+
+```sh
+uv run --frozen python manage.py test tests.test_markets_preview tests.test_home
+```
