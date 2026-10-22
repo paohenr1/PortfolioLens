@@ -522,3 +522,8 @@
 .account-menu-panel a, .account-menu-panel button { display: block; width: 100%; padding: 9px 12px; text-align: left; background: none; font-size: 13px; border-radius: 4px; }
 .account-menu-panel form { margin: 0; }
 .account-menu-panel a:hover, .account-menu-panel button:hover { background: var(--mp-surface-raised); color: var(--mp-accent); }
+.watch-date { display: block; font-size: 10px; color: var(--mp-muted); margin-top: 5px; }
+.watch-sources { padding: 0 21px 15px; }
+.watch-source { padding: 10px 0; font-size: 12px; color: var(--mp-muted); }
+.watch-source summary { color: var(--mp-accent); cursor: pointer; }
+.watch-source p { max-width: 850px; margin-top: 8px; }

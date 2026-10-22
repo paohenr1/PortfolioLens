@@ -18,14 +18,18 @@ def main():
             page.on("request", lambda request: requests.append(request.url))
             response = page.goto(base, wait_until="networkidle")
             assert response.status == 200
-            assert page.get_by_text("Not loaded", exact=True).count() == 3
+            assert page.locator(".index-card").get_by_text("Not loaded", exact=True).count() == 3
             assert not page.locator(".index-value").count()
             assert not page.locator('[src$="markets-preview.js"]').count()
-            page.get_by_role("button", name="Load daily levels", exact=True).click()
+            page.get_by_role("button", name="Load market overview", exact=True).click()
             assert page.locator(".index-value").count() == 3
             assert page.get_by_text("103.00", exact=True).count() == 3
             assert page.locator(".sparkline path").count() == 6  # Explicit null breaks each line.
-            assert page.get_by_text("Not connected", exact=True).count() == 5
+            assert page.locator(".watchbar .watch-value").count() == 5
+            assert page.locator('[data-watch="10y"] .watch-value').inner_text() == "4.18%"
+            assert page.locator('[data-watch="2y"] .watch-value').inner_text() == "4.03%"
+            assert page.locator('[data-watch="btc"] .watch-value').inner_text() == "$110.00"
+            assert page.locator('[data-watch="eur"] .watch-value').inner_text() == "1.2500"
             for theme in ("dark", "light"):
                 page.get_by_role("combobox", name="Color theme").select_option(theme)
                 page.screenshot(path=str(output / f"market-home-{theme}.png"), full_page=True)
@@ -44,7 +48,7 @@ def main():
             assert not errors, errors
             assert all(urlsplit(request).hostname == "127.0.0.1" for request in requests)
             print(
-                "Market homepage PASS: explicit CSRF form load, three dated index cards, "
+                "Market homepage PASS: explicit CSRF load, three indices, five sourced indicators, "
                 "null gaps, accessible observation tables, honest unavailable widgets, "
                 "themes, watchbar controls, and responsive layout. Synthetic local transport only."
             )

@@ -7,7 +7,8 @@ interactive charts and accessible data tables. It does not execute trades.
 ## What you can do
 
 - Load dated S&P 500, Dow Jones and Nasdaq Composite index levels on the market
-  homepage, with explicit observation dates and no automatic provider refresh.
+  homepage, alongside sourced Treasury yields, reference FX rates and Bitcoin
+  statistics, with explicit dates and no automatic provider refresh.
 
 - Research instruments, historical prices and volume, stock volatility and
   drawdown, company statements, margins, ROA/ROE, annual growth, selected-year

@@ -9,10 +9,15 @@ from django.shortcuts import render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
-from market_data.errors import AuthenticationFailed, CredentialsMissing, ProviderError
+from market_data.errors import (
+    AuthenticationFailed,
+    CredentialsMissing,
+    ProviderError,
+    ProviderRateLimited,
+)
 from market_data.indices import INDEX_CATALOG
 from market_data.status import provider_status
-from research import services
+from research import services, watchbar
 
 PERIODS = {"1D": 0, "1W": 7, "1M": 30, "1Y": 365}
 logger = logging.getLogger("research")
@@ -22,6 +27,7 @@ def base_context(period="1M"):
     now = datetime.now(UTC)
     return {
         "provider_status": provider_status(credential_present=bool(settings.INTRINIO_API_KEY)),
+        "watchbar": watchbar.empty_watchbar(),
         "indices": [{"key": key, "name": item[2]} for key, item in INDEX_CATALOG.items()],
         "period": period,
         "periods": tuple(PERIODS),
@@ -137,8 +143,16 @@ def load_market_indices(request):
             results.append({"key": key, "name": name, "issue": ProviderError.message})
             stop_error, status = ProviderError(), 503
     context["indices"] = results
-    if not any(result.get("available") for result in results) and status == 200:
-        status = 503
+    watch = watchbar.load_watchbar(
+        request.META.get("REMOTE_ADDR", ""),
+        stop_error=stop_error if isinstance(stop_error, ProviderRateLimited) else None,
+    )
+    context["watchbar"] = watch.items
+    if watch.rate_limit is not None:
+        status, retry_after = 429, watch.rate_limit.retry_after
+    elif status != 429:
+        status = 200 if any(row.get("available") for row in results + watch.items) else 503
+    context["retry_after"] = retry_after
     response = render_markets(request, context, status)
     if retry_after is not None:
         response.headers["Retry-After"] = str(retry_after)

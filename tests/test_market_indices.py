@@ -18,6 +18,7 @@ from market_data.indices import (
 from market_data.intrinio import IntrinioClient
 from research.market_views import index_presentation
 from research.services import _request_budget
+from research.watchbar import WatchbarResult, empty_watchbar
 
 TEST_KEY = "index-test-key-never-render"
 
@@ -143,6 +144,11 @@ class IndexHomepageTests(SimpleTestCase):
     def setUp(self):
         _request_budget.reset()
         self.addCleanup(_request_budget.reset)
+        self.watch = patch(
+            "research.watchbar.load_watchbar", return_value=WatchbarResult(empty_watchbar())
+        )
+        self.watch.start()
+        self.addCleanup(self.watch.stop)
 
     def history(self, key, start, end, client):
         return normalize_index_history(payload(key, end=end), key, start, end)

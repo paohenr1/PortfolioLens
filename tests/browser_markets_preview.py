@@ -57,7 +57,7 @@ def serve():
     with make_server(
         "127.0.0.1", 0, StaticFilesHandler(get_wsgi_application()), handler_class=QuietHandler
     ) as server:
-        from contextlib import nullcontext
+        from contextlib import ExitStack, nullcontext
         from unittest.mock import patch
 
         context = nullcontext()
@@ -89,7 +89,67 @@ def serve():
             def factory(key):
                 return IntrinioClient(key, transport=httpx.MockTransport(transport))
 
-            context = patch("research.services.IntrinioClient", side_effect=factory)
+            from market_data.public_markets import (
+                ATOM,
+                DATA,
+                FX_URL,
+                METADATA,
+                TREASURY_URL,
+                PublicMarketClient,
+            )
+
+            def public_transport(request):
+                end = date.today() - timedelta(days=1)
+                if str(request.url).startswith(TREASURY_URL):
+                    entries = "".join(
+                        f"<entry><content><m:properties><d:NEW_DATE>{day.isoformat()}T00:00:00"
+                        f"</d:NEW_DATE><d:BC_2YEAR>{two}</d:BC_2YEAR>"
+                        f"<d:BC_10YEAR>{ten}</d:BC_10YEAR></m:properties></content></entry>"
+                        for day, two, ten in (
+                            (end - timedelta(days=1), "4.00", "4.20"),
+                            (end, "4.03", "4.18"),
+                        )
+                        if day.year == date.today().year
+                    )
+                    return httpx.Response(
+                        200,
+                        content=(
+                            f'<feed xmlns="{ATOM[1:-1]}" xmlns:d="{DATA[1:-1]}" '
+                            f'xmlns:m="{METADATA[1:-1]}">{entries}</feed>'
+                        ).encode(),
+                    )
+                if str(request.url).startswith(FX_URL):
+                    return httpx.Response(
+                        200,
+                        json={
+                            "seriesDetail": {
+                                "FXUSDCAD": {"label": "USD/CAD"},
+                                "FXEURCAD": {"label": "EUR/CAD"},
+                            },
+                            "observations": [
+                                {
+                                    "d": (end - timedelta(days=1)).isoformat(),
+                                    "FXUSDCAD": {"v": "1.20"},
+                                    "FXEURCAD": {"v": "1.44"},
+                                },
+                                {
+                                    "d": end.isoformat(),
+                                    "FXUSDCAD": {"v": "1.25"},
+                                    "FXEURCAD": {"v": "1.5625"},
+                                },
+                            ],
+                        },
+                    )
+                return httpx.Response(200, json={"open": "100", "last": "110"})
+
+            def public_factory(**kwargs):
+                return PublicMarketClient(**kwargs, transport=httpx.MockTransport(public_transport))
+
+            context = ExitStack()
+            context.enter_context(patch("research.services.IntrinioClient", side_effect=factory))
+            context.enter_context(
+                patch("research.watchbar.PublicMarketClient", side_effect=public_factory)
+            )
         with context:
             print(server.server_port, flush=True)
             server.serve_forever()

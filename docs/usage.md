@@ -3,10 +3,12 @@
 ## Review markets
 
 The homepage provides dated S&P 500, Dow Jones and Nasdaq Composite index cards.
-Choose a range and select **Load daily levels**. Data loads only on request, with
+Choose a range and select **Load market overview**. Data loads only on request, with
 actual observation dates; these are historical index levels, not live quotes.
 Expand **Dates, values and sources** for the supplied observations and comparison
-dates. Watchbar, heatmap, calendar and news feeds remain explicitly unconnected.
+dates. The same load supplies Treasury yields, Bank of Canada reference FX rates, and
+Coinbase Bitcoin statistics, each with its own date/source basis. Heatmap, calendar
+and news feeds remain explicitly unconnected.
 See [market overview](market-overview.md) for the calculation and request limits.
 
 ## Start a private portfolio

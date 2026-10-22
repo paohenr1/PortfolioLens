@@ -2,8 +2,8 @@
 
 The homepage shows three fixed U.S. index cards: S&P 500, Dow Jones Industrial
 Average and Nasdaq Composite. Opening or refreshing the initial page makes no
-market-provider requests. Choose a chart range and explicitly select **Load daily
-levels**. The overview uses provider-reported historical index `level` observations,
+market-provider requests. Choose a chart range and explicitly select **Load market
+overview**. The overview uses provider-reported historical index `level` observations,
 not ETF prices, intraday quotes or a constructed total-return series.
 
 ## Dates and calculations
@@ -50,19 +50,63 @@ Official contract references:
 - [Index historical response](https://github.com/intrinio/python-sdk/blob/master/docs/ApiResponseStockMarketIndexHistoricalData.md)
 - [Index metadata](https://github.com/intrinio/python-sdk/blob/master/docs/StockMarketIndexSummary.md)
 
-A load makes at most three provider requests, sharing the existing per-client/global
+The index portion makes at most three provider requests, sharing the existing per-client/global
 market budgets. Invalid forms, missing credentials, GET and HEAD do not spend provider
 requests. CSRF protection applies to the POST load. Rate exhaustion stops remaining
 requests and preserves Retry-After; individual unavailable datasets do not erase other
 valid cards. PostgreSQL budget failures fail closed before provider I/O. No automatic
 polling, retries or successful-result caching is introduced. Result pages use no-store.
 
+## Public watchbar sources
+
+The same explicit overview load also requests three public sources (six total upstream
+requests including indices), using the shared market admission budget. Each source is
+requested once, with no automatic retries, polling or caching. Hiding watchbar items
+is a browser-local visibility preference and does not trigger requests.
+
+- **U.S. 2-year and 10-year yields:** the current calendar year's official
+  [Treasury daily curve XML](https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=2026).
+  Values retain percent units. Change is the difference between the latest two supplied
+  observations multiplied by 100, displayed in basis points. Zero yields are valid;
+  missing latest values are not replaced by earlier values. Early in January the
+  current-year feed may have no observations or no change baseline; no previous-year
+  substitution is performed.
+- **USD/CAD:** Bank of Canada daily average reference rate, in Canadian dollars
+  per U.S. dollar, from `FXUSDCAD`.
+- **EUR/USD:** a derived daily reference cross-rate: `FXEURCAD / FXUSDCAD`, using
+  both observations from exactly the same date. This is not an independently published
+  Bank of Canada EUR/USD quote or an intraday tradable rate. Percentage changes compare
+  unrounded cross-rates on the latest two supplied dates. Either missing component
+  leaves the cross-rate unavailable, without mixing dates. The source is
+  [Bank of Canada Valet](https://www.bankofcanada.ca/valet/observations/FXUSDCAD,FXEURCAD/json?recent=5).
+- **BTC/USD:** [Coinbase Exchange BTC-USD 24-hour product statistics](https://api.exchange.coinbase.com/products/BTC-USD/stats).
+  Price is the statistics response's `last`; percentage change is `(last / open - 1) × 100`.
+  The response does not provide a quote timestamp. Retrieval time is shown separately
+  and does not establish freshness. This is a single venue's rolling-window statistic,
+  not a consolidated crypto quote or a daily-close comparison.
+
+Source labels, observation/comparison dates and retrieval times appear under **Dates,
+values and sources**. Different sources have different bases and are not presented as
+one synchronized live feed. Yield changes use one decimal in basis points; FX values
+use four decimals; BTC price and percentage changes use two. Display rounding is half-up.
+
+Public-source requests use fixed HTTPS destinations, normal proxy/CA trust, no credentials,
+no redirects and a 2 MiB decoded response limit. JSON rejects duplicate fields and
+nonfinite constants; Treasury XML rejects DTD/entity declarations and non-UTF-8 input.
+Malformed identities, dates and numeric values fail closed. Failures remain local to
+the affected widgets; rate exhaustion stops remaining source requests and preserves
+Retry-After. Missing Intrinio credentials do not prevent public-source widgets loading.
+
+Cloud execution needs outbound access to `home.treasury.gov`, `www.bankofcanada.ca`
+and `api.exchange.coinbase.com`; these feeds require no added API-key bindings.
+Public reachability alone does not establish redistribution rights for another audience.
+
 ## Remaining feeds
 
-Watchbar preferences can be changed in this browser, but Treasury yields, BTC/USD and
-FX values remain **Not connected**. Heatmap, news and calendar show explicit unavailable
-states. The normal application never loads the fictional design-preview datasets.
-Feed coverage and access must be established before these widgets are populated.
+Heatmap, news and calendar still show explicit unavailable states. The current Intrinio
+account denied the S&P constituent endpoint during bounded verification; no placeholder
+constituents, sector weights or market caps are presented as real market coverage.
+Source access must be established before those sections are populated.
 
 The development design preview remains separately available at `/design/markets/`
 only with debug enabled outside production. It contains clearly labeled fictional
