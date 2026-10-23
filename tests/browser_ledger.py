@@ -121,6 +121,10 @@ def main():
             assert "857.00" in page.locator(".portfolio-inline-values").inner_text()
             assert "1.7815%" in page.locator(".portfolio-inline-values").inner_text()
             assert page.get_by_role("region", name="Holding market values").is_visible()
+            assert page.locator("main table").count() == 1
+            assert not page.locator(".portfolio-analysis-links").is_visible()
+            update = page.get_by_role("button", name="Update valuation & performance")
+            assert update.bounding_box()["height"] >= 44
             for theme in ("dark", "light"):
                 page.get_by_role("combobox", name="Color theme").select_option(theme)
                 for width in (1280, 390):

@@ -18,6 +18,7 @@ urlpatterns = [
         name="snapshot_delete",
     ),
     path("", views.portfolio_list, name="portfolio_list"),
+    path("open/", views.portfolio_home, name="portfolio_home"),
     path("check-holdings/", holdings_preview, name="holdings_preview"),
     path("create/", views.portfolio_create, name="portfolio_create"),
     path("<uuid:portfolio_id>/", views.portfolio_detail, name="portfolio_detail"),

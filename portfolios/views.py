@@ -24,6 +24,20 @@ def unavailable(request):
 @never_cache
 @login_required
 @require_GET
+def portfolio_home(request):
+    """Skip the picker only when this owner has exactly one portfolio."""
+    try:
+        identifiers = list(services.owned_portfolios(request.user).values_list("pk", flat=True)[:2])
+    except services.PortfolioStorageUnavailable:
+        return unavailable(request)
+    if len(identifiers) == 1:
+        return redirect("portfolio_detail", portfolio_id=identifiers[0])
+    return redirect("portfolio_list")
+
+
+@never_cache
+@login_required
+@require_GET
 def portfolio_list(request):
     try:
         queryset = services.owned_portfolios(request.user)

@@ -86,7 +86,7 @@ def create(page, base, name):
     page.get_by_label("Reporting currency:", exact=True).select_option("USD")
     page.get_by_role("button", name="Create portfolio", exact=True).click()
     page.get_by_role("heading", name=name, exact=True).wait_for()
-    assert "View time-weighted returns" in page.locator("main").inner_text()
+    assert page.get_by_role("button", name="Update valuation & performance").is_visible()
     return page.url
 
 
@@ -133,6 +133,11 @@ def main():
                 page.screenshot(path=f"/tmp/stock-portfolios-list-{name}.png", full_page=True)
                 page.get_by_role("link", name=own_name, exact=True).focus()
                 page.keyboard.press("Enter")
+                page.get_by_role("heading", name=own_name, exact=True).wait_for()
+                assert page.url == own_url
+                page.get_by_role("navigation", name="Main navigation").get_by_role(
+                    "link", name="My Portfolio", exact=True
+                ).click()
                 page.get_by_role("heading", name=own_name, exact=True).wait_for()
                 assert page.url == own_url
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")

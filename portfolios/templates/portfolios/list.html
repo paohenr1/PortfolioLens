@@ -1,10 +1,9 @@
 {% extends 'research/base.html' %}
 {% block title %}My Portfolio · PortfolioLens{% endblock %}
+{% block body_class %}portfolio-page{% endblock %}
 {% block content %}
 <section class="intro compact">
-  <p class="eyebrow">Private workspace</p>
   <h1>My Portfolio</h1>
-  <p class="lead">Track your holdings, transactions and performance in one place.</p>
   <a class="button" href="{% url 'portfolio_create' %}">Create portfolio</a>
 </section>
 <section class="results" aria-label="Your portfolios">
@@ -13,7 +12,7 @@
     {% for portfolio in page %}
     <li class="result-card"><div>
       <h2><a href="{% url 'portfolio_detail' portfolio_id=portfolio.pk %}">{{ portfolio.name }}</a></h2>
-      <p class="muted">{{ portfolio.reporting_currency }} · Transaction portfolio</p>
+      <p class="muted">{{ portfolio.reporting_currency }}</p>
     </div></li>
     {% endfor %}
   </ul>
@@ -28,5 +27,5 @@
   <div class="empty-state"><h2>No portfolios yet</h2><p>Create your first portfolio to start organizing your investments.</p></div>
   {% endif %}
 </section>
-<section class="reference-panel portfolio-import-tools"><h2>Working with a holdings file?</h2><p>Use a dated holdings snapshot when you have balances but no transaction history. Snapshots stay separate from transaction portfolios.</p><div class="portfolio-actions"><a href="{% url 'snapshot_list' %}">My holdings snapshots</a><a href="{% url 'holdings_preview' %}">Check a holdings CSV</a></div></section>
+<details class="portfolio-details"><summary>Import holdings instead</summary><p>Snapshots are dated balances, separate from your transaction portfolios.</p><div class="portfolio-analysis-links"><a class="button button-secondary" href="{% url 'snapshot_list' %}">My holdings snapshots</a><a class="button button-secondary" href="{% url 'holdings_preview' %}">Check a holdings CSV</a></div></details>
 {% endblock %}

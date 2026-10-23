@@ -17,7 +17,7 @@
       <a class="brand" href="{% url 'home' %}"><span class="brand-mark" aria-hidden="true">P</span> PortfolioLens</a>
       <nav aria-label="Main navigation">
         <a href="{% url 'home' %}">Markets</a>
-        <a href="{% url 'portfolio_list' %}">My Portfolio</a>
+        <a href="{% url 'portfolio_home' %}">My Portfolio</a>
         <a href="{% url 'search' %}">Research</a>
         <a href="{% url 'watchlist_list' %}">Watchlists</a>
         {% if user.is_authenticated %}

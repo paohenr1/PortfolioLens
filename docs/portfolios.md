@@ -97,3 +97,9 @@ The transaction entry form shows type-specific inputs when JavaScript is availab
 retaining values when switching types but omitting inactive inputs on submission.
 Field errors remain visible. Without JavaScript the full server-validated form remains
 usable. Submission identity, exact arithmetic, CSRF and correction behavior are unchanged.
+
+The My Portfolio navigation opens the overview directly when the signed-in owner has
+exactly one portfolio; zero or multiple portfolios lead to the portfolio list. The
+overview keeps one holdings table, puts loaded value/return figures first, and reserves
+methodology and advanced analysis links for secondary details. Important dates, input
+confirmations, missing-price warnings and provider errors remain visible.
