@@ -15,16 +15,16 @@
   <p><a href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a></p>
   <p><a href="{% url 'ledger_audit' portfolio.pk %}">View correction history</a></p>
   <p class="muted">This table shows the current interpretation. Corrections retain original entries in the audit trail and may restate past accounting and returns.</p>
-  <p class="muted">Recorded net dividends add cash; recorded splits adjust open shares without changing lot cost. Actions are not fetched automatically. Entries are ordered by transaction date and your explicit same-day order.</p>
+  <p class="muted">Recorded net dividends add cash; recorded splits adjust open shares without changing lot cost. Actions are not fetched automatically. Entries are ordered by date and saved order.</p>
 </section>
 <section class="results">
 {% if page.object_list %}
 <div class="table-scroll" tabindex="0" role="region" aria-label="Transaction table">
 <table class="price-table">
   <caption>User-entered executions and cash movements. Amount is the cash movement or rounded gross trade value; trade fees are separate. Instrument labels are reference snapshots at entry time.</caption>
-  <thead><tr><th scope="col">Date</th><th scope="col">Order</th><th scope="col">Type</th><th scope="col">Instrument</th><th scope="col">Split ratio (new for old)</th><th scope="col">Shares</th><th scope="col">Execution price (USD/share)</th><th scope="col">Amount (USD)</th><th scope="col">Trade fees (USD)</th><th scope="col">Cash change (USD)</th><th scope="col">Correction controls</th></tr></thead>
+  <thead><tr><th scope="col">Date</th><th scope="col">Type</th><th scope="col">Instrument</th><th scope="col">Split ratio (new for old)</th><th scope="col">Shares</th><th scope="col">Execution price (USD/share)</th><th scope="col">Amount (USD)</th><th scope="col">Trade fees (USD)</th><th scope="col">Cash change (USD)</th><th scope="col">Correction controls</th></tr></thead>
   <tbody>{% for entry in page %}<tr>
-    <td>{{ entry.event_date|date:'Y-m-d' }}</td><td>{{ entry.sequence }}</td><td>{{ entry.get_kind_display }}</td>
+    <td>{{ entry.event_date|date:'Y-m-d' }}</td><td>{{ entry.get_kind_display }}</td>
     <td>{% if entry.security_id %}{{ entry.security_ticker }} · {{ entry.exchange_mic }}<br><span class="muted">{{ entry.security_id }}</span>{% else %}—{% endif %}</td>
     <td>{% if entry.kind == 'SPLIT' %}{{ entry.split_new }} for {{ entry.split_old }}{% else %}—{% endif %}</td><td>{{ entry.quantity|default_if_none:'—' }}</td><td>{{ entry.unit_price|default_if_none:'—' }}</td><td>{{ entry.amount }}</td><td>{{ entry.fees }}</td><td>{{ entry.cash_delta }}</td><td><a href="{% url 'ledger_correct' portfolio.pk entry.pk %}">Correct</a> · <a href="{% url 'ledger_void' portfolio.pk entry.pk %}">Void</a></td>
   </tr>{% endfor %}</tbody>

@@ -163,3 +163,6 @@ input, select, textarea { background: var(--mp-surface); color: var(--ink); }
 [hidden] { display: none !important; }
 @media (max-width: 900px) { .portfolio-overview-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } .portfolio-overview-form > button { grid-column: 1 / -1; grid-row: auto; } }
 @media (max-width: 540px) { .portfolio-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .portfolio-summary > div { padding: 1rem; } .portfolio-summary dt { font-size: .95rem; } .portfolio-overview-form { grid-template-columns: minmax(0, 1fr); } .portfolio-overview-form .portfolio-confirmation { grid-row: auto; } .portfolio-actions { width: 100%; } .portfolio-actions > .button { flex: 1; } .portfolio-holdings { padding: 1rem; } }
+
+.entry-modes { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1.5rem; }
+.entry-modes .button { min-height: 48px; display: inline-flex; align-items: center; }

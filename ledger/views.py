@@ -12,7 +12,7 @@ from ledger import analytics, services
 from ledger.allocations import allocation_weights
 from ledger.domain import LedgerRuleError
 from ledger.fifo import analyze
-from ledger.forms import EntryForm
+from ledger.forms import EntryForm, SimpleEntryForm
 from ledger.valuation_forms import ValuationForm
 from ledger.valuation_services import ValuationLimitError, load_valuation
 from market_data.errors import ProviderError
@@ -136,8 +136,18 @@ def entry_create(request, portfolio_id):
         portfolio = services.private_portfolio(request.user, portfolio_id)
     except (PortfolioStorageUnavailable, services.PortfolioUnavailable) as error:
         return private_error(request, error)
-    form = EntryForm(request.POST if request.method == "POST" else None)
-    context = {"portfolio": portfolio, "form": form}
+    mode = request.GET.get("mode", "cash")
+    if request.method == "POST":
+        mode = "trade" if request.POST.get("kind") in {"BUY", "SELL"} else "cash"
+    mode = "trade" if mode == "trade" else "cash"
+    # Old explicit-order submissions remain retryable; new forms never send that field.
+    legacy = request.method == "POST" and "sequence" in request.POST
+    form = (
+        EntryForm(request.POST)
+        if legacy
+        else SimpleEntryForm(request.POST if request.method == "POST" else None, mode=mode)
+    )
+    context = {"portfolio": portfolio, "form": form, "entry_mode": mode}
     status = 200
     retry_after = None
     if request.method == "POST" and form.is_valid():
@@ -148,6 +158,7 @@ def entry_create(request, portfolio_id):
                 client_key=form.cleaned_data["client_key"],
                 intent=form.intent,
                 client_address=request.META.get("REMOTE_ADDR", "unknown"),
+                auto_sequence=not legacy,
             )
         except (PortfolioStorageUnavailable, services.PortfolioUnavailable) as error:
             return private_error(request, error)

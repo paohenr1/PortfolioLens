@@ -4,7 +4,7 @@
 {% block content %}
 <section class="portfolio-heading">
   <a class="portfolio-back" href="{% url 'portfolio_list' %}">All portfolios</a>
-  <div class="portfolio-title-row"><div><h1>{{ portfolio.name }}</h1><p class="muted">USD · {% if valuation %}Closing values {{ valuation.as_of|date:"M j, Y" }}{% else %}Recorded transactions{% endif %}</p></div><div class="portfolio-actions"><a class="button" href="{% url 'ledger_create' portfolio.pk %}">Record transaction</a><a class="button button-secondary" href="{% url 'ledger_history' portfolio.pk %}">View transactions</a></div></div>
+  <div class="portfolio-title-row"><div><h1>{{ portfolio.name }}</h1><p class="muted">USD · {% if valuation %}Closing values {{ valuation.as_of|date:"M j, Y" }}{% else %}Recorded transactions{% endif %}</p></div><div class="portfolio-actions"><a class="button" href="{% url 'ledger_create' portfolio.pk %}?mode=trade">Buy / Sell</a><a class="button button-secondary" href="{% url 'ledger_create' portfolio.pk %}?mode=cash">Deposit / Withdraw</a><a class="button button-secondary" href="{% url 'ledger_history' portfolio.pk %}">View transactions</a></div></div>
 </section>
 {% if summary_unavailable %}<p class="data-warning" role="status">Journal totals are unavailable. Review your transactions to resolve the issue.</p>{% endif %}
 {% if provider_error %}<p class="data-warning" role="status">{{ provider_error.message }}</p>{% endif %}
