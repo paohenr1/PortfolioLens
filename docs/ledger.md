@@ -1,6 +1,10 @@
 # USD transaction journal
 
-Each portfolio has a private transaction history and entry form. Choose **View
+Each portfolio has a private transaction history and separate **Buy / Sell** and
+**Deposit / Withdraw** entry flows. Regular forms offer these four transaction types;
+standalone fees, dividends and splits are not offered in the entry menus. Optional
+fees attached to a trade remain supported. Existing records and the underlying
+accounting/correction support for other event types are retained. Choose **View
 transactions**, then **Record transaction**. The journal records supplied events; it
 does not send orders or verify brokerage executions. Original entries cannot be edited
 or deleted. [Replacement/void corrections](corrections.md) require a preview and
@@ -110,3 +114,14 @@ a complete, correctly ordered history.
 
 See [setup and checks](setup.md#automated-checks) and the [methodology
 index](methodology.md) for related calculations.
+
+## Automatic ordering for regular entries
+
+Regular entry forms do not ask for same-day order. The server assigns the next unused
+position for that portfolio/date, recalculating it while holding the portfolio lock.
+Original, replaced and voided entries all reserve their historical positions. Retries
+reuse the original entry's position and compare all other submitted details; concurrent
+new entries receive distinct positions. Network verification stays outside the lock.
+Backdated entries are appended within their chosen date and still validate the entire
+later journal; no previous entry is reordered. Existing explicit-order submissions and
+correction workflows retain their previous behavior for compatibility.

@@ -20,7 +20,7 @@
   const update = () => {
     Object.entries(fields).forEach(([name, kinds]) => {
       const input = document.getElementById('id_' + name);
-      if (!input) return;
+      if (!input || input.type === 'hidden') return;
       const wrapper = input.closest('div');
       // Keep field-specific server errors visible and editable after validation.
       const visible = kinds.includes(kind.value) || Boolean(wrapper.querySelector('.errorlist'));

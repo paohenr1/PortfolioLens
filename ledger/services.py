@@ -2,6 +2,7 @@
 
 import logging
 import uuid
+from dataclasses import replace
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -37,18 +38,33 @@ def private_portfolio(user, portfolio_id, *, lock=False):
     return portfolio
 
 
-def retry_entry(portfolio, client_key, intent):
+def retry_entry(portfolio, client_key, intent, *, auto_sequence=False):
     if Correction.objects.filter(portfolio=portfolio, client_key=client_key).exists():
         raise LedgerRuleError("This submission key belongs to a correction. Open a new form.")
     existing = Entry.objects.filter(portfolio=portfolio, client_key=client_key).first()
     if existing and existing.is_replacement:
         raise LedgerRuleError("This submission key belongs to a correction. Open a new form.")
+    if existing and auto_sequence:
+        intent = replace(intent, sequence=existing.sequence)
     if existing and existing.as_input() != intent:
         raise LedgerRuleError(
             "This submission key already records different details. "
             "Open a new form for a new transaction."
         )
     return existing
+
+
+def assigned_order(portfolio, intent):
+    """Include voided/replaced slots; never silently reuse an old journal position."""
+    last = (
+        Entry.objects.filter(portfolio=portfolio, event_date=intent.event_date).aggregate(
+            last=Max("sequence")
+        )["last"]
+        or 0
+    )
+    if last >= 999999:
+        raise LedgerRuleError("This date has reached the supported transaction limit.")
+    return replace(intent, sequence=last + 1)
 
 
 def next_revision(portfolio, intent):
@@ -118,7 +134,7 @@ def security_reference(intent, address):
     }
 
 
-def append_entry(*, user, portfolio_id, client_key, intent, client_address):
+def append_entry(*, user, portfolio_id, client_key, intent, client_address, auto_sequence=False):
     """Network verification occurs outside the lock; all ledger checks repeat inside it."""
     try:
         if not isinstance(client_key, uuid.UUID):
@@ -127,9 +143,11 @@ def append_entry(*, user, portfolio_id, client_key, intent, client_address):
         if intent.security_id and not valid_provider_id(intent.security_id):
             raise LedgerRuleError("Enter a valid provider security ID.")
         portfolio = private_portfolio(user, portfolio_id)
-        existing = retry_entry(portfolio, client_key, intent)
+        existing = retry_entry(portfolio, client_key, intent, auto_sequence=auto_sequence)
         if existing:
             return existing
+        if auto_sequence:
+            intent = assigned_order(portfolio, intent)
         try:
             entries = list(effective_entries(portfolio))
             if Entry.objects.filter(portfolio=portfolio).count() >= MAX_ENTRIES_PER_PORTFOLIO:
@@ -142,16 +160,18 @@ def append_entry(*, user, portfolio_id, client_key, intent, client_address):
             # but before this unlocked snapshot. Its committed event can make
             # preflight fail (notably split order/replay). Recheck the key before
             # rejecting it; the locked path still validates every new append.
-            existing = retry_entry(portfolio, client_key, intent)
+            existing = retry_entry(portfolio, client_key, intent, auto_sequence=auto_sequence)
             if existing:
                 return existing
             raise
         reference = security_reference(intent, client_address)
         with transaction.atomic():
             portfolio = private_portfolio(user, portfolio_id, lock=True)
-            existing = retry_entry(portfolio, client_key, intent)
+            existing = retry_entry(portfolio, client_key, intent, auto_sequence=auto_sequence)
             if existing:
                 return existing
+            if auto_sequence:
+                intent = assigned_order(portfolio, intent)
             entries = list(effective_entries(portfolio))
             if Entry.objects.filter(portfolio=portfolio).count() >= MAX_ENTRIES_PER_PORTFOLIO:
                 raise LedgerRuleError(

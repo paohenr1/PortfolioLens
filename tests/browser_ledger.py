@@ -7,22 +7,38 @@ from browser_portfolios import create, portfolio_application
 
 
 def fill(page, kind, sequence, amount="", *, quantity="", price="", fees="0", security_id=""):
-    page.get_by_label("Transaction currency:", exact=True).select_option("USD")
-    page.get_by_label("Transaction type:", exact=True).select_option(kind)
+    regular = kind in {"BUY", "SELL", "DEPOSIT", "WITHDRAWAL"}
+    if regular:
+        mode = "Buy / Sell" if kind in {"BUY", "SELL"} else "Deposit / Withdraw"
+        if not page.locator(f'#id_kind option[value="{kind}"]').count():
+            page.get_by_role("link", name=mode, exact=True).click()
+        page.get_by_label("Transaction type:", exact=True).select_option(kind)
+    else:
+        # Historical accounting fixtures use the supported explicit-order payload;
+        # Fee/Dividend/Split are deliberately absent from the regular entry UI.
+        page.locator("#id_kind").evaluate(
+            "(el, kind) => { el.add(new Option(kind, kind)); el.value = kind; }", kind
+        )
+        page.locator("form.account-form").evaluate(
+            "(form, order) => { const input = document.createElement('input'); "
+            "input.type='hidden'; input.name='sequence'; input.value=order; form.append(input); }",
+            str(sequence),
+        )
     page.get_by_label("Transaction date:", exact=True).fill("2020-01-02")
-    page.get_by_label("Same-day order:", exact=True).fill(str(sequence))
-    for label, value in (
-        ("Cash amount (USD):", amount),
-        ("Intrinio security ID:", security_id),
-        ("Share quantity:", quantity),
-        ("Execution price (USD per share):", price),
-        ("Trade fees (USD):", fees),
-    ):
-        field = page.get_by_label(label, exact=True)
+    values = {
+        "currency": "USD",
+        "amount": amount,
+        "security_id": security_id,
+        "quantity": quantity,
+        "unit_price": price,
+        "fees": fees,
+    }
+    for name, value in values.items():
+        field = page.locator("#id_" + name)
         if field.is_visible():
             field.fill(value)
-        else:
-            assert not value or (label == "Trade fees (USD):" and value == "0")
+        elif not regular:
+            field.evaluate("(el, value) => el.value = value", value)
 
 
 def submit(page, record_url, kind, sequence, amount="", **extra):
@@ -109,8 +125,10 @@ def main():
             page.goto(record_url)
             assert page.get_by_label("Cash amount (USD):", exact=True).is_visible()
             assert not page.get_by_label("Intrinio security ID:", exact=True).is_visible()
-            page.get_by_label("Transaction type:", exact=True).select_option("SPLIT")
-            assert page.get_by_label("Split new shares:", exact=True).is_visible()
+            assert not page.locator('[name="sequence"]').count()
+            page.get_by_role("link", name="Buy / Sell", exact=True).click()
+            assert page.get_by_label("Share quantity:", exact=True).is_visible()
+            assert not page.locator('#id_kind option[value="SPLIT"]').count()
             assert not page.get_by_label("Cash amount (USD):", exact=True).is_visible()
             page.goto(portfolio_url)
             page.get_by_label("Opening valuation date:", exact=True).fill("2020-01-06")
@@ -121,6 +139,10 @@ def main():
             assert "857.00" in page.locator(".portfolio-inline-values").inner_text()
             assert "1.7815%" in page.locator(".portfolio-inline-values").inner_text()
             assert page.get_by_role("region", name="Holding market values").is_visible()
+            assert page.locator("main table").count() == 1
+            assert not page.locator(".portfolio-analysis-links").is_visible()
+            update = page.get_by_role("button", name="Update valuation & performance")
+            assert update.bounding_box()["height"] >= 44
             for theme in ("dark", "light"):
                 page.get_by_role("combobox", name="Color theme").select_option(theme)
                 for width in (1280, 390):

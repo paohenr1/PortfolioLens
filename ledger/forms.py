@@ -120,3 +120,35 @@ class EntryForm(forms.Form):
         except LedgerRuleError as error:
             raise forms.ValidationError(str(error)) from None
         return values
+
+
+class SimpleEntryForm(EntryForm):
+    """Regular trade/cash flows; order is assigned by the locked append service."""
+
+    def __init__(self, *args, mode="trade", **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields.pop("sequence")
+        self.initial["currency"] = "USD"
+        self.fields["currency"].widget = forms.HiddenInput()
+        kinds = (
+            (("BUY", "Buy"), ("SELL", "Sell"))
+            if mode == "trade"
+            else (("DEPOSIT", "Deposit"), ("WITHDRAWAL", "Withdraw"))
+        )
+        self.fields["kind"].choices = kinds
+        self.initial["kind"] = kinds[0][0]
+        hidden = (
+            ("amount", "split_new", "split_old")
+            if mode == "trade"
+            else ("security_id", "quantity", "unit_price", "fees", "split_new", "split_old")
+        )
+        for name in hidden:
+            self.fields[name].widget = forms.HiddenInput()
+        self.fields["amount"].help_text = "Amount transferred in USD."
+        self.fields["security_id"].help_text = "Copy the ID from the instrument's research page."
+        self.fields["fees"].help_text = "Optional fees attached to this trade."
+
+    def clean(self):
+        # Validate shape now; the real position is chosen again under the portfolio lock.
+        self.cleaned_data["sequence"] = 1
+        return super().clean()

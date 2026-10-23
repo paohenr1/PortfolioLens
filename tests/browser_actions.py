@@ -11,8 +11,8 @@ def record_action(page, record_url, kind, order, *, new="", old="", amount=""):
     page.goto(record_url)
     fill(page, kind, order, amount, security_id="sec_fixture_primary")
     if kind == "SPLIT":
-        page.get_by_label("Split new shares:", exact=True).fill(new)
-        page.get_by_label("Split old shares:", exact=True).fill(old)
+        page.locator("#id_split_new").evaluate("(el, value) => el.value = value", new)
+        page.locator("#id_split_old").evaluate("(el, value) => el.value = value", old)
     data = page.locator("form.account-form").evaluate(
         "form => Object.fromEntries(new FormData(form))"
     )

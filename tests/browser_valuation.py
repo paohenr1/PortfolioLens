@@ -84,8 +84,8 @@ def main():
                 )
                 page.get_by_label("Transaction date:", exact=True).fill("2020-01-09")
                 if kind == "SPLIT":
-                    page.get_by_label("Split new shares:", exact=True).fill("2")
-                    page.get_by_label("Split old shares:", exact=True).fill("1")
+                    page.locator("#id_split_new").evaluate("el => el.value = '2'")
+                    page.locator("#id_split_old").evaluate("el => el.value = '1'")
                 page.get_by_role("button", name="Record transaction", exact=True).click()
                 page.get_by_role("heading", name="Transactions", exact=True).wait_for()
             load(page, valuation_url, "2020-01-08")

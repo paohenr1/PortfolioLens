@@ -252,9 +252,9 @@ class ActionConcurrencyTests(TransactionTestCase):
         first_check = True
         committed = None
 
-        def check_with_commit(portfolio, client_key, intent):
+        def check_with_commit(portfolio, client_key, intent, **kwargs):
             nonlocal first_check, committed
-            existing = retry_entry(portfolio, client_key, intent)
+            existing = retry_entry(portfolio, client_key, intent, **kwargs)
             if first_check:
                 first_check = False
                 self.assertIsNone(existing)

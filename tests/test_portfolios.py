@@ -94,6 +94,20 @@ class PortfolioTests(TestCase):
         portfolio = services.create_portfolio(owner=self.bob, name="Alice retirement")
         self.assertEqual(portfolio.owner, self.bob)
 
+    def test_main_navigation_skips_picker_for_exactly_one_owned_portfolio(self):
+        response = self.client.get(reverse("portfolio_home"))
+        self.assertRedirects(response, reverse("portfolio_detail", args=[self.owned.pk]))
+        self.assertIn("no-store", response.headers["Cache-Control"])
+        services.create_portfolio(owner=self.alice, name="Second owned portfolio")
+        self.assertRedirects(self.client.get(reverse("portfolio_home")), reverse("portfolio_list"))
+
+    def test_portfolio_shortcut_without_portfolios_or_login_is_safe(self):
+        self.client.force_login(get_user_model().objects.create_user("empty-portfolio-owner"))
+        self.assertRedirects(self.client.get(reverse("portfolio_home")), reverse("portfolio_list"))
+        self.client.logout()
+        response = self.client.get(reverse("portfolio_home"))
+        self.assertRedirects(response, "/sign-in/?next=/portfolios/open/")
+
     def test_owner_can_view_detail_without_placeholder_valuation(self):
         response = self.client.get(reverse("portfolio_detail", args=[self.owned.pk]))
         self.assertContains(response, "Alice retirement")
