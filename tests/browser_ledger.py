@@ -11,11 +11,18 @@ def fill(page, kind, sequence, amount="", *, quantity="", price="", fees="0", se
     page.get_by_label("Transaction type:", exact=True).select_option(kind)
     page.get_by_label("Transaction date:", exact=True).fill("2020-01-02")
     page.get_by_label("Same-day order:", exact=True).fill(str(sequence))
-    page.get_by_label("Cash amount (USD):", exact=True).fill(amount)
-    page.get_by_label("Intrinio security ID:", exact=True).fill(security_id)
-    page.get_by_label("Share quantity:", exact=True).fill(quantity)
-    page.get_by_label("Execution price (USD per share):", exact=True).fill(price)
-    page.get_by_label("Trade fees (USD):", exact=True).fill(fees)
+    for label, value in (
+        ("Cash amount (USD):", amount),
+        ("Intrinio security ID:", security_id),
+        ("Share quantity:", quantity),
+        ("Execution price (USD per share):", price),
+        ("Trade fees (USD):", fees),
+    ):
+        field = page.get_by_label(label, exact=True)
+        if field.is_visible():
+            field.fill(value)
+        else:
+            assert not value or (label == "Trade fees (USD):" and value == "0")
 
 
 def submit(page, record_url, kind, sequence, amount="", **extra):
@@ -99,6 +106,27 @@ def main():
                 page.goto(history_url)
                 assert page.locator("tbody tr").count() == 5
                 assert "Recorded cash: 764.00 USD" in page.locator("main").inner_text()
+            page.goto(record_url)
+            assert page.get_by_label("Cash amount (USD):", exact=True).is_visible()
+            assert not page.get_by_label("Intrinio security ID:", exact=True).is_visible()
+            page.get_by_label("Transaction type:", exact=True).select_option("SPLIT")
+            assert page.get_by_label("Split new shares:", exact=True).is_visible()
+            assert not page.get_by_label("Cash amount (USD):", exact=True).is_visible()
+            page.goto(portfolio_url)
+            page.get_by_label("Opening valuation date:", exact=True).fill("2020-01-06")
+            page.get_by_label("Closing valuation date:", exact=True).fill("2020-01-08")
+            page.get_by_role("checkbox").check()
+            page.get_by_role("button", name="Update valuation & performance", exact=True).click()
+            assert page.get_by_role("heading", name="Transaction fixture", exact=True).is_visible()
+            assert "857.00" in page.locator(".portfolio-inline-values").inner_text()
+            assert "1.7815%" in page.locator(".portfolio-inline-values").inner_text()
+            assert page.get_by_role("region", name="Holding market values").is_visible()
+            for theme in ("dark", "light"):
+                page.get_by_role("combobox", name="Color theme").select_option(theme)
+                for width in (1280, 390):
+                    page.set_viewport_size({"width": width, "height": 900})
+                    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+            page.screenshot(path="/tmp/stock-portfolio-inline-mobile.png", full_page=True)
             for url in (history_url, record_url):
                 response = bob.goto(url)
                 assert response.status == 404

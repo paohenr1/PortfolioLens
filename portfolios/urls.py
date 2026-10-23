@@ -21,6 +21,11 @@ urlpatterns = [
     path("check-holdings/", holdings_preview, name="holdings_preview"),
     path("create/", views.portfolio_create, name="portfolio_create"),
     path("<uuid:portfolio_id>/", views.portfolio_detail, name="portfolio_detail"),
+    path(
+        "<uuid:portfolio_id>/overview/load/",
+        views.portfolio_overview_load,
+        name="portfolio_overview_load",
+    ),
     path("<uuid:portfolio_id>/transactions/", include("ledger.urls")),
     path("<uuid:portfolio_id>/positions/", positions, name="portfolio_positions"),
     path("<uuid:portfolio_id>/valuation/", valuation, name="portfolio_valuation"),

@@ -1,32 +1,51 @@
 {% extends 'research/base.html' %}
 {% block title %}{{ portfolio.name }} · PortfolioLens{% endblock %}
 {% block content %}
-<section class="intro compact">
-  <p class="eyebrow">Your private portfolio</p>
+<section class="intro compact portfolio-heading">
+  <p class="eyebrow"><a href="{% url 'portfolio_list' %}">My Portfolio</a> / Overview</p>
   <h1>{{ portfolio.name }}</h1>
-  <p class="lead">Reporting currency: {{ portfolio.reporting_currency }} — U.S. dollar.</p>
-  <p>Analysis uses your recorded transaction history. Start with funding and trades, then review positions, value, and performance. Entries do not place trading orders.</p>
+  <p class="lead">Your holdings and activity · {{ portfolio.reporting_currency }}</p>
+  <div class="portfolio-actions"><a class="button" href="{% url 'ledger_create' portfolio_id=portfolio.pk %}">Record transaction</a><a href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a></div>
 </section>
-<section class="reference-panel account-section">
-  <h2>1. Transactions and positions</h2>
-  <p>Record USD cash movements, buys, sells, fees, net dividends, and splits. Review or correct entries in the transaction journal.</p>
-  <p><a class="button" href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a></p>
-  <p><a class="button" href="{% url 'portfolio_positions' portfolio_id=portfolio.pk %}">View positions and gains</a></p>
-  <p class="muted">Recorded cash, FIFO cost basis, and realized sale gains come from your journal without market-data requests.</p>
+{% if summary_unavailable %}<p class="data-warning" role="status">Journal totals are unavailable. You can still review transactions and corrections below.</p>{% else %}
+<section class="portfolio-summary" aria-label="Recorded portfolio totals">
+  <div class="reference-panel"><h2>Recorded cash</h2><p class="portfolio-number">{{ analysis.cash|floatformat:"2g" }} <small>USD</small></p><p class="muted">Cash from your transactions</p></div>
+  <div class="reference-panel"><h2>Holdings cost basis</h2><p class="portfolio-number">{{ analysis.open_cost_basis|floatformat:"2g" }} <small>USD</small></p><p class="muted">Remaining purchase cost, including buy fees</p></div>
+  <div class="reference-panel"><h2>Realized gain/loss</h2><p class="portfolio-number {% if analysis.realized_gain < 0 %}portfolio-loss{% elif analysis.realized_gain > 0 %}portfolio-gain{% endif %}">{{ analysis.realized_gain|floatformat:"2g" }} <small>USD</small></p><p class="muted">From recorded sales · FIFO</p></div>
 </section>
-<section class="reference-panel account-section">
-  <h2>2. Valuation and allocations</h2>
-  <p>Load dated market value, unrealized gains, and cash-inclusive allocation weights.</p>
-  <p><a class="button" href="{% url 'portfolio_valuation' portfolio_id=portfolio.pk %}">View market valuation</a></p>
-  <p class="muted">Supports up to five open instruments on the selected date. Missing required prices leave totals unavailable.</p>
+<p class="muted">Based on your recorded journal. Cash and cost basis are not current market value; deposits are not gains.</p>
+<section class="reference-panel portfolio-holdings" aria-labelledby="holdings-title">
+  <div class="section-heading"><h2 id="holdings-title">Open holdings <span class="muted">({{ position_count }})</span></h2><a href="{% url 'portfolio_positions' portfolio_id=portfolio.pk %}">View positions and gains</a></div>
+  {% if position_preview %}<div class="table-scroll" tabindex="0" role="region" aria-label="Holdings preview"><table class="price-table"><caption>Recorded shares and remaining FIFO cost · USD</caption><thead><tr><th scope="col">Holding</th><th scope="col">Shares</th><th scope="col">Cost basis (USD)</th></tr></thead><tbody>{% for row in position_preview %}<tr><th scope="row">{{ row.instrument.security_ticker }} <span class="muted">{{ row.instrument.exchange_mic }}</span></th><td>{{ row.position.quantity }}</td><td>{{ row.position.cost_basis|floatformat:"2g" }}</td></tr>{% endfor %}</tbody></table></div>{% if position_count > 5 %}<p class="muted">Showing the first five holdings. View positions and gains for all holdings and sales.</p>{% endif %}
+  {% else %}<div class="portfolio-empty"><h3>No open holdings yet</h3><p>Record a deposit, then a buy to build your portfolio. If you sold all your holdings, your sales remain under positions and gains.</p></div>{% endif %}
 </section>
-<section class="reference-panel account-section">
-  <h2>3. Performance and risk</h2>
-  <p>Review returns with explicit cash-flow timing and share-basis assumptions.</p>
-  <p><a class="button" href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a></p>
-  <p><a class="button" href="{% url 'portfolio_daily_returns' portfolio_id=portfolio.pk %}">View daily returns and risk</a></p>
-  <p>Daily returns include volatility and drawdown, with optional benchmark comparison, correlation, beta, and Sharpe when their data requirements are met.</p>
-  <p class="muted">Daily analysis supports up to two instruments across a maximum 90-calendar-day window, including holdings sold during that period. Benchmark statistics describe portfolio-level relationships, not holding-level risk attribution.</p>
+{% endif %}
+<section class="reference-panel portfolio-market-overview" aria-labelledby="market-overview-title">
+  <h2 id="market-overview-title">Valuation &amp; performance</h2>
+  <p>Update both here with one action. Values use the closing date; returns measure the selected period.</p>
+  {% if provider_error %}<p class="data-warning" role="status">{{ provider_error.message }}</p>{% endif %}
+  {% if valuation %}
+  <p class="eyebrow">Closing values · {{ valuation.as_of|date:"M j, Y" }} · USD</p>
+  <dl class="portfolio-summary portfolio-inline-values">
+    <div><dt>Total portfolio value</dt><dd>{{ valuation.total_value|default_if_none:"Unavailable" }}</dd></div>
+    <div><dt>Holdings market value</dt><dd>{{ valuation.market_value|default_if_none:"Unavailable" }}</dd></div>
+    <div><dt>Unrealized gain/loss</dt><dd>{{ valuation.unrealized_gain|default_if_none:"Unavailable" }}</dd></div>
+    <div><dt>Cash on closing date</dt><dd>{{ valuation.cash }}</dd></div>
+    <div><dt>Time-weighted return</dt><dd>{% if performance and performance.return_percent != None %}{{ performance.return_percent }}%{% else %}Unavailable{% endif %}</dd></div>
+  </dl>
+  {% if performance %}<p class="muted">Return period: {{ performance.start_date|date:"M j, Y" }} – {{ performance.end_date|date:"M j, Y" }}. Deposits and withdrawals are separated from investment returns.</p>{% endif %}
+  {% if performance.issue or performance_issue %}<p class="data-warning" role="status">{% firstof performance.issue performance_issue %}</p>{% endif %}
+  {% if valuation.total_value == None %}<p class="data-warning" role="status">Some holdings lack a confirmed closing price. Portfolio totals remain unavailable; known holding values are shown below.</p>{% endif %}
+  {% if valued_rows %}<div class="table-scroll" tabindex="0" role="region" aria-label="Holding market values"><table class="price-table"><caption>Holdings on {{ valuation.as_of|date:"M j, Y" }} · USD</caption><thead><tr><th scope="col">Holding</th><th scope="col">Shares</th><th scope="col">Close</th><th scope="col">Market value</th><th scope="col">Unrealized gain/loss</th></tr></thead><tbody>{% for row in valued_rows %}<tr><th scope="row">{{ row.instrument.security_ticker }}</th><td>{{ row.value.position.quantity }}</td><td>{{ row.value.raw_close|default_if_none:"Unavailable" }}</td><td>{{ row.value.market_value|default_if_none:"Unavailable" }}</td><td>{{ row.value.unrealized_gain|default_if_none:"Unavailable" }}{% if row.value.issue %}<br><span class="muted">{{ row.value.issue }}</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+  {% endif %}
+  <form class="account-form portfolio-overview-form" method="post" action="{% url 'portfolio_overview_load' portfolio.pk %}">
+    {% csrf_token %}{{ overview_form.as_div }}<button class="button" type="submit">Update valuation &amp; performance</button>
+  </form>
+  <p class="muted">Daily closing prices · No automatic refresh · Up to eight price requests per update. Missing dates, including weekends and holidays, stay unavailable.</p>
 </section>
-<p><a href="{% url 'portfolio_list' %}">Back to my portfolios</a></p>
+<section class="portfolio-tools" aria-label="Detailed portfolio analysis">
+  <article class="reference-panel"><h2>Explore valuation</h2><p>Inspect price sources and cash-inclusive allocation weights.</p><a href="{% url 'portfolio_valuation' portfolio_id=portfolio.pk %}">View market valuation</a></article>
+  <article class="reference-panel"><h2>Explore performance &amp; risk</h2><p><a href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a></p><a href="{% url 'portfolio_daily_returns' portfolio_id=portfolio.pk %}">View daily returns and risk</a><p class="muted">Daily risk: up to two instruments over 90 calendar days</p></article>
+</section>
+<p class="muted">Entries record completed activity; they do not place orders. Journal calculations include only dividends and splits you record.</p>
 {% endblock %}

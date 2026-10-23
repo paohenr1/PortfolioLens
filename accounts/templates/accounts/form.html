@@ -9,7 +9,7 @@
 <section class="account-section">
   <form class="account-form" method="post">
     {% csrf_token %}
-    {{ form.as_div }}
+    {% block form_fields %}{{ form.as_div }}{% endblock %}
     {% block hidden_fields %}{% endblock %}
     <button class="button" type="submit">{% block submit_label %}{% endblock %}</button>
   </form>
