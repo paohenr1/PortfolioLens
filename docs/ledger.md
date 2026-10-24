@@ -125,3 +125,20 @@ new entries receive distinct positions. Network verification stays outside the l
 Backdated entries are appended within their chosen date and still validate the entire
 later journal; no previous entry is reordered. Existing explicit-order submissions and
 correction workflows retain their previous behavior for compatibility.
+
+## In-form stock picker
+
+With JavaScript enabled, Buy/Sell replaces provider-ID entry with ticker/company search
+inside the form. Search runs only on explicit submission, shares the existing market
+request budget and returns up to 20 supported USD listings. Select a ticker, name and
+exchange without leaving the page; typed dates, quantities and execution prices remain.
+Editing the search clears the prior selection to avoid submitting a different stock.
+
+Sell also offers recorded holdings through the chosen transaction date. Changing that
+date reloads the journal-derived list, without market-data requests. The list shows
+at most 20 holdings and labels the date and recorded cash; search can find other listings.
+Search and holdings endpoints are owner-scoped, CSRF-protected POSTs with no-store
+responses and never record transactions. A trade still revalidates its stable identity,
+USD listing, shares and cash with the existing append service. Provider search metadata
+is not an execution quote. No pricing cache or polling is introduced. Without JavaScript,
+the original instrument-ID field remains usable as a fallback.

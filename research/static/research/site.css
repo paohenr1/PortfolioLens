@@ -166,3 +166,13 @@ input, select, textarea { background: var(--mp-surface); color: var(--ink); }
 
 .entry-modes { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1.5rem; }
 .entry-modes .button { min-height: 48px; display: inline-flex; align-items: center; }
+
+.stock-picker { margin-block: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--line); }
+.stock-picker h2 { font-size: 1.2rem; margin-top: 0; }
+.stock-search-controls { display: flex; align-items: stretch; gap: .75rem; }
+.stock-search-controls input { flex: 1; }
+.stock-search-controls .button { flex-shrink: 0; }
+.stock-results { display: grid; gap: .75rem; margin-top: 1rem; }
+.stock-result { display: flex; flex-direction: column; align-items: flex-start; gap: .25rem; padding: 1rem; min-height: 48px; border: 1px solid var(--line); border-radius: .5rem; background: var(--mp-surface-soft); color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+.stock-result span { color: var(--muted); font-size: .95rem; }
+@media (max-width: 540px) { .stock-search-controls { flex-wrap: wrap; } .stock-search-controls input { flex-basis: 100%; } .stock-search-controls .button { width: 100%; } }
