@@ -25,6 +25,16 @@ def fill(page, kind, sequence, amount="", *, quantity="", price="", fees="0", se
             str(sequence),
         )
     page.get_by_label("Transaction date:", exact=True).fill("2020-01-02")
+    if regular and security_id and page.locator(".stock-picker").is_visible():
+        if security_id == "sec_fixture_primary":
+            page.get_by_label("Ticker or company name", exact=True).fill("TSTF")
+            page.locator(".stock-picker").get_by_role("button", name="Search", exact=True).click()
+            page.locator(f'.stock-result[data-security-id="{security_id}"]').click()
+        else:
+            # Other analytics fixtures predate the picker search fixture's listings.
+            page.locator("#stock-query").fill(security_id)
+            page.locator("#id_security_id").evaluate("(el, value) => el.value = value", security_id)
+
     values = {
         "currency": "USD",
         "amount": amount,
