@@ -15,6 +15,7 @@ from ledger.journal import effective_entries
 from ledger.models import Correction, Entry
 from market_data.errors import InvalidResponse, ProviderError
 from market_data.fields import valid_provider_id
+from market_data.identities import register_intrinio_instrument
 from market_data.venues import SUPPORTED_MICS
 from portfolios.services import owned_portfolios
 from research import services as market_data
@@ -75,6 +76,9 @@ def next_revision(portfolio, intent):
 
 
 def make_entry(portfolio, client_key, intent, reference, *, is_replacement=False):
+    fields = dict(reference)
+    if intent.kind in REFERENCED:
+        register_intrinio_instrument(intent.security_id, fields.pop("company_id", None))
     entry = Entry(
         portfolio=portfolio,
         client_key=client_key,
@@ -90,7 +94,7 @@ def make_entry(portfolio, client_key, intent, reference, *, is_replacement=False
         split_old=intent.split_old,
         revision=next_revision(portfolio, intent),
         is_replacement=is_replacement,
-        **reference,
+        **fields,
     )
     entry.full_clean(validate_unique=False, validate_constraints=False)
     entry.save()
@@ -128,6 +132,7 @@ def security_reference(intent, address):
             "with a ticker and MIC."
         )
     return {
+        "company_id": security.company_id,
         "security_ticker": security.ticker,
         "exchange_mic": security.exchange_mic,
         "reference_retrieved_at": result.retrieved_at,

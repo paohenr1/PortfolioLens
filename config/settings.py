@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "ledger",
     "watchlists",
     "operations",
+    "market_data",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
