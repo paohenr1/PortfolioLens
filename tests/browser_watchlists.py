@@ -113,6 +113,7 @@ def main():
                 "You already have a watchlist with this name." in alice.locator("main").inner_text()
             )
             bob.goto(bob_url)
+            bob.locator(".account-menu summary").click()
             bob.get_by_role("button", name="Sign out", exact=True).click()
             bob.goto(bob_url)
             assert "/sign-in/?next=" in bob.url

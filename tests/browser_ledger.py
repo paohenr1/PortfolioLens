@@ -163,6 +163,7 @@ def main():
                 response = bob.goto(url)
                 assert response.status == 404
                 assert "Transaction fixture" not in bob.locator("main").inner_text()
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(history_url)
             assert "/sign-in/?next=" in page.url

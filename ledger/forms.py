@@ -144,9 +144,11 @@ class SimpleEntryForm(EntryForm):
         )
         for name in hidden:
             self.fields[name].widget = forms.HiddenInput()
-        self.fields["amount"].help_text = "Amount transferred in USD."
+        for name in ("event_date", "amount", "quantity"):
+            self.fields[name].help_text = ""
+        self.fields["unit_price"].help_text = "Use the price you paid or received."
         self.fields["security_id"].help_text = "Copy the ID from the instrument's research page."
-        self.fields["fees"].help_text = "Optional fees attached to this trade."
+        self.fields["fees"].help_text = "Optional."
 
     def clean(self):
         # Validate shape now; the real position is chosen again under the portfolio lock.

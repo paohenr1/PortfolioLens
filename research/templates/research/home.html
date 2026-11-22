@@ -7,6 +7,7 @@
   <title>Markets · PortfolioLens</title>
   <link rel="stylesheet" href="{% static 'research/theme.css' %}">
     <script src="{% static 'research/theme.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'research/header.css' %}">
     <link rel="stylesheet" href="{% static 'research/markets.css' %}">
   <script src="{% static 'research/market-preferences.js' %}" defer></script>
   <script src="{% static 'research/market-indices.js' %}" defer></script>
@@ -15,7 +16,7 @@
 <body class="market-page">
 <a class="skip-link" href="#main">Skip to markets</a>
 <div class="preview-shell">
-{% include 'research/market_header.html' %}
+{% include 'research/site_header.html' %}
 <main id="main">
   <section aria-labelledby="market-title">
     <div class="market-heading"><div><h1 id="market-title" class="market-title">Markets at a glance</h1><p class="market-subtitle">{{ today|date:"l, F j, Y" }} · Daily indices and dated market indicators</p></div></div>

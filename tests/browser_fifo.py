@@ -102,6 +102,7 @@ def main():
                 "0.00",
             ]
             assert "-12.00" in page.get_by_role("region", name="Realized sale table").inner_text()
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(positions_url)
             assert "/sign-in/?next=" in page.url

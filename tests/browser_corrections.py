@@ -177,6 +177,7 @@ def main():
             assert "journal changed" in response.text()
             assert "no-store" in response.headers["cache-control"]
             bob.goto(foreign_url)
+            bob.locator(".account-menu summary").click()
             bob.get_by_role("button", name="Sign out", exact=True).click()
             bob.goto(audit_url)
             assert "/sign-in/?next=" in bob.url

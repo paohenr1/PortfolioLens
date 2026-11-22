@@ -103,6 +103,7 @@ def main():
                 form={"start_date": "2020-01-02", "end_date": "2020-01-08", "timing_checked": "on"},
             )
             assert response.status == 403
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(url)
             assert "/sign-in/?next=" in page.url

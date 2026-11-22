@@ -178,6 +178,7 @@ def main():
             page.get_by_label("New password confirmation:", exact=True).fill(NEW_PASSWORD)
             page.get_by_role("button", name="Change password", exact=True).click()
             assert "/password/changed/" in page.url
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(portfolio)
             assert "/sign-in/?next=" in page.url

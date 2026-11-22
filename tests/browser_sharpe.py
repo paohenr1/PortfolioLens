@@ -92,6 +92,7 @@ def main():
             assert "Sharpe example" not in bob.locator("main").inner_text()
             assert "no-store" in response.headers["cache-control"]
             assert owner.request.post(url, form={"annual_risk_free_percent": "0"}).status == 403
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(url)
             assert "/sign-in/?next=" in page.url

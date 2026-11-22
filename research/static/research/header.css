@@ -1,0 +1,118 @@
+/* Shared navigation for Markets and the workspace. */
+.site-header {
+  width: min(100% - 64px, 1440px);
+  margin-inline: auto;
+  font: 400 14px/1.5 system-ui, sans-serif;
+}
+.market-page .site-header { width: 100%; }
+.site-header a { text-decoration: none; }
+.site-header a:hover { color: var(--mp-accent); }
+.site-header :focus-visible { outline: 2px solid var(--mp-accent); outline-offset: 3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.market-header {
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  border-bottom: 1px solid var(--mp-line);
+}
+.market-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  white-space: nowrap;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -.7px;
+}
+.brand-symbol {
+  display: inline-block;
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+  border: 6px solid var(--mp-accent);
+  border-right-color: var(--mp-line);
+  border-radius: 50%;
+  transform: rotate(-28deg);
+}
+.market-nav { display: flex; align-items: stretch; gap: 18px; align-self: stretch; }
+.market-nav a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--mp-muted);
+}
+.market-nav a[aria-current="page"] { color: var(--mp-accent); }
+.market-nav a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  inset-inline: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--mp-accent);
+}
+.header-search { position: relative; margin-left: auto; min-width: 130px; max-width: 330px; flex: 1; }
+.header-search input {
+  width: 100%;
+  height: 39px;
+  padding: 8px 12px 8px 35px;
+  background: var(--mp-surface);
+  color: var(--mp-text);
+  border: 1px solid var(--mp-line);
+  border-radius: 7px;
+  font-size: 12px;
+}
+.header-search input::placeholder { color: var(--mp-muted); opacity: 1; }
+.header-search > svg, .header-search > span {
+  position: absolute;
+  left: 12px;
+  top: 11px;
+  width: 17px;
+  height: 17px;
+  color: var(--mp-muted);
+  pointer-events: none;
+}
+.header-tools { display: flex; align-items: center; gap: 12px; }
+.theme-select {
+  min-height: 44px;
+  max-width: 105px;
+  padding: 6px 9px;
+  background: var(--mp-surface);
+  border: 1px solid var(--mp-line);
+  border-radius: 6px;
+  color: var(--mp-text);
+  font-size: 12px;
+}
+.account-link { display: grid; place-items: center; min-width: 44px; min-height: 44px; border-radius: 50%; background: var(--mp-surface-raised); }
+.account-menu { position: relative; }
+.account-menu summary { cursor: pointer; list-style: none; }
+.account-menu summary::-webkit-details-marker { display: none; }
+.account-menu-panel { position: absolute; right: 0; top: calc(100% + 10px); min-width: 160px; z-index: 5; padding: 7px; background: var(--mp-surface); border: 1px solid var(--mp-line); border-radius: 8px; box-shadow: var(--mp-shadow); }
+.account-menu-panel a, .account-menu-panel button { display: block; width: 100%; padding: 9px 12px; text-align: left; background: none; font-size: 13px; border-radius: 4px; }
+.account-menu-panel form { margin: 0; }
+.account-menu-panel a:hover, .account-menu-panel button:hover { background: var(--mp-surface-raised); color: var(--mp-accent); }
+
+.header-tools { margin-left: auto; }
+.header-search input, .header-tools select, .account-menu-panel button { font-family: inherit; }
+.account-menu-panel button { border: 0; color: inherit; cursor: pointer; min-height: 44px; }
+.account-menu-panel a { min-height: 44px; }
+@media (max-width: 1190px) {
+  .site-header { width: calc(100% - 40px); }
+}
+@media (max-width: 880px) {
+  .site-header { flex-wrap: wrap; gap: 0 16px; padding-top: 12px; }
+  .header-search { display: none; }
+  .market-nav { order: 3; flex-basis: 100%; min-height: 48px; }
+}
+@media (max-width: 650px) {
+  .site-header { width: calc(100% - 32px); }
+  .market-brand { font-size: 18px; gap: 8px; }
+  .brand-symbol { width: 24px; height: 24px; flex-basis: 24px; border-width: 5px; }
+  .header-tools { gap: 6px; }
+  .market-nav { gap: 6px; justify-content: space-between; }
+  .market-nav a { font-size: 13px; }
+}

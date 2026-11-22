@@ -8,6 +8,7 @@
   <title>Markets · PortfolioLens design preview</title>
   <link rel="stylesheet" href="{% static 'research/theme.css' %}">
     <script src="{% static 'research/theme.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'research/header.css' %}">
     <link rel="stylesheet" href="{% static 'research/markets.css' %}">
   <script src="{% static 'research/market-preferences.js' %}" defer></script>
   <script src="{% static 'research/markets-preview.js' %}" defer></script>
@@ -15,7 +16,7 @@
 <body class="market-page">
 <a class="skip-link" href="#main">Skip to markets</a>
 <div class="preview-shell">
-  {% include 'research/market_header.html' %}
+  {% include 'research/site_header.html' %}
   <main id="main">
     <div class="preview-note"><span class="preview-badge">Design preview</span><span>Illustrative data only. Quotes, events and headlines are fictional. App links open the existing application.</span></div>
     <section aria-labelledby="market-title">

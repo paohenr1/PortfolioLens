@@ -14,11 +14,7 @@ a { color: inherit; }
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
 .skip-link { position: absolute; left: 1rem; top: -5rem; background: var(--mp-surface); padding: .6rem 1rem; }
 .skip-link:focus { top: 1rem; z-index: 1; }
-.header, main, footer { max-width: 1120px; margin: auto; padding-inline: 2rem; }
-.header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-block: 1.8rem; border-bottom: 1px solid var(--line); }
-.header nav { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; }
-.header nav form { margin: 0; }
-.nav-button { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; font: inherit; cursor: pointer; }
+main, footer { max-width: 1120px; margin: auto; padding-inline: 2rem; }
 .account-section { max-width: 650px; margin-bottom: 3rem; }
 .account-form { background: var(--mp-surface); border: 1px solid var(--line); border-radius: .7rem; padding: 1.5rem; }
 .account-form > div { margin-bottom: 1.5rem; }
@@ -28,8 +24,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .account-form select { width: 100%; padding: .7rem; border: 1px solid var(--line); border-radius: .4rem; font: inherit; background: var(--mp-surface); }
 .account-form .helptext { color: var(--muted); font-size: .88rem; }
 .account-form .helptext ul { padding-left: 1.2rem; }
-.brand { display: flex; align-items: center; gap: .7rem; font-weight: 700; text-decoration: none; }
-.brand-mark { display: grid; place-items: center; width: 2rem; height: 2rem; background: var(--accent-bg, var(--mp-accent-bg)); color: var(--accent); border-radius: .4rem; }
 .stage, .tag { font-size: .75rem; border: 1px solid var(--line); border-radius: 2rem; padding: .3rem .7rem; white-space: nowrap; }
 .intro { padding-block: 4.5rem 2.5rem; max-width: 760px; }
 .eyebrow, .step { color: var(--accent); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
@@ -112,8 +106,8 @@ figcaption { color: var(--muted); font-size: .85rem; margin-top: .7rem; }
 .financial-table th:first-child { white-space: normal; min-width: 180px; }
 .financial-table td { font-variant-numeric: tabular-nums; }
 @media (max-width: 720px) {
-  .header, main, footer { padding-inline: 1.2rem; }
-  .header, .section-heading, footer { flex-wrap: wrap; }
+  main, footer { padding-inline: 1.2rem; }
+  .section-heading, footer { flex-wrap: wrap; }
   .intro { padding-top: 3rem; }
   .cards { grid-template-columns: 1fr; }
 }
@@ -125,12 +119,9 @@ figcaption { color: var(--muted); font-size: .85rem; margin-top: .7rem; }
 }
 
 input, select, textarea { background: var(--mp-surface); color: var(--ink); }
-.theme-select { font: inherit; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: .4rem; }
 
 
 /* Clearer portfolio hierarchy and comfortable action targets. */
-.header nav { gap: .5rem 1rem; }
-.header nav > a, .header .nav-button { display: inline-flex; align-items: center; min-height: 44px; padding-block: .4rem; }
 .portfolio-page .muted { font-size: .95rem; }
 .portfolio-heading { padding-block: 2rem 1rem; }
 .portfolio-title-row { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; }
@@ -159,7 +150,6 @@ input, select, textarea { background: var(--mp-surface); color: var(--ink); }
 .portfolio-details summary { min-height: 44px; cursor: pointer; font-weight: 600; font-size: 1.05rem; }
 .portfolio-details p { max-width: 800px; }
 .portfolio-analysis-links { padding-block: .75rem; }
-.transaction-guidance { padding: .8rem 1rem; border-left: 3px solid var(--accent); background: var(--mp-surface-soft); }
 [hidden] { display: none !important; }
 @media (max-width: 900px) { .portfolio-overview-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } .portfolio-overview-form > button { grid-column: 1 / -1; grid-row: auto; } }
 @media (max-width: 540px) { .portfolio-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .portfolio-summary > div { padding: 1rem; } .portfolio-summary dt { font-size: .95rem; } .portfolio-overview-form { grid-template-columns: minmax(0, 1fr); } .portfolio-overview-form .portfolio-confirmation { grid-row: auto; } .portfolio-actions { width: 100%; } .portfolio-actions > .button { flex: 1; } .portfolio-holdings { padding: 1rem; } }
@@ -176,3 +166,26 @@ input, select, textarea { background: var(--mp-surface); color: var(--ink); }
 .stock-result { display: flex; flex-direction: column; align-items: flex-start; gap: .25rem; padding: 1rem; min-height: 48px; border: 1px solid var(--line); border-radius: .5rem; background: var(--mp-surface-soft); color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
 .stock-result span { color: var(--muted); font-size: .95rem; }
 @media (max-width: 540px) { .stock-search-controls { flex-wrap: wrap; } .stock-search-controls input { flex-basis: 100%; } .stock-search-controls .button { width: 100%; } }
+
+.transaction-page .intro h1 { font-size: clamp(2rem, 4vw, 2.65rem); margin: 0 0 .35rem; }
+.transaction-page .intro .lead { margin: 0; }
+.transaction-page .intro { padding-block: 1.75rem 0; }
+.transaction-page .entry-modes { margin-block: 1rem; gap: .6rem; }
+.transaction-page .account-section { max-width: 760px; }
+.transaction-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.transaction-field { min-width: 0; }
+.transaction-field-security_id, .transaction-field-amount, .transaction-fields .stock-picker { grid-column: 1 / -1; }
+.transaction-fields .stock-picker { margin: 0; padding: 0 0 .8rem; }
+.transaction-fields label { margin-bottom: .3rem; }
+.transaction-fields input, .transaction-fields select { min-height: 44px; }
+.transaction-fields .stock-results { margin-top: .5rem; }
+.transaction-fields .stock-results:empty, .transaction-fields #stock-selection:empty { display: none; }
+.transaction-fields #stock-selection { margin: .5rem 0; }
+.transaction-page .account-form > button { min-height: 44px; }
+@media (max-width: 540px) {
+  .transaction-page .account-form { padding: 1rem; }
+  .transaction-fields { grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+  .transaction-fields .stock-search-controls { flex-wrap: nowrap; gap: .5rem; }
+  .transaction-fields .stock-search-controls input { flex-basis: 0; }
+  .transaction-fields .stock-search-controls .button { width: auto; padding-inline: .8rem; }
+}

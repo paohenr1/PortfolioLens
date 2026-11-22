@@ -69,6 +69,7 @@ def main():
             bob.goto(url)
             assert bob.locator("#id_name").input_value() == ""
             assert "Synthetic holdings check" not in bob.locator("main").inner_text()
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(url)
             assert "/sign-in/?next=" in page.url

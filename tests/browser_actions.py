@@ -105,6 +105,7 @@ def main():
             assert "Recorded action example" not in bob.locator("main").inner_text()
             response = bob.goto(positions_url)
             assert response.status == 404
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(record_url)
             assert "/sign-in/?next=" in page.url

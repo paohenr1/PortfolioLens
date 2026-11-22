@@ -118,6 +118,7 @@ def main():
             assert "100.00%" in page.locator("main").inner_text()
             assert "Not applicable" in page.locator("main").inner_text()
             verify_print(page, "cash-only", requests)
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(url)
             assert "/sign-in/?next=" in page.url

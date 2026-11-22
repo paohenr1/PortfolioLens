@@ -133,6 +133,7 @@ def main():
                 valuation_url, form={"as_of": "2020-01-08", "share_basis_checked": "on"}
             )
             assert response.status == 403
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(valuation_url)
             assert "/sign-in/?next=" in page.url
