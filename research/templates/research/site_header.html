@@ -1,8 +1,8 @@
   <header class="market-header site-header">
-    <a class="market-brand" href="{% if is_preview %}{% url 'markets_preview' %}{% else %}{% url 'home' %}{% endif %}" aria-label="PortfolioLens home"><span class="brand-symbol" aria-hidden="true"></span>PortfolioLens</a>
+    <a class="market-brand" href="{% url 'home' %}" aria-label="PortfolioLens home"><span class="brand-symbol" aria-hidden="true"></span>PortfolioLens</a>
     {% with route=request.resolver_match.url_name path=request.path_info %}
     <nav class="market-nav" aria-label="Main navigation">
-      <a href="{% if is_preview %}{% url 'markets_preview' %}{% else %}{% url 'home' %}{% endif %}"{% if route == 'home' or route == 'load_market_indices' or is_preview %} aria-current="page"{% endif %}>Markets</a>
+      <a href="{% url 'home' %}"{% if route == 'home' or route == 'load_market_indices' %} aria-current="page"{% endif %}>Markets</a>
       <a href="{% url 'portfolio_home' %}"{% if path|slice:':12' == '/portfolios/' %} aria-current="page"{% endif %}>My Portfolio</a>
       <a href="{% url 'search' %}"{% if route == 'search' or path|slice:':8' == '/stocks/' %} aria-current="page"{% endif %}>Research</a>
       <a href="{% url 'watchlist_list' %}"{% if path|slice:':12' == '/watchlists/' %} aria-current="page"{% endif %}>Watchlists</a>

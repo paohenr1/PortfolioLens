@@ -199,7 +199,6 @@ class IndexHomepageTests(SimpleTestCase):
         self.assertContains(response, "+2.50%")
         self.assertContains(response, "Sources: Intrinio")
         self.assertNotContains(response, TEST_KEY)
-        self.assertNotContains(response, "markets-preview.js")
         self.assertNotContains(response, "5,842.47")
         self.assertIn("no-store", response.headers["Cache-Control"])
         self.assertLess(provider.call_args.args[2], datetime.now(UTC).date())

@@ -1,15 +1,159 @@
 """Exercise the actual market homepage with explicitly synthetic local transport."""
 
+import os
+import select
+import subprocess
+import sys
+from contextlib import contextmanager
+from pathlib import Path
 from urllib.parse import urlsplit
 
-from browser_markets_preview import ROOT, preview_application
-from playwright.sync_api import sync_playwright
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+
+
+@contextmanager
+def market_application():
+    with (ROOT / ".local/market-homepage/server.log").open("w") as diagnostics:
+        process = subprocess.Popen(
+            [str(ROOT / ".venv/bin/python"), __file__, "--serve"],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=diagnostics,
+            text=True,
+            env={
+                **os.environ,
+                "DJANGO_ENV": "development",
+                "DJANGO_DEBUG": "true",
+                "DJANGO_PRIVATE_SITE": "false",
+                "INTRINIO_API_KEY": "index-browser-fixture-key",
+            },
+        )
+        try:
+            if not select.select([process.stdout], [], [], 15)[0]:
+                raise RuntimeError("Markets fixture server failed to start")
+            port = int(process.stdout.readline().strip())
+            yield f"http://127.0.0.1:{port}"
+        finally:
+            process.terminate()
+            process.wait(timeout=10)
+
+
+def serve():
+    import django
+
+    django.setup()
+    from wsgiref.simple_server import WSGIRequestHandler, make_server
+
+    from django.contrib.staticfiles.handlers import StaticFilesHandler
+    from django.core.wsgi import get_wsgi_application
+
+    class QuietHandler(WSGIRequestHandler):
+        def log_message(self, *args):
+            pass
+
+    with make_server(
+        "127.0.0.1", 0, StaticFilesHandler(get_wsgi_application()), handler_class=QuietHandler
+    ) as server:
+        from datetime import date, timedelta
+        from unittest.mock import patch
+
+        import httpx
+
+        from market_data.indices import INDEX_CATALOG
+        from market_data.intrinio import IntrinioClient
+
+        def transport(request):
+            symbol = request.url.path.split("/")[3]
+            key = next(key for key, spec in INDEX_CATALOG.items() if spec[0] == symbol)
+            end = date.fromisoformat(request.url.params["end_date"])
+            values = [100, 101, None, 102, 103]
+            return httpx.Response(
+                200,
+                json={
+                    "index": {"symbol": symbol, "id": INDEX_CATALOG[key][1]},
+                    "historical_data": [
+                        {"date": (end - timedelta(days=4 - i)).isoformat(), "value": value}
+                        for i, value in enumerate(values)
+                    ],
+                    "next_page": None,
+                },
+            )
+
+        def factory(key):
+            return IntrinioClient(key, transport=httpx.MockTransport(transport))
+
+        from market_data.public_markets import (
+            ATOM,
+            DATA,
+            FX_URL,
+            METADATA,
+            TREASURY_URL,
+            PublicMarketClient,
+        )
+
+        def public_transport(request):
+            end = date.today() - timedelta(days=1)
+            if str(request.url).startswith(TREASURY_URL):
+                entries = "".join(
+                    f"<entry><content><m:properties><d:NEW_DATE>{day.isoformat()}T00:00:00"
+                    f"</d:NEW_DATE><d:BC_2YEAR>{two}</d:BC_2YEAR>"
+                    f"<d:BC_10YEAR>{ten}</d:BC_10YEAR></m:properties></content></entry>"
+                    for day, two, ten in (
+                        (end - timedelta(days=1), "4.00", "4.20"),
+                        (end, "4.03", "4.18"),
+                    )
+                    if day.year == date.today().year
+                )
+                return httpx.Response(
+                    200,
+                    content=(
+                        f'<feed xmlns="{ATOM[1:-1]}" xmlns:d="{DATA[1:-1]}" '
+                        f'xmlns:m="{METADATA[1:-1]}">{entries}</feed>'
+                    ).encode(),
+                )
+            if str(request.url).startswith(FX_URL):
+                return httpx.Response(
+                    200,
+                    json={
+                        "seriesDetail": {
+                            "FXUSDCAD": {"label": "USD/CAD"},
+                            "FXEURCAD": {"label": "EUR/CAD"},
+                        },
+                        "observations": [
+                            {
+                                "d": (end - timedelta(days=1)).isoformat(),
+                                "FXUSDCAD": {"v": "1.20"},
+                                "FXEURCAD": {"v": "1.44"},
+                            },
+                            {
+                                "d": end.isoformat(),
+                                "FXUSDCAD": {"v": "1.25"},
+                                "FXEURCAD": {"v": "1.5625"},
+                            },
+                        ],
+                    },
+                )
+            return httpx.Response(200, json={"open": "100", "last": "110"})
+
+        def public_factory(**kwargs):
+            return PublicMarketClient(**kwargs, transport=httpx.MockTransport(public_transport))
+
+        with (
+            patch("research.services.IntrinioClient", side_effect=factory),
+            patch("research.watchbar.PublicMarketClient", side_effect=public_factory),
+        ):
+            print(server.server_port, flush=True)
+            server.serve_forever()
 
 
 def main():
-    output = ROOT / ".local/design-preview"
+    from playwright.sync_api import sync_playwright
+
+    output = ROOT / ".local/market-homepage"
     output.mkdir(parents=True, exist_ok=True)
-    with preview_application(index_fixtures=True) as base, sync_playwright() as driver:
+    with market_application() as base, sync_playwright() as driver:
         browser = driver.chromium.launch(executable_path="/usr/bin/chromium", headless=True)
         try:
             page = browser.new_page(viewport={"width": 1440, "height": 1100})
@@ -20,7 +164,6 @@ def main():
             assert response.status == 200
             assert page.locator(".index-card").get_by_text("Not loaded", exact=True).count() == 3
             assert not page.locator(".index-value").count()
-            assert not page.locator('[src$="markets-preview.js"]').count()
             page.get_by_role("button", name="Load market overview", exact=True).click()
             assert page.locator(".index-card .index-value").count() == 3
             assert page.locator(".index-card").get_by_text("103.00", exact=True).count() == 3
@@ -96,4 +239,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if "--serve" in sys.argv:
+        serve()
+    else:
+        main()

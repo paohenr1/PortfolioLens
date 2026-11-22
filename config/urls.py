@@ -3,7 +3,6 @@ from django.urls import include, path
 from operations.health import live
 from research.capital_return_views import capital_returns
 from research.capitalization_views import market_capitalization
-from research.design_preview import markets_preview
 from research.growth_views import annual_growth
 from research.market_views import load_market_indices
 from research.multiple_views import annual_multiples
@@ -17,7 +16,6 @@ urlpatterns = [
     path("watchlists/", include("watchlists.urls")),
     path("", home, name="home"),
     path("markets/load/", load_market_indices, name="load_market_indices"),
-    path("design/markets/", markets_preview, name="markets_preview"),
     path("search/", search, name="search"),
     path("stocks/<str:security_id>/", security, name="security"),
     path("stocks/<str:security_id>/prices/", prices, name="prices"),
