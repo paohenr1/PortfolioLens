@@ -5,17 +5,17 @@
   <p class="eyebrow">Private portfolio research · End of day</p>
   <h1>Market valuation</h1>
   <p class="lead">{{ portfolio.name }} · USD</p>
-  <p><a href="{% url 'portfolio_positions' portfolio_id=portfolio.pk %}">View positions and gains</a> · <a href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a></p>
 </section>
+{% include "portfolios/section_nav.html" with active_section="valuation" %}
 <section class="account-section">
   <form class="account-form" method="post" aria-label="Valuation settings">
+    {% if form.date_notice %}<p class="data-warning" role="status">{{ form.date_notice }}</p>{% endif %}
     {% csrf_token %}
     {{ form.as_div }}
     <button class="button" type="submit">Load valuation</button>
   </form>
   <p class="muted">Prices load only on submission. Up to five open instruments; one daily-price request each. No automatic refresh or saved quotes.</p>
   <p>Shares, cash, and FIFO cost include only journal entries through the selected date. Each price must be a confirmed unadjusted close on that exact date. Missing dates, including weekends and holidays, are not filled from an earlier close.</p>
-  <p><a href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a> for an explicit period with supported cash-flow timing.</p>
   <p class="muted">Corporate actions are recorded manually. Checking the share basis does not verify completeness with a broker. Current reference metadata is not historical listing evidence. Money-weighted returns and tax adjustments remain unavailable.</p>
 </section>
 {% if valuation %}

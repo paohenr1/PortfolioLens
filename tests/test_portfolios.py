@@ -111,9 +111,9 @@ class PortfolioTests(TestCase):
     def test_owner_can_view_detail_without_placeholder_valuation(self):
         response = self.client.get(reverse("portfolio_detail", args=[self.owned.pk]))
         self.assertContains(response, "Alice retirement")
-        self.assertContains(response, "View time-weighted returns")
-        self.assertContains(response, "View market valuation")
-        self.assertContains(response, "View positions and gains")
+        self.assertContains(response, "Returns</a>")
+        self.assertContains(response, "Valuation</a>")
+        self.assertContains(response, "Holdings &amp; gains</a>")
         self.assertNotContains(response, "$0")
         self.assertIn("no-store", response.headers["Cache-Control"])
 

@@ -4,48 +4,116 @@
 {% block content %}
 <section class="portfolio-heading">
   <a class="portfolio-back" href="{% url 'portfolio_list' %}">All portfolios</a>
-  <div class="portfolio-title-row"><div><h1>{{ portfolio.name }}</h1><p class="muted">USD · {% if valuation %}Closing values {{ valuation.as_of|date:"M j, Y" }}{% else %}Recorded transactions{% endif %}</p></div><div class="portfolio-actions"><a class="button" href="{% url 'ledger_create' portfolio.pk %}?mode=trade">Buy / Sell</a><a class="button button-secondary" href="{% url 'ledger_create' portfolio.pk %}?mode=cash">Deposit / Withdraw</a><a class="button button-secondary" href="{% url 'ledger_history' portfolio.pk %}">View transactions</a></div></div>
+  <div class="portfolio-title-row">
+    <div><h1>{{ portfolio.name }}</h1><p class="muted">USD · {% if valuation %}Closing values {{ valuation.as_of|date:"M j, Y" }}{% else %}Recorded transactions{% endif %}</p></div>
+    <div class="portfolio-actions">
+      <a class="button" href="{% url 'ledger_create' portfolio.pk %}?mode=trade">Buy / Sell</a>
+      <a class="button button-secondary" href="{% url 'ledger_create' portfolio.pk %}?mode=cash">Deposit / Withdraw</a>
+    </div>
+  </div>
 </section>
+{% include 'portfolios/section_nav.html' with active_section='overview' %}
+
 {% if summary_unavailable %}<p class="data-warning" role="status">Journal totals are unavailable. Review your transactions to resolve the issue.</p>{% endif %}
 {% if provider_error %}<p class="data-warning" role="status">{{ provider_error.message }}</p>{% endif %}
+{% if valuation_issue %}<p class="data-warning" role="status">{{ valuation_issue }}</p>{% endif %}
 {% if valuation %}
-<dl class="portfolio-summary portfolio-inline-values" aria-label="Valuation and performance">
-  <div><dt>Total value · USD</dt><dd>{{ valuation.total_value|default_if_none:"Unavailable" }}</dd></div>
-  <div><dt>Unrealized gain/loss · USD</dt><dd>{{ valuation.unrealized_gain|default_if_none:"Unavailable" }}</dd></div>
-  <div><dt>Period return</dt><dd>{% if performance and performance.return_percent != None %}{{ performance.return_percent }}%{% else %}Unavailable{% endif %}</dd></div>
-  <div><dt>Cash · USD</dt><dd>{{ valuation.cash }}</dd></div>
-</dl>
-{% if performance %}<p class="muted">Time-weighted return · {{ performance.start_date|date:"M j, Y" }} – {{ performance.end_date|date:"M j, Y" }}</p>{% endif %}
-{% if performance.issue or performance_issue %}<p class="data-warning" role="status">{% firstof performance.issue performance_issue %}</p>{% endif %}
-{% if valuation.total_value == None %}<p class="data-warning" role="status">Some holdings lack a confirmed closing price. Portfolio totals remain unavailable.</p>{% endif %}
+  <dl class="portfolio-summary portfolio-inline-values" aria-label="Valuation and performance">
+    <div><dt>Total value · USD</dt><dd>{% if valuation.total_value != None %}{{ valuation.total_value|floatformat:"2g" }}{% else %}Unavailable{% endif %}</dd></div>
+    <div><dt>Unrealized gain/loss · USD</dt><dd>{% if valuation.unrealized_gain != None %}{{ valuation.unrealized_gain|floatformat:"2g" }}{% else %}Unavailable{% endif %}</dd></div>
+    <div><dt>Period return</dt><dd>{% if performance and performance.return_percent != None %}{{ performance.return_percent }}%{% else %}Unavailable{% endif %}</dd></div>
+    <div><dt>Cash on closing date · USD</dt><dd>{{ valuation.cash|floatformat:"2g" }}</dd>{% if cash_weight != None %}<small class="muted">{{ cash_weight }}% of total value</small>{% endif %}</div>
+  </dl>
+  {% if performance %}<p class="muted">Time-weighted return · {{ performance.start_date|date:"M j, Y" }} – {{ performance.end_date|date:"M j, Y" }}</p>{% endif %}
+  {% if performance.issue or performance_issue %}<p class="data-warning" role="status">{% firstof performance.issue performance_issue %}</p>{% endif %}
+  {% if valuation.total_value == None %}<p class="data-warning" role="status">Some holdings lack a confirmed closing price. Portfolio totals remain unavailable.</p>{% endif %}
 {% elif analysis %}
-<dl class="portfolio-summary" aria-label="Recorded portfolio totals">
-  <div><dt>Recorded cash · USD</dt><dd>{{ analysis.cash|floatformat:"2g" }}</dd></div>
-  <div><dt>Holdings cost basis · USD</dt><dd>{{ analysis.open_cost_basis|floatformat:"2g" }}</dd></div>
-  <div><dt>Realized gain/loss · USD</dt><dd>{{ analysis.realized_gain|floatformat:"2g" }}</dd></div>
-</dl>
-<p class="muted">Recorded totals, not current market values.</p>
+  <dl class="portfolio-summary" aria-label="Recorded portfolio totals">
+    <div><dt>Recorded cash · USD</dt><dd>{{ analysis.cash|floatformat:"2g" }}</dd></div>
+    <div><dt>Holdings cost basis · USD</dt><dd>{{ analysis.open_cost_basis|floatformat:"2g" }}</dd></div>
+    <div><dt>Realized gain/loss · USD</dt><dd>{{ analysis.realized_gain|floatformat:"2g" }}</dd></div>
+  </dl>
 {% endif %}
-<section class="reference-panel portfolio-market-overview" aria-labelledby="market-overview-title">
-  <h2 id="market-overview-title">Valuation &amp; performance</h2>
-  <form class="portfolio-overview-form" method="post" action="{% url 'portfolio_overview_load' portfolio.pk %}">
-    {% csrf_token %}{{ overview_form.non_field_errors }}
-    <div>{{ overview_form.start_date.label_tag }}{{ overview_form.start_date }}{{ overview_form.start_date.errors }}</div>
-    <div>{{ overview_form.end_date.label_tag }}{{ overview_form.end_date }}{{ overview_form.end_date.errors }}</div>
-    <label class="portfolio-confirmation" for="{{ overview_form.timing_checked.id_for_label }}">{{ overview_form.timing_checked }}<span>Cash flows occurred at end of day, after other activity; recorded shares match raw closing prices.</span></label>{{ overview_form.timing_checked.errors }}
-    <button class="button" type="submit">Update valuation &amp; performance</button>
-  </form>
-  <p class="muted">Daily closing prices · Updated on request</p>
-</section>
-<section class="reference-panel portfolio-holdings" aria-labelledby="holdings-title">
-  <div class="section-heading"><h2 id="holdings-title">Holdings{% if not valuation %} <span class="muted">({{ position_count|default:0 }})</span>{% endif %}</h2><a class="button button-secondary" href="{% url 'portfolio_positions' portfolio.pk %}">View positions and gains</a></div>
-  {% if valuation %}
-    {% if valued_rows %}<div class="table-scroll" tabindex="0" role="region" aria-label="Holding market values"><table class="price-table"><caption>Holdings on {{ valuation.as_of|date:"M j, Y" }} · USD</caption><thead><tr><th scope="col">Holding</th><th scope="col">Shares</th><th scope="col">Market value</th><th scope="col">Gain/loss</th></tr></thead><tbody>{% for row in valued_rows %}<tr><th scope="row">{{ row.instrument.security_ticker }}</th><td>{{ row.value.position.quantity }}</td><td>{{ row.value.market_value|default_if_none:"Unavailable" }}</td><td>{{ row.value.unrealized_gain|default_if_none:"Unavailable" }}{% if row.value.issue %}<br><span class="muted">{{ row.value.issue }}</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>No open holdings on this date.</p>{% endif %}
-  {% elif position_preview %}
-    <div class="table-scroll" tabindex="0" role="region" aria-label="Holdings preview"><table class="price-table"><caption>Recorded shares and remaining cost · USD</caption><thead><tr><th scope="col">Holding</th><th scope="col">Shares</th><th scope="col">Cost basis</th></tr></thead><tbody>{% for row in position_preview %}<tr><th scope="row">{{ row.instrument.security_ticker }}</th><td>{{ row.position.quantity }}</td><td>{{ row.position.cost_basis|floatformat:"2g" }}</td></tr>{% endfor %}</tbody></table></div>{% if position_count > 5 %}<p class="muted">First five holdings shown. View positions and gains for all holdings.</p>{% endif %}
-  {% elif summary_unavailable %}<p>Holdings are unavailable until the journal issue is resolved.</p>
-  {% else %}<div class="portfolio-empty"><h3>No open holdings</h3><p>Record a deposit, then a buy to get started.</p></div>{% endif %}
-</section>
-<details class="portfolio-details"><summary>More analysis</summary><div class="portfolio-analysis-links"><a class="button button-secondary" href="{% url 'portfolio_valuation' portfolio.pk %}">View market valuation</a><a class="button button-secondary" href="{% url 'portfolio_performance' portfolio.pk %}">View time-weighted returns</a><a class="button button-secondary" href="{% url 'portfolio_daily_returns' portfolio.pk %}">View daily returns and risk</a></div></details>
-<details class="portfolio-details"><summary>About these figures</summary><p>Recorded cash, cost basis and realized sale gains come from your transaction journal using FIFO. They are not current market value. Total value adds cash to holdings valued on the selected closing date. Deposits and withdrawals are separated from investment returns.</p><p>Only recorded dividends and splits are included. Missing closing prices, including weekends and holidays, are not filled. Updates use at most eight price requests; closing valuation alone supports five instruments. No automatic refresh is used. Entries do not place orders.</p>{% if valuation and analysis %}<dl class="reference-grid"><div><dt>All recorded holdings cost · USD</dt><dd>{{ analysis.open_cost_basis }}</dd></div><div><dt>All recorded realized gain/loss · USD</dt><dd>{{ analysis.realized_gain }}</dd></div></dl>{% endif %}</details>
+
+<div class="portfolio-workspace">
+  <div class="portfolio-workspace-main">
+    <section class="reference-panel portfolio-holdings" aria-labelledby="holdings-title">
+      <h2 id="holdings-title">Holdings{% if valuation %} <span class="muted">({{ valued_rows|length }})</span>{% elif analysis %} <span class="muted">({{ position_count }})</span>{% endif %}</h2>
+      {% if valuation %}
+        {% if valued_rows %}
+          <div class="table-scroll" tabindex="0" role="region" aria-label="Holding market values">
+            <table class="price-table">
+              <caption>Closing values on {{ valuation.as_of|date:"M j, Y" }} · USD</caption>
+              <thead><tr><th scope="col">Holding</th><th scope="col">Shares</th><th scope="col">Market value</th><th scope="col">Gain/loss</th><th scope="col">Weight</th></tr></thead>
+              <tbody>{% for row in valued_rows %}
+                <tr>
+                  <th scope="row">{{ row.instrument.security_ticker }}</th>
+                  <td>{{ row.value.position.quantity|floatformat:"-6" }}</td>
+                  <td>{{ row.value.market_value|default_if_none:"—" }}</td>
+                  <td>{{ row.value.unrealized_gain|default_if_none:"—" }}</td>
+                  <td>{% if row.weight != None %}{{ row.weight }}%{% else %}—{% endif %}</td>
+                </tr>
+                {% if row.value.issue %}<tr class="portfolio-holding-note"><td colspan="5">{{ row.instrument.security_ticker }} · {{ row.value.issue }}</td></tr>{% endif %}
+              {% endfor %}</tbody>
+            </table>
+          </div>
+        {% else %}<p>No open holdings on this date.</p>{% endif %}
+        {% if allocation_issue %}<p class="muted">{{ allocation_issue }}</p>{% endif %}
+      {% elif position_preview %}
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Holdings preview">
+          <table class="price-table">
+            <caption>Recorded shares and remaining cost · USD</caption>
+            <thead><tr><th scope="col">Holding</th><th scope="col">Shares</th><th scope="col">Cost basis</th></tr></thead>
+            <tbody>{% for row in position_preview %}
+              <tr><th scope="row">{{ row.instrument.security_ticker }}</th><td>{{ row.position.quantity|floatformat:"-6" }}</td><td>{{ row.position.cost_basis|floatformat:"2g" }}</td></tr>
+            {% endfor %}</tbody>
+          </table>
+        </div>
+        {% if position_count > 5 %}<p class="muted">First five holdings shown. <a href="{% url 'portfolio_positions' portfolio.pk %}">View positions and gains</a> for the full list.</p>{% endif %}
+      {% elif summary_unavailable %}<p>Holdings are unavailable until the journal issue is resolved.</p>
+      {% else %}<p>Record a deposit, then a buy to get started.</p>{% endif %}
+    </section>
+
+    {% if analysis %}
+      <section class="reference-panel portfolio-activity" aria-labelledby="recent-activity-title">
+        <div class="section-heading">
+          <h2 id="recent-activity-title">Recent transactions</h2>
+          {% if recent_entries %}<a href="{% url 'ledger_history' portfolio.pk %}">Full transaction history</a>{% endif %}
+        </div>
+        {% if recent_entries %}
+          <ul class="portfolio-activity-list">
+            {% for entry in recent_entries %}
+              <li>
+                <div><strong>{{ entry.get_kind_display }}{% if entry.security_ticker %} · {{ entry.security_ticker }}{% endif %}</strong><br><time class="muted" datetime="{{ entry.event_date|date:'Y-m-d' }}">{{ entry.event_date|date:"M j, Y" }}</time></div>
+                <span class="portfolio-activity-amount">{% with delta=entry.cash_delta %}{% if delta > 0 %}+{% endif %}{{ delta|floatformat:"2g" }} USD{% endwith %}</span>
+              </li>
+            {% endfor %}
+          </ul>
+          <p class="muted">Newest transaction date first. Amounts show cash movement, including fees.</p>
+        {% else %}<p>No transactions recorded yet.</p>{% endif %}
+      </section>
+    {% endif %}
+  </div>
+
+  <section class="reference-panel portfolio-market-overview" aria-labelledby="market-overview-title">
+    <h2 id="market-overview-title">Valuation &amp; performance</h2>
+    <p class="muted">Load closing values, weights and period return here.</p>
+    {% if overview_form.date_notice %}<p class="data-warning" role="status">{{ overview_form.date_notice }}</p>{% endif %}
+    <form class="portfolio-overview-form" method="post" action="{% url 'portfolio_overview_load' portfolio.pk %}">
+      {% csrf_token %}{{ overview_form.non_field_errors }}
+      <div>{{ overview_form.start_date.label_tag }}{{ overview_form.start_date }}{{ overview_form.start_date.errors }}</div>
+      <div>{{ overview_form.end_date.label_tag }}{{ overview_form.end_date }}{{ overview_form.end_date.errors }}</div>
+      <div>
+        <label class="portfolio-confirmation" for="{{ overview_form.timing_checked.id_for_label }}">
+          {{ overview_form.timing_checked }}<span>Cash flows occurred at end of day, after other activity. Recorded shares match raw closing prices.</span>
+        </label>
+        {{ overview_form.timing_checked.errors }}
+      </div>
+      <button class="button" type="submit">Update valuation &amp; performance</button>
+    </form>
+    <p class="muted">Daily closing prices · Updated on request</p>
+  </section>
+</div>
+
+<details class="portfolio-details"><summary>About these figures</summary><p>Recorded cash, cost basis and realized sale gains come from your transaction journal using FIFO. They are not current market value. Total value adds cash to holdings valued on the selected closing date. Weights use this cash-inclusive value. Deposits and withdrawals are separated from investment returns.</p><p>Only recorded dividends and splits are included. Missing closing prices, including weekends and holidays, are not filled. Updates use at most eight price requests; closing valuation alone supports five instruments. No automatic refresh is used. Entries do not place orders.</p>{% if valuation and analysis %}<dl class="reference-grid"><div><dt>All recorded holdings cost · USD</dt><dd>{{ analysis.open_cost_basis }}</dd></div><div><dt>All recorded realized gain/loss · USD</dt><dd>{{ analysis.realized_gain }}</dd></div></dl>{% endif %}</details>
 {% endblock %}

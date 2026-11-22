@@ -7,12 +7,10 @@
   <p class="lead">{{ portfolio.name }} · USD</p>
   <p><a class="button" href="{% url 'ledger_create' portfolio_id=portfolio.pk %}">Record transaction</a></p>
 </section>
+{% include "portfolios/section_nav.html" with active_section="transactions" %}
 <section class="reference-panel">
   <h2>Recorded cash: {{ cash }} USD</h2>
   <p>Derived from all recorded cash movements and trade proceeds/costs including fees. This is not a verified brokerage balance or investment return.</p>
-  <p><a href="{% url 'portfolio_positions' portfolio_id=portfolio.pk %}">View positions and gains</a></p>
-  <p><a href="{% url 'portfolio_valuation' portfolio_id=portfolio.pk %}">View market valuation</a></p>
-  <p><a href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a></p>
   <p><a href="{% url 'ledger_audit' portfolio.pk %}">View correction history</a></p>
   <p class="muted">This table shows the current interpretation. Corrections retain original entries in the audit trail and may restate past accounting and returns.</p>
   <p class="muted">Recorded net dividends add cash; recorded splits adjust open shares without changing lot cost. Actions are not fetched automatically. Entries are ordered by date and saved order.</p>

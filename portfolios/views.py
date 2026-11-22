@@ -8,10 +8,10 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from ledger.analysis_context import analysis_form, remember_dates
 from ledger.domain import LedgerRuleError
 from ledger.performance_forms import PerformanceForm
 from ledger.services import PortfolioUnavailable
-from ledger.valuation_services import ValuationLimitError
 from portfolios import services
 from portfolios.forms import PortfolioForm
 from portfolios.overview import overview_context
@@ -91,7 +91,7 @@ def portfolio_detail(request, portfolio_id):
         return unavailable(request)
     except PortfolioUnavailable:
         return render(request, "portfolios/not_found.html", status=404)
-    context["overview_form"] = PerformanceForm()
+    context["overview_form"] = analysis_form(request, portfolio_id, PerformanceForm)
     return render(request, "portfolios/detail.html", context)
 
 
@@ -108,11 +108,12 @@ def portfolio_overview_load(request, portfolio_id):
         return unavailable(request)
     except PortfolioUnavailable:
         return render(request, "portfolios/not_found.html", status=404)
-    form = PerformanceForm(request.POST)
+    form = analysis_form(request, portfolio_id, PerformanceForm)
     status, provider_error = 200, None
     try:
         dates = None
         if form.is_valid():
+            remember_dates(request, portfolio_id, form)
             dates = (form.cleaned_data["start_date"], form.cleaned_data["end_date"])
         else:
             status = 400
@@ -129,9 +130,7 @@ def portfolio_overview_load(request, portfolio_id):
     except LedgerRuleError:
         context = {"portfolio": portfolio, "summary_unavailable": True}
         status = 503
-    except ValuationLimitError as error:
-        context = {"portfolio": portfolio, "summary_unavailable": True}
-        form.add_error(None, str(error))
+    if context.get("valuation_issue"):
         status = 400
     if provider_error:
         status = 429 if provider_error.status == 429 else 503

@@ -32,7 +32,7 @@ def main():
             register(page, base, "performance-browser-alice")
             register(bob, base, "performance-browser-bob")
             portfolio = create(page, base, "Performance example")
-            page.get_by_role("link", name="View time-weighted returns", exact=True).click()
+            page.get_by_role("link", name="Returns", exact=True).click()
             url = page.url
             assert page.locator(".reference-grid").count() == 0
             load(page, url)

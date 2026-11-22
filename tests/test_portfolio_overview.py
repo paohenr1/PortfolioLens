@@ -1,6 +1,7 @@
 """Inline portfolio analysis keeps owner isolation and bounded, shared price loading."""
 
 import uuid
+from dataclasses import replace
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest import skipUnless
@@ -59,6 +60,8 @@ class PortfolioOverviewTests(TestCase):
         self.assertEqual(response.context["analysis"].cash, Decimal("749.00"))
         self.assertContains(response, "Valuation &amp; performance")
         self.assertContains(response, "749.00")
+        self.assertContains(response, "Recent transactions")
+        self.assertEqual([event.sequence for event in response.context["recent_entries"]], [2, 1])
         self.quotes.assert_not_called()
         self.reference.assert_not_called()
         self.assertEqual(Entry.objects.count(), count)
@@ -77,6 +80,8 @@ class PortfolioOverviewTests(TestCase):
         self.assertEqual(response.context["performance"].return_percent, Decimal("5.0050"))
         self.assertEqual(self.quotes.call_count, 2)
         self.assertContains(response, "5.0050%")
+        self.assertContains(response, "28.60%")
+        self.assertContains(response, "71.40% of total value")
         self.assertIn("no-store", response.headers["Cache-Control"])
 
     def test_unsupported_intraday_flow_keeps_closing_value_without_invented_return(self):
@@ -102,6 +107,8 @@ class PortfolioOverviewTests(TestCase):
         self.assertIsNone(response.context["performance"].return_percent)
         self.assertEqual(response.context["valuation"].cash, Decimal("749.00"))
         self.assertContains(response, "Some holdings lack a confirmed closing price")
+        self.assertIsNone(response.context["cash_weight"])
+        self.assertIsNone(response.context["valued_rows"][0]["weight"])
         self.assertEqual(self.quotes.call_count, 2)
 
     def test_cash_only_zero_return_needs_no_prices_and_zero_is_displayed(self):
@@ -109,7 +116,33 @@ class PortfolioOverviewTests(TestCase):
         response = self.client.post(self.url, self.data)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "0.0000%")
+        self.assertContains(response, "100.00% of total value")
         self.assertEqual(response.context["valuation"].total_value, Decimal("1000.00"))
+        self.quotes.assert_not_called()
+
+    def test_empty_portfolio_explains_why_allocation_weights_are_unavailable(self):
+        response = self.client.post(self.url, self.data)
+        self.assertContains(
+            response, "Allocation weights are unavailable because total value is zero"
+        )
+        self.assertIsNone(response.context["cash_weight"])
+        self.quotes.assert_not_called()
+
+    def test_valuation_limit_preserves_recorded_holdings_and_recent_transactions(self):
+        self.record(cash())
+        for number in range(6):
+            security_id = f"sec_overview_{number}"
+            self.reference.return_value = replace(
+                REFERENCE, security=replace(REFERENCE.security, id=security_id)
+            )
+            self.record(trade(quantity="1", sequence=number + 2, security_id=security_id))
+        response = self.client.post(self.url, self.data)
+        self.assertContains(response, "Valuation supports at most five", status_code=400)
+        self.assertContains(response, "First five holdings shown", status_code=400)
+        self.assertEqual(response.context["position_count"], 6)
+        self.assertEqual(
+            [event.sequence for event in response.context["recent_entries"]], [7, 6, 5, 4, 3]
+        )
         self.quotes.assert_not_called()
 
     def test_rate_limit_stops_remaining_boundaries_and_preserves_retry_header(self):

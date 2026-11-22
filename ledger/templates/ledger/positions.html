@@ -5,8 +5,9 @@
   <p class="eyebrow">Private journal calculations · FIFO</p>
   <h1>Positions and gains</h1>
   <p class="lead">{{ portfolio.name }} · USD · First in, first out</p>
-  <p><a href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a> · <a href="{% url 'ledger_create' portfolio_id=portfolio.pk %}">Record transaction</a></p>
+  <p><a class="button" href="{% url 'ledger_create' portfolio_id=portfolio.pk %}">Record transaction</a></p>
 </section>
+{% include "portfolios/section_nav.html" with active_section="holdings" %}
 <section class="reference-panel">
   <h2>Recorded journal totals</h2>
   <dl class="reference-grid">
@@ -17,8 +18,6 @@
     <div><dt>Net dividends received (USD)</dt><dd>{{ analysis.net_dividends }}</dd></div>
   </dl>
   <p>Buy fees enter lot cost; sell fees reduce proceeds. Sales consume the oldest shares by transaction date and same-day order. Standalone fees reduce cash and are shown separately; they are not deducted again from sale gains.</p>
-  <p><a href="{% url 'portfolio_valuation' portfolio_id=portfolio.pk %}">View market valuation</a> to load closing prices for an explicit date.</p>
-  <p><a href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a> for an explicit supported period.</p>
   <p class="muted">These are journal-derived research calculations. Contributions are not gains. Load valuation to view allocation weights. Money-weighted returns remain unavailable. Only explicitly recorded splits and net cash dividends are processed. Transfers and tax adjustments are unsupported; this is not a tax report or verified brokerage statement.</p>
   <details><summary>How partial-sale cents are allocated</summary><p>Each lot's cumulative sold cost is its original cost multiplied by the fraction of its original shares sold, rounded half up to USD cents. A sale receives the increase in that cumulative cost. The remainder stays with the open lot, so closing it allocates its full cost exactly. Very small remaining lots may have zero cent-denominated basis.</p></details>
 </section>

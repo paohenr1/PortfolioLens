@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 
+from ledger.analysis_context import analysis_form, remember_dates
 from ledger.domain import LedgerRuleError
 from ledger.performance import PerformanceRuleError
 from ledger.performance_forms import PerformanceForm
@@ -22,13 +23,14 @@ def performance(request, portfolio_id):
         portfolio = private_portfolio(request.user, portfolio_id)
     except (PortfolioStorageUnavailable, PortfolioUnavailable) as error:
         return private_error(request, error)
-    form = PerformanceForm(request.POST if request.method == "POST" else None)
+    form = analysis_form(request, portfolio_id, PerformanceForm)
     context = {"portfolio": portfolio, "form": form}
     status, provider_error = 200, None
     if request.method == "POST":
         if not form.is_valid():
             status = 400
         else:
+            remember_dates(request, portfolio_id, form)
             try:
                 _, result, valuations, provider_error = load_performance(
                     request.user,

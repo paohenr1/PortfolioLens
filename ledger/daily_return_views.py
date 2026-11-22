@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 
+from ledger.analysis_context import analysis_form, remember_dates
 from ledger.benchmark_chart import comparison_chart
 from ledger.daily_return_forms import DailyReturnForm
 from ledger.daily_return_services import load_daily_comparison
@@ -26,13 +27,14 @@ def daily_returns(request, portfolio_id):
         portfolio = private_portfolio(request.user, portfolio_id)
     except (PortfolioStorageUnavailable, PortfolioUnavailable) as error:
         return private_error(request, error)
-    form = DailyReturnForm(request.POST if request.method == "POST" else None)
+    form = analysis_form(request, portfolio_id, DailyReturnForm)
     context = {"portfolio": portfolio, "form": form}
     status, provider_error = 200, None
     if request.method == "POST":
         if not form.is_valid():
             status = 400
         else:
+            remember_dates(request, portfolio_id, form)
             try:
                 _, result, valuations, provider_error, comparison = load_daily_comparison(
                     request.user,

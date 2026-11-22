@@ -77,18 +77,17 @@ index](methodology.md) for related calculations.
 
 ## Portfolio overview
 
-The portfolio overview shows recorded cash, remaining FIFO cost, realized sale gain/loss
-and the first five open holdings directly from one effective journal snapshot. Opening
-it makes no provider request and writes no totals. A separate inline section updates
-closing market value, unrealized gains and time-weighted returns with one CSRF-protected
-submission. Opening/closing dates and the existing cash-flow/share-basis confirmation
-are explicit; detailed valuation and risk pages remain available for deeper analysis.
+The portfolio overview shows recorded cash, remaining FIFO cost, realized sale gain
+or loss, up to five open holdings, and the latest five effective transactions from
+one journal snapshot. Opening it makes no provider request. One CSRF-protected
+submission loads closing market value, unrealized gains, cash and holding weights,
+and time-weighted return for the chosen dates and confirmed assumptions.
 
-The combined load takes one owner-scoped journal snapshot and uses the existing
-performance plan and bounded prices. Its closing valuation is reused without an extra
-price request. If timing or performance-plan limits fail before price I/O, closing
-valuation alone is attempted with its existing five-instrument limit, and the return
-stays unavailable with an explanation. A supported plan retains the eight-request
+The combined load uses one owner-scoped journal snapshot and the existing
+performance plan. Cash-inclusive weights reuse the closing valuation. If timing
+or plan limits prevent calculating a return, the overview attempts closing valuation
+within its existing five-instrument limit. If that limit is exceeded, the overview
+still shows the recorded holdings and transactions. A supported plan retains the eight-request
 limit and stops after rate exhaustion, preserving Retry-After. Missing closes withhold
 unknown totals. Recorded journal totals include all entries; market values explicitly
 stop at the selected closing date. No pricing cache or automatic refresh is introduced.
@@ -100,6 +99,22 @@ usable. Submission identity, exact arithmetic, CSRF and correction behavior are 
 
 The My Portfolio navigation opens the overview directly when the signed-in owner has
 exactly one portfolio; zero or multiple portfolios lead to the portfolio list. The
-overview keeps one holdings table, puts loaded value/return figures first, and reserves
-methodology and advanced analysis links for secondary details. Important dates, input
-confirmations, missing-price warnings and provider errors remain visible.
+overview puts holdings and recent transactions next to valuation controls on desktop.
+The section navigation gives direct access to holdings, transactions, valuation,
+returns and daily risk. Dates, confirmations, and price availability remain visible.
+
+## Selected analysis dates
+
+The last valid submitted opening/closing dates follow each portfolio between its
+overview, valuation, time-weighted performance and daily returns/risk pages within the
+signed-in browser session. A valuation-only selection updates the closing date while
+retaining a previously selected opening date. If no opening date has been selected,
+range-based pages suggest the preceding 30 calendar days anchored to that closing date.
+
+Date preferences are scoped to the signed-in owner and portfolio, bounded to 50 contexts,
+and contain no prices, results or confirmations. Invalid submissions do not overwrite
+the last valid selection. A valid selection survives a provider failure. Opening pages
+still makes no provider request; loading analysis and confirming its assumptions remain
+explicit actions. Existing date, session and period limits are unchanged. Unsupported
+saved ranges remain visible with an explanation rather than being silently shortened
+or moved to different trading dates. Market results are not cached or reused.

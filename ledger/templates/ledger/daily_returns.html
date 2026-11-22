@@ -5,10 +5,11 @@
 <section class="intro compact">
   <p class="eyebrow">Private portfolio research · U.S. equity sessions</p>
   <h1>Daily returns</h1><p class="lead">{{ portfolio.name }} · USD</p>
-  <p><a href="{% url 'portfolio_performance' portfolio_id=portfolio.pk %}">View time-weighted returns</a> · <a href="{% url 'ledger_history' portfolio_id=portfolio.pk %}">View transactions</a></p>
 </section>
+{% include "portfolios/section_nav.html" with active_section="risk" %}
 <section class="account-section">
   <form class="account-form" method="post" aria-label="Daily return settings">
+    {% if form.date_notice %}<p class="data-warning" role="status">{{ form.date_notice }}</p>{% endif %}
     {% csrf_token %}{{ form.as_div }}<button class="button" type="submit">Load daily returns</button>
   </form>
   <p>Choose two completed U.S. equity session dates from 2000, covering at most 90 calendar days. The opening close is the baseline; its transactions are already included. Each subsequent row measures the return from the previous session close, including over weekends and holidays.</p>

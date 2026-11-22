@@ -32,7 +32,7 @@ def main():
             register(page, base, "valuation-browser-alice")
             register(bob, base, "valuation-browser-bob")
             portfolio = create(page, base, "Valuation example")
-            page.get_by_role("link", name="View market valuation", exact=True).click()
+            page.get_by_role("link", name="Valuation", exact=True).click()
             valuation_url = page.url
             assert page.locator(".reference-grid").count() == 0
             assert page.get_by_role("region", name="Allocation table", exact=True).count() == 0
