@@ -11,6 +11,7 @@ from research import services
 from research.charts import build_price_chart
 from research.forms import PriceHistoryForm, SearchForm, StatementForm
 from research.fundamentals import statement_presentation
+from research.stock_overview import overview_sections
 from research.stock_risk import calculate_stock_risk
 from research.stock_risk_chart import stock_drawdown_chart
 from research.volume_charts import build_volume_chart
@@ -73,7 +74,11 @@ def security(request, security_id):
     response = render(
         request,
         "research/security.html",
-        {"security": result.security, "retrieved_at": result.retrieved_at},
+        {
+            "security": result.security,
+            "retrieved_at": result.retrieved_at,
+            **overview_sections(result.security, request.META.get("REMOTE_ADDR", "")),
+        },
     )
     response.headers["Cache-Control"] = "no-store"
     return response

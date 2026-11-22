@@ -96,6 +96,25 @@ def historical_prices(security_id, start_date, end_date, client_address):
         )
 
 
+def overview_prices(security_id, start_date, end_date, client_address):
+    with IntrinioClient(_key_and_budget(client_address)) as provider:
+        return provider.overview_prices(security_id, start_date, end_date)
+
+
+def overview_income_statement(security, fiscal_year, client_address):
+    key = settings.INTRINIO_API_KEY
+    if not key:
+        raise CredentialsMissing()
+    with IntrinioClient(key) as provider:
+        return provider.statement_for_verified_security(
+            security,
+            "income_statement",
+            fiscal_year,
+            "FY",
+            before_request=lambda: _reserve_request(client_address),
+        )
+
+
 def benchmark_prices(security_id, start_date, end_date, client_address):
     """Spend the shared quota on one page, without following a remaining cursor."""
     key = settings.INTRINIO_API_KEY

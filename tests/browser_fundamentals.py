@@ -111,10 +111,11 @@ def main():
                                 path=f"/tmp/stock-financials-{code}-{name}.png", full_page=True
                             )
                         for year, status, expected in failures:
-                            response = page.goto(
-                                base + "/stocks/sec_fixture_primary/financials/"
-                                f"?statement_code={code}&fiscal_year={year}&fiscal_period=FY"
-                            )
+                            with fixture_application() as failure_base:
+                                response = page.goto(
+                                    failure_base + "/stocks/sec_fixture_primary/financials/"
+                                    f"?statement_code={code}&fiscal_year={year}&fiscal_period=FY"
+                                )
                             assert response.status == status
                             assert expected in page.locator("main").inner_text()
                             assert page.locator(".financial-table").count() == 0

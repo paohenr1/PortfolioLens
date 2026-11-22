@@ -6,9 +6,17 @@ volatility and drawdown](stock-risk.md). Realtime prices are unsupported.
 
 ## User workflow
 
-Search for an instrument, select its stable provider ID, and choose **View price
-history** on the reference page. Choose start/end dates and adjusted or raw
-close plus an independent volume basis, then **Load prices**. The initial form
+Selecting a listing in Research opens its company overview. The overview loads
+one page of raw daily prices for the 90 completed UTC dates ending yesterday
+and shows the latest completed close in that response. It also requests the
+previous calendar year's fiscal-year income statement when the provider supplies
+a company ID. Each section reports unavailable data independently. The overview
+makes up to four provider requests, including the listing reference, within the
+shared request budget.
+
+Choose **Price history** for a configurable range, adjusted or raw close, and
+the independent volume basis. Submit **Load prices** to start that request.
+The initial form
 suggests 90 days ending on the preceding UTC day but
 does not request prices until submission. Changing a field alone makes no request.
 

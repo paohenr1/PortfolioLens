@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime
 from unittest.mock import patch
 
 import httpx
@@ -30,8 +31,21 @@ class SearchIntegrationTests(SimpleTestCase):
             requests.append(request)
             if request.url.path == "/securities/search":
                 return httpx.Response(200, json=fixture("security_search.json"))
-            self.assertEqual(request.url.path, "/securities/sec_fixture_primary")
-            return httpx.Response(200, json=fixture("security_reference.json"))
+            if request.url.path == "/securities/sec_fixture_primary":
+                return httpx.Response(200, json=fixture("security_reference.json"))
+            if request.url.path == "/securities/sec_fixture_primary/prices":
+                self.assertEqual(request.url.params["end_date"], "2020-01-10")
+                return httpx.Response(200, json=fixture("daily_prices.json"))
+            if request.url.path.endswith("/income_statement/2019/FY"):
+                return httpx.Response(200, json=fixture("fundamental.json"))
+            if (
+                request.url.path
+                == "/fundamentals/fun_fixture_income_2019_FY/standardized_financials"
+            ):
+                payload = fixture("standardized_financials.json")
+                payload["fundamental"] = fixture("fundamental.json")
+                return httpx.Response(200, json=payload)
+            self.fail(f"Unexpected provider path: {request.url.path}")
 
         with self.provider(handler):
             result = self.client.get(reverse("search"), {"q": "Fixture"})
@@ -41,16 +55,43 @@ class SearchIntegrationTests(SimpleTestCase):
             self.assertContains(result, "XTST")
             self.assertContains(result, "Unavailable")
             self.assertContains(result, "Retrieved")
-            details = self.client.get(reverse("security", args=["sec_fixture_primary"]))
+            with patch("research.stock_overview.datetime") as clock:
+                clock.now.return_value = datetime(2020, 1, 11, tzinfo=UTC)
+                details = self.client.get(reverse("security", args=["sec_fixture_primary"]))
+        self.assertContains(details, "Latest available close")
+        self.assertContains(details, "15.5")
+        self.assertContains(details, "As of Jan 8, 2020")
+        self.assertContains(details, "Annual financial highlights")
+        self.assertContains(details, "1,234,567,890.125")
+        self.assertContains(details, 'aria-current="page">Overview')
         self.assertContains(details, "Listing details")
         self.assertContains(details, "USD")
         self.assertContains(details, "Active")
         self.assertContains(details, "2020-01-02")
         self.assertContains(details, "not a quote timestamp")
         self.assertEqual(details.headers["Cache-Control"], "no-store")
-        self.assertEqual(len(requests), 2)
+        self.assertEqual(len(requests), 5)
         self.assertNotContains(result, TEST_KEY)
         self.assertNotContains(details, TEST_KEY)
+
+    def test_overview_price_rate_limit_keeps_reference_and_skips_company_requests(self):
+        paths = []
+
+        def handler(request):
+            paths.append(request.url.path)
+            if request.url.path.endswith("/prices"):
+                return httpx.Response(429)
+            return httpx.Response(200, json=fixture("security_reference.json"))
+
+        with self.provider(handler):
+            detail = self.client.get(reverse("security", args=["sec_fixture_primary"]))
+        self.assertContains(detail, "Fixture Research Corp")
+        self.assertContains(detail, "The market-data request limit has been reached")
+        self.assertContains(detail, "Annual financial highlights")
+        self.assertNotContains(detail, 'class="price-chart"')
+        self.assertEqual(
+            paths, ["/securities/sec_fixture_primary", "/securities/sec_fixture_primary/prices"]
+        )
 
     def test_empty_search_does_not_contact_provider(self):
         with patch("research.services.IntrinioClient") as provider:

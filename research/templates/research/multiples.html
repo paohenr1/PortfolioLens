@@ -7,6 +7,7 @@
     <h1 id="page-title">Annual earnings valuation multiples</h1>
     <p class="lead">Compare an exact-date raw closing price with basic and diluted EPS for one selected annual fiscal period.</p>
   </section>
+  {% include 'research/company_nav.html' with active_section='valuation' %}
   <form class="search-form statement-form" method="get" action="{% url 'annual_multiples' security_id %}" aria-label="Annual valuation settings">
     {{ form.non_field_errors }}
     <div class="price-controls">

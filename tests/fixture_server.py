@@ -2,6 +2,7 @@
 
 import os
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 from wsgiref.simple_server import make_server
@@ -83,7 +84,11 @@ def main(*, statement_transport=None, price_transport=None, capitalization_trans
         return IntrinioClient(key, transport=httpx.MockTransport(transport))
 
     with override_settings(INTRINIO_API_KEY=TEST_KEY):
-        with patch("research.services.IntrinioClient", side_effect=provider):
+        with (
+            patch("research.services.IntrinioClient", side_effect=provider),
+            patch("research.stock_overview.datetime") as overview_clock,
+        ):
+            overview_clock.now.return_value = datetime(2020, 1, 11, tzinfo=UTC)
             application = StaticFilesHandler(get_wsgi_application())
             with make_server("127.0.0.1", 0, application) as server:
                 print(server.server_port, flush=True)

@@ -1,0 +1,6 @@
+        <details class="price-table-details">
+          <summary>View observations table ({{ chart.rows|length }})</summary>
+          <div class="table-scroll" tabindex="0" aria-label="Scrollable daily observations">
+            <table class="price-table"><caption>Daily observations, newest first. Currency: {{ history.security.currency|default_if_none:"Unavailable" }}.</caption><thead><tr><th scope="col">Date</th><th scope="col">Raw close</th><th scope="col">Adjusted close</th><th scope="col">Period status</th></tr></thead><tbody>{% for row in chart.rows %}<tr><th scope="row">{{ row.date|date:"Y-m-d" }}</th><td>{{ row.close }}</td><td>{{ row.adjusted_close }}</td><td>{{ row.period_status }}</td></tr>{% endfor %}</tbody></table>
+          </div>
+        </details>

@@ -248,6 +248,10 @@ class IntrinioClient:
         """One date, one request. A remaining cursor means the result is incomplete."""
         return self._price_history(security_id, price_date, price_date, 1, before_request)
 
+    def overview_prices(self, security_id, start_date, end_date, *, before_request=None):
+        """One page of completed-date history for the company overview."""
+        return self._price_history(security_id, start_date, end_date, 1, before_request)
+
     def benchmark_prices(self, security_id, start_date, end_date, *, before_request=None):
         """One bounded page; a cursor leaves the comparison explicitly incomplete."""
         validate_price_range(start_date, end_date)
@@ -327,16 +331,28 @@ class IntrinioClient:
             raise ValueError("Invalid security identifier.")
         validate_statement_request(statement_code, fiscal_year, fiscal_period)
 
+        if before_request is not None:
+            before_request()
+        security = self.security(security_id).security
+        return self.statement_for_verified_security(
+            security, statement_code, fiscal_year, fiscal_period, before_request=before_request
+        )
+
+    def statement_for_verified_security(
+        self, security, statement_code, fiscal_year, fiscal_period, *, before_request=None
+    ) -> FinancialStatement:
+        """Use a normalized security verified by this provider in the same request."""
+        validate_statement_request(statement_code, fiscal_year, fiscal_period)
+        if security.company_id is None:
+            raise CompanyUnavailable()
+        if not valid_security_id(security.company_id):
+            raise InvalidResponse()
+
         def request(path):
             if before_request is not None:
                 before_request()
             return self._request_json(path)
 
-        security = normalize_security(request("/securities/" + security_id))
-        if security.id != security_id:
-            raise InvalidResponse()
-        if security.company_id is None:
-            raise CompanyUnavailable()
         return self._statement_for_security(
             security, statement_code, fiscal_year, fiscal_period, request
         )

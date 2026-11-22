@@ -1,27 +1,75 @@
 {% extends "research/base.html" %}
-{% block title %}Instrument details · PortfolioLens{% endblock %}
+{% load static %}
+{% block title %}{% if security.ticker %}{{ security.ticker }} overview{% else %}Company overview{% endif %} · PortfolioLens{% endblock %}
 {% block content %}
-  <section class="intro compact" aria-labelledby="page-title">
-    <a href="{% url 'search' %}">Back to stock search</a>
-    <p class="eyebrow">Instrument reference</p>
-    <h1 id="page-title">{% if security %}{{ security.name|default_if_none:"Name unavailable" }}{% else %}Instrument details{% endif %}</h1>
-    {% if security %}<p class="lead">{{ security.ticker|default_if_none:"Ticker unavailable" }}</p>{% endif %}
+  <section class="company-heading" aria-labelledby="page-title">
+    <div>
+      <a href="{% url 'search' %}">Back to stock search</a>
+      <h1 id="page-title">{% if security %}{{ security.name|default_if_none:security.ticker|default_if_none:"Name unavailable" }}{% else %}Company overview{% endif %}</h1>
+      {% if security %}<p class="muted">{{ security.ticker|default_if_none:"Ticker unavailable" }}{% if security.exchange_mic %} · {{ security.exchange_mic }}{% endif %}{% if security.currency %} · {{ security.currency }}{% endif %}</p>{% endif %}
+    </div>
+    {% if security %}<a class="button button-secondary" href="{% url 'watchlist_choose' %}?security_id={{ security.id|urlencode }}">Add to watchlist</a>{% endif %}
   </section>
   {% if provider_error %}
     {% include "research/provider_error.html" %}
   {% else %}
-    <section class="reference-panel" aria-labelledby="reference-title">
-      <h2 id="reference-title">Listing details</h2>
+    {% include "research/company_nav.html" with security_id=security.id active_section="overview" %}
+    <div class="company-overview-grid">
+      <section class="reference-panel company-price" aria-labelledby="company-price-title">
+        <h2 id="company-price-title">Latest available close</h2>
+        {% if chart.latest %}
+          <p class="company-close">{{ chart.latest.value }}{% if history.security.currency %} <small>{{ history.security.currency }}</small>{% endif %}</p>
+          <p class="muted">As of {{ chart.latest.date|date:"M j, Y" }} · Daily unadjusted close · Intrinio</p>
+        {% else %}
+          <p role="status">{% if price_error %}{{ price_error }}{% else %}No completed closes available in the selected window.{% endif %}</p>
+        {% endif %}
+        {% if history and not history.pagination_complete %}<p class="data-warning">Only the first page of prices was supplied. More observations may be available in Price history.</p>{% endif %}
+        {% if chart.points %}
+          {% include "research/daily_price_chart.html" %}
+          {% include "research/daily_price_table.html" %}
+          <script src="{% static 'research/prices.js' %}" defer></script>
+        {% endif %}
+        <a href="{% url 'prices' security.id %}">View price history</a>
+      </section>
+      <section class="reference-panel company-financials" aria-labelledby="company-financials-title">
+        <h2 id="company-financials-title">Annual financial highlights</h2>
+        {% if statement %}
+          <p class="muted">FY {{ statement.fundamental.fiscal_year }}{% if statement.fundamental.end_date %} · Ended {{ statement.fundamental.end_date|date:"M j, Y" }}{% endif %} · Intrinio</p>
+          {% if not statement.pagination_complete %}<p class="data-warning">Intrinio returned a partial statement.</p>{% endif %}
+          <dl>
+            {% for metric in metrics %}
+              <div><dt>{{ metric.label }}</dt><dd>{{ metric.value }}{% if metric.availability == 'Supplied observation' %} <small>{{ metric.unit }}</small>{% endif %}</dd></div>
+            {% endfor %}
+          </dl>
+        {% else %}
+          <p class="muted">FY {{ overview_fiscal_year }} · Intrinio</p>
+          <p role="status">{{ financial_error|default:"Financial highlights are unavailable." }}</p>
+        {% endif %}
+        <a href="{% url 'financials' security.id %}">View company financials</a>
+      </section>
+    </div>
+
+    <details class="portfolio-details">
+      <summary>Listing details</summary>
       <dl class="reference-grid">
         <div><dt>Exchange (MIC)</dt><dd>{{ security.exchange_mic|default_if_none:"Unavailable" }}</dd></div>
         <div><dt>Trading currency</dt><dd>{{ security.currency|default_if_none:"Unavailable" }}</dd></div>
         <div><dt>Provider instrument ID</dt><dd>{{ security.id }}</dd></div>
         <div><dt>Listing status</dt><dd>{% if security.delisted %}Delisted{% elif security.active is True %}Active{% elif security.active is False %}Inactive{% else %}Unavailable{% endif %}</dd></div>
-        <div><dt>Latest historical price date reported by provider</dt><dd>{% if security.last_stock_price_date %}{{ security.last_stock_price_date|date:"Y-m-d" }}{% else %}Unavailable{% endif %}</dd></div>
+        <div><dt>Latest historical date reported by provider</dt><dd>{{ security.last_stock_price_date|date:"Y-m-d"|default:"Unavailable" }}</dd></div>
       </dl>
       <p class="muted">Source: Intrinio security reference data. Retrieved {{ retrieved_at|date:"Y-m-d H:i:s T" }}.</p>
       <p class="muted">The historical date is reference metadata, not a quote timestamp or proof of current prices.</p>
+    </details>
+    <section class="portfolio-details" aria-labelledby="more-research-title">
+      <h2 id="more-research-title">More research</h2>
+      <div class="research-links">
+        <a href="{% url 'capital_returns' security.id %}">View return on assets and equity</a>
+        <a href="{% url 'annual_growth' security.id %}">View annual revenue and earnings growth</a>
+        <a href="{% url 'annual_multiples' security.id %}">View annual earnings valuation multiples</a>
+        <a href="{% url 'market_capitalization' security.id %}">View company market capitalization</a>
+        <a href="{% url 'statement_trends' security.id %}">View annual financial statement trends</a>
+      </div>
     </section>
-    <section class="empty-state" aria-labelledby="history-link-title"><h2 id="history-link-title">Explore this instrument</h2><p>Explore price history for prices, volume, volatility, and drawdown. Review company statements for margins, or use the dedicated annual analysis pages below.</p><div class="research-links"><a class="button" href="{% url 'prices' security.id %}">View price history</a><a class="button" href="{% url 'financials' security.id %}">View company financials</a><a class="button" href="{% url 'capital_returns' security.id %}">View return on assets and equity</a><a class="button" href="{% url 'annual_growth' security.id %}">View annual revenue and earnings growth</a><a class="button" href="{% url 'annual_multiples' security.id %}">View annual earnings valuation multiples</a><a class="button" href="{% url 'market_capitalization' security.id %}">View company market capitalization</a><a class="button" href="{% url 'statement_trends' security.id %}">View annual financial statement trends</a><a class="button" href="{% url 'watchlist_choose' %}?security_id={{ security.id|urlencode }}">Add to watchlist</a></div></section>
   {% endif %}
 {% endblock %}

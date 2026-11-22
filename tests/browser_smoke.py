@@ -1,32 +1,18 @@
 """Optional browser checks using the environment's existing Playwright/Chromium."""
 
-import select
-import subprocess
-from pathlib import Path
 from urllib.parse import urlsplit
+
+from browser_fundamentals import fixture_application
 
 
 def main():
     from playwright.sync_api import sync_playwright
 
-    root = Path(__file__).resolve().parent.parent
-    diagnostics = Path("/tmp/stock-search-fixture-server.log").open("w")
-    process = subprocess.Popen(
-        [str(root / ".venv/bin/python"), str(root / "tests/fixture_server.py")],
-        cwd=root,
-        stdout=subprocess.PIPE,
-        stderr=diagnostics,
-        text=True,
-    )
-    try:
-        if not select.select([process.stdout], [], [], 15)[0]:
-            raise RuntimeError("The test-only fixture server did not start.")
-        port = int(process.stdout.readline().strip())
-        base_url = f"http://127.0.0.1:{port}"
-        with sync_playwright() as driver:
-            browser = driver.chromium.launch(executable_path="/usr/bin/chromium", headless=True)
-            try:
-                for name, width, height in [("desktop", 1280, 900), ("mobile", 390, 844)]:
+    with sync_playwright() as driver:
+        browser = driver.chromium.launch(executable_path="/usr/bin/chromium", headless=True)
+        try:
+            for name, width, height in [("desktop", 1280, 900), ("mobile", 390, 844)]:
+                with fixture_application() as base_url:
                     page = browser.new_page(viewport={"width": width, "height": height})
                     errors = []
                     requests = []
@@ -36,9 +22,7 @@ def main():
                     )
                     response = page.goto(base_url + "/search/", wait_until="networkidle")
                     assert response.status == 200
-                    assert page.evaluate(
-                        "getComputedStyle(document.body).backgroundColor === 'rgb(247, 249, 246)'"
-                    )
+                    assert page.evaluate("document.documentElement.dataset.theme === 'dark'")
                     page.get_by_label("Ticker or company name").fill("Fixture")
                     page.get_by_role("button", name="Search", exact=True).click()
                     page.get_by_role("heading", name="Search results", exact=True).wait_for()
@@ -48,11 +32,22 @@ def main():
                     )
                     page.screenshot(path=f"/tmp/stock-search-{name}.png", full_page=True)
                     page.get_by_role("link", name="Fixture Research Corp", exact=True).click()
-                    page.get_by_role("heading", name="Listing details").wait_for()
+                    assert page.locator(".company-close").inner_text().strip() == "15.5 USD"
+                    assert page.locator(".company-price .price-chart").is_visible()
+                    assert page.get_by_role(
+                        "heading", name="Annual financial highlights"
+                    ).is_visible()
+                    page.get_by_text("Listing details", exact=True).click()
                     assert (
-                        page.locator(".reference-panel").get_by_text("USD", exact=True).is_visible()
+                        page.locator("details .reference-grid")
+                        .get_by_text("USD", exact=True)
+                        .is_visible()
                     )
-                    assert page.get_by_text("2020-01-02", exact=True).is_visible()
+                    assert (
+                        page.locator(".reference-grid")
+                        .get_by_text("2020-01-02", exact=True)
+                        .is_visible()
+                    )
                     assert page.evaluate(
                         "document.documentElement.scrollWidth <= window.innerWidth"
                     )
@@ -82,8 +77,6 @@ def main():
                         "document.documentElement.scrollWidth <= window.innerWidth"
                     )
                     page.screenshot(path=f"/tmp/stock-prices-{name}.png", full_page=True)
-                    # Keep both workflows inside the real process-local quota.
-                    # Failure states run once; desktop/mobile layout checks share them.
                     for query, expected, status in (
                         [
                             ("fixture-empty", "No matching instruments", 200),
@@ -110,16 +103,8 @@ def main():
                     assert all(urlsplit(url).hostname == "127.0.0.1" for url in requests)
                     print(f"Test-only {name}: search, select, details, prices, chart/table PASS")
                     page.close()
-            finally:
-                browser.close()
-    finally:
-        process.terminate()
-        try:
-            process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            process.kill()
-            process.wait(timeout=5)
-        diagnostics.close()
+        finally:
+            browser.close()
 
 
 if __name__ == "__main__":

@@ -241,3 +241,41 @@ input, select, textarea { background: var(--mp-surface); color: var(--ink); }
   .transaction-fields .stock-search-controls input { flex-basis: 0; }
   .transaction-fields .stock-search-controls .button { width: auto; padding-inline: .8rem; }
 }
+
+.company-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-block: 1.75rem 1rem;
+}
+.company-heading h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin: .65rem 0 .25rem;
+  overflow-wrap: anywhere;
+}
+.company-heading p { margin: 0; }
+.company-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  align-items: start;
+  gap: 1rem;
+  margin-block: 1rem 1.5rem;
+}
+.company-close {
+  margin: .6rem 0 0;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.company-close small, .company-financials dd small { font-size: .88rem; color: var(--muted); }
+.company-price .chart-figure { margin: .75rem 0; }
+.company-price .price-table-details { margin: .85rem 0; }
+.company-price .price-chart { min-width: 480px; }
+.company-financials dl { margin: .75rem 0; }
+.company-financials dl div { border-top: 1px solid var(--line); padding: .65rem 0; }
+.company-financials dd { font-size: 1.08rem; font-variant-numeric: tabular-nums; }
+@media (max-width: 850px) {
+  .company-overview-grid { grid-template-columns: minmax(0, 1fr); }
+}
