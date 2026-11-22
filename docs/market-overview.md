@@ -111,10 +111,6 @@ account denied the S&P constituent endpoint during bounded verification; no plac
 constituents, sector weights or market caps are presented as real market coverage.
 Source access must be established before those sections are populated.
 
-The development design preview remains separately available at `/design/markets/`
-only with debug enabled outside production. It contains clearly labeled fictional
-fixtures. Its controls are not live-provider controls.
-
 The overview has one main navigation and explicit Dark/Light theme choices. A formerly
 saved System preference resolves once to the device theme and is saved as Dark or Light.
 

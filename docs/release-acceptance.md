@@ -23,6 +23,7 @@ python3 scripts/development_database.py
 python3 tests/browser_release_journey.py
 python3 tests/browser_release_journey.py --shared-limits
 python3 tests/browser_smoke.py
+python3 tests/browser_market_homepage.py
 ```
 
 The release journey exercises two users, transactions/retries, corporate actions,

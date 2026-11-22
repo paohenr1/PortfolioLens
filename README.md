@@ -41,11 +41,9 @@ history, source coverage, and the confirmations shown on each calculation page.
 | Benchmark statistics | Portfolio-versus-benchmark relationships; no holding-level risk attribution |
 | Data availability | Missing or unsuitable observations remain unavailable; no fabricated or silently filled prices |
 
-Holding-level risk attribution, stress testing and server-generated report exports
-remain proposed capabilities. A holdings snapshot alone cannot establish actual account
-performance.
-See [product scope](docs/product-specification.md) and the
-[methodology index](docs/methodology.md).
+A holdings snapshot alone cannot establish account performance. Historical calculations
+use the current corrected journal. See the [usage guide](docs/usage.md) and
+[methodology index](docs/methodology.md) for details.
 
 ## Quick start
 

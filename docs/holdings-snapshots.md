@@ -9,10 +9,22 @@ review can load dated raw closes to show value, allocation and concentration.
 
 Use **Check a holdings CSV** from **My portfolios**, or **Import a holdings CSV**
 from **My holdings snapshots**. The [usage guide](usage.md#check-a-holdings-csv)
-describes the exact CSV format. Limits are 16 KiB, five holdings, supported U.S.
-MICs, positive quantities through one billion with six decimals, and explicit USD
-cash through one trillion with two decimals. A header-only file requires positive
-cash. Dates must be completed XNYS sessions from 2000 through yesterday in Toronto.
+shows an example. The upload contains holdings only. The form supplies the snapshot
+name, date, USD cash and confirmation.
+
+| Input | Requirement |
+| --- | --- |
+| Name | 1–100 characters after trimming, with no control characters |
+| As-of date | Completed XNYS session from 2000 through yesterday in America/Toronto |
+| Cash | Explicit USD amount from zero to one trillion, with at most two decimals |
+| File | UTF-8 CSV, optional BOM, at most 16 KiB and five nonblank holding rows |
+| Header | Exactly `ticker,exchange_mic,quantity,currency` in that order |
+| Ticker and exchange | Ticker up to 32 characters and an explicit supported U.S. MIC |
+| Quantity and currency | Positive quantity up to one billion shares with at most six decimals, and literal `USD` |
+
+The parser trims surrounding whitespace and rejects duplicate ticker/MIC pairs,
+malformed rows, and unsupported numeric formats such as exponents and thousands
+separators. A header-only file requires positive cash.
 
 Checking is local and transient. **Find instrument matches** performs one search
 per unresolved row, at most five requests. Only exact ticker/MIC/USD candidates
@@ -71,10 +83,8 @@ This format requires users to reshape broker exports. Unsupported instruments,
 historical ticker changes and truncated searches may block import. Five holdings
 is a deliberate initial capacity, not silent truncation.
 
-A snapshot cannot establish actual account performance or gains. Risk attribution,
-stress tests and server-generated report exports remain outside the implemented workflow. The
-[workflow specification](proposals/holdings-import.md) records the bounded design.
-
+Calculating account performance or gains requires transaction history. A snapshot
+provides only the dated holdings and valuation described below.
 
 ## Review methodology
 

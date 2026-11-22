@@ -1,7 +1,7 @@
   <header class="market-header">
-    <a class="market-brand" href="{% if is_preview %}{% url 'markets_preview' %}{% else %}{% url 'home' %}{% endif %}" aria-label="PortfolioLens markets"><span class="brand-symbol" aria-hidden="true"></span>PortfolioLens</a>
+    <a class="market-brand" href="{% url 'home' %}" aria-label="PortfolioLens markets"><span class="brand-symbol" aria-hidden="true"></span>PortfolioLens</a>
     <nav class="market-nav" aria-label="Main navigation">
-      <a class="is-active" href="{% if is_preview %}{% url 'markets_preview' %}{% else %}{% url 'home' %}{% endif %}" aria-current="page">Markets</a>
+      <a class="is-active" href="{% url 'home' %}" aria-current="page">Markets</a>
       <a href="{% url 'portfolio_home' %}">My Portfolio</a>
       <a href="{% url 'search' %}">Research</a>
       <a href="{% url 'watchlist_list' %}">Watchlists</a>
