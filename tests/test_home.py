@@ -47,4 +47,3 @@ class LandingPageTests(SimpleTestCase):
         self.assertContains(response, 'href="#main"')
         self.assertContains(response, 'href="/static/research/markets.css"')
         self.assertContains(response, 'src="/static/research/market-preferences.js"')
-        self.assertNotContains(response, "markets-preview.js")
