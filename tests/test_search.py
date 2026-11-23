@@ -74,6 +74,36 @@ class SearchIntegrationTests(SimpleTestCase):
         self.assertNotContains(result, TEST_KEY)
         self.assertNotContains(details, TEST_KEY)
 
+    def test_overview_accepts_missing_price_metadata_but_rejects_conflicts(self):
+        for price_metadata, show_chart in (
+            ({}, True),
+            ({"exchange_mic": "XNAS"}, False),
+            ({"currency": "CAD"}, False),
+        ):
+            with self.subTest(price_metadata=price_metadata):
+                _request_budget.reset()
+                prices = fixture("daily_prices.json")
+                for field in ("exchange_mic", "currency"):
+                    del prices["security"][field]
+                prices["security"].update(price_metadata)
+                reference = fixture("security_reference.json")
+                reference.pop("company_id")
+
+                def handler(request, prices=prices, reference=reference):
+                    payload = prices if request.url.path.endswith("/prices") else reference
+                    return httpx.Response(200, json=payload)
+
+                with self.provider(handler), patch("research.stock_overview.datetime") as clock:
+                    clock.now.return_value = datetime(2020, 1, 11, tzinfo=UTC)
+                    response = self.client.get(reverse("security", args=["sec_fixture_primary"]))
+
+                self.assertEqual(response.status_code, 200)
+                if show_chart:
+                    self.assertContains(response, 'class="price-chart"')
+                    self.assertContains(response, "15.5")
+                else:
+                    self.assertNotContains(response, 'class="price-chart"')
+
     def test_overview_price_rate_limit_keeps_reference_and_skips_company_requests(self):
         paths = []
 

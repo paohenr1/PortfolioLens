@@ -26,9 +26,12 @@ def overview_sections(security, client_address):
         history = services.overview_prices(
             security.id, end - timedelta(days=89), end, client_address
         )
-        if (history.security.currency, history.security.exchange_mic) != (
-            security.currency,
-            security.exchange_mic,
+        if any(
+            observed is not None and expected is not None and observed != expected
+            for observed, expected in (
+                (history.security.currency, security.currency),
+                (history.security.exchange_mic, security.exchange_mic),
+            )
         ):
             raise InvalidResponse()
         context.update(history=history, chart=build_price_chart(history, "raw"))

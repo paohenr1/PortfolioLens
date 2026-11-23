@@ -73,6 +73,7 @@ LOGOUT_REDIRECT_URL = "home"
 # Idle sessions expire after eight hours; active use refreshes the expiry.
 SESSION_COOKIE_AGE = 8 * 60 * 60
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_ENGINE = "config.session_backend"
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {
