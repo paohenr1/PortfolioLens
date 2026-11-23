@@ -3,16 +3,16 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from ledger.analysis_context import analysis_form, remember_dates
+from ledger.analysis_context import analysis_form, remember_dates, saved_dates
 from ledger.domain import LedgerRuleError
 from ledger.performance_forms import PerformanceForm
 from ledger.services import PortfolioUnavailable
-from ledger.valuation_services import ValuationLimitError
 from portfolios import services
 from portfolios.automatic_valuation import automatic_valuation
 from portfolios.forms import PortfolioForm
@@ -103,37 +103,60 @@ def portfolio_detail(request, portfolio_id):
 @require_POST
 def portfolio_automatic_valuation(request, portfolio_id):
     try:
-        valuation, provider_error, busy = automatic_valuation(
-            request.user, portfolio_id, request.META.get("REMOTE_ADDR", "unknown")
+        result = automatic_valuation(
+            request.user,
+            portfolio_id,
+            request.META.get("REMOTE_ADDR", "unknown"),
+            saved_dates(request, portfolio_id),
         )
     except PortfolioUnavailable:
         return render(request, "portfolios/not_found.html", status=404)
     except services.PortfolioStorageUnavailable:
         return unavailable(request)
-    except ValuationLimitError as error:
-        return render(
-            request,
-            "portfolios/automatic_valuation.html",
-            {"issue": str(error), "manual_portfolio_id": portfolio_id},
-        )
     except LedgerRuleError as error:
         return render(
             request, "portfolios/automatic_valuation.html", {"issue": str(error)}, status=400
         )
+    provider_error = result.provider_error
     status = (429 if provider_error.status == 429 else 503) if provider_error else 200
     response = render(
         request,
         "portfolios/automatic_valuation.html",
         {
-            "valuation": valuation,
-            "issue": provider_error.message if provider_error else "",
-            "busy": busy,
+            "valuation": result.valuation,
+            "performance": result.performance,
+            "period": result.period,
+            "performance_issue": result.performance_issue,
+            "performance_portfolio_id": portfolio_id,
+            "issue": result.valuation_issue or (provider_error.message if provider_error else ""),
+            "manual_portfolio_id": portfolio_id if result.valuation_issue else None,
+            "busy": result.busy,
         },
         status=status,
     )
     if provider_error and provider_error.retry_after:
         response.headers["Retry-After"] = str(provider_error.retry_after)
     return response
+
+
+@never_cache
+@login_required
+@require_POST
+def portfolio_performance_preference(request, portfolio_id):
+    action = request.POST.get("automatic_performance")
+    if action not in {"enable", "disable"}:
+        return HttpResponseBadRequest("Choose whether to enable automatic performance.")
+    try:
+        updated = (
+            services.owned_portfolios(request.user)
+            .filter(pk=portfolio_id)
+            .update(automatic_performance_enabled=action == "enable")
+        )
+    except services.PortfolioStorageUnavailable:
+        return unavailable(request)
+    if not updated:
+        return render(request, "portfolios/not_found.html", status=404)
+    return redirect("portfolio_detail", portfolio_id=portfolio_id)
 
 
 @never_cache
@@ -150,6 +173,8 @@ def portfolio_overview_load(request, portfolio_id):
     except PortfolioUnavailable:
         return render(request, "portfolios/not_found.html", status=404)
     form = analysis_form(request, portfolio_id, PerformanceForm)
+    if portfolio.automatic_performance_enabled:
+        form.fields.pop("timing_checked")
     status, provider_error = 200, None
     try:
         dates = None

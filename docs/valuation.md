@@ -20,7 +20,9 @@ Where the Intrinio agreement permits retention, set
 `DJANGO_PORTFOLIO_VALUATION_CACHE=true` to reuse complete automatic valuations
 for up to five minutes within a single web worker. Each worker holds up to 256
 results. A changed effective journal or closing date requires a new result.
-The setting defaults to false. The automatic request does not poll or retry.
+The setting defaults to false. The automatic request does not poll.
+[Automatic performance](performance.md#automatic-performance-in-my-portfolio)
+can retry once after a short rate-limit delay.
 
 Choose **View market valuation**, select a completed calendar date in Toronto
 time (1900 through yesterday), confirm that recorded shares match the raw price

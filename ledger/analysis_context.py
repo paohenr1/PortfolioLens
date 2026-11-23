@@ -30,13 +30,17 @@ def _saved(contexts, key):
     return result
 
 
+def saved_dates(request, portfolio_id):
+    contexts = request.session.get(ANALYSIS_DATES_KEY, {})
+    return _saved(contexts, _key(request, portfolio_id)) if isinstance(contexts, dict) else {}
+
+
 def analysis_form(request, portfolio_id, form_type):
     form = form_type(request.POST if request.method == "POST" else None)
     form.date_notice = ""
     if request.method != "GET":
         return form
-    contexts = request.session.get(ANALYSIS_DATES_KEY, {})
-    saved = _saved(contexts, _key(request, portfolio_id)) if isinstance(contexts, dict) else {}
+    saved = saved_dates(request, portfolio_id)
     if not saved:
         return form
     if "as_of" in form.fields and "end_date" in saved:

@@ -9,4 +9,15 @@
   {% if issue %}<p class="data-warning">{{ issue }}</p>
   {% elif valuation and valuation.total_value == None %}<p class="muted">A confirmed closing price is missing for one or more holdings.</p>{% endif %}
   {% if manual_portfolio_id %}<a href="{% url 'portfolio_valuation' manual_portfolio_id %}">Open manual valuation</a>{% endif %}
+  {% if period %}
+    <div class="portfolio-automatic-performance">
+      <p class="muted">Time-weighted return</p>
+      <strong class="portfolio-automatic-amount">{% if performance and performance.return_percent != None %}{{ performance.return_percent }}%{% elif busy %}Loading{% else %}Unavailable{% endif %}</strong>
+      <p class="muted">{{ period.0|date:"M j, Y" }} – {{ period.1|date:"M j, Y" }} · Cash flows at the close</p>
+      {% if performance_issue or performance.issue %}
+        <p class="muted">{% firstof performance_issue performance.issue %}</p>
+        <a href="{% url 'portfolio_performance' performance_portfolio_id %}">Open detailed performance</a>
+      {% endif %}
+    </div>
+  {% endif %}
 </div>

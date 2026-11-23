@@ -17,7 +17,7 @@
 
 {% if load_automatic_valuation %}
   <section class="reference-panel portfolio-automatic-value" aria-label="Portfolio valuation">
-    <form method="post" action="{% url 'portfolio_automatic_valuation' portfolio.pk %}" data-automatic-valuation hidden>
+    <form method="post" action="{% url 'portfolio_automatic_valuation' portfolio.pk %}" data-automatic-valuation{% if portfolio.automatic_performance_enabled %} data-retry-performance{% endif %} hidden>
       {% csrf_token %}
     </form>
     <div id="automatic-valuation-result" role="status">
@@ -112,17 +112,26 @@
   <section class="reference-panel portfolio-market-overview" aria-labelledby="market-overview-title">
     <h2 id="market-overview-title">Valuation &amp; performance</h2>
     <p class="muted">Load closing values, weights and period return here.</p>
+    <form class="portfolio-performance-preference" method="post" action="{% url 'portfolio_performance_preference' portfolio.pk %}">
+      {% csrf_token %}
+      {% if portfolio.automatic_performance_enabled %}
+        <button class="button button-secondary" name="automatic_performance" value="disable">Turn off automatic performance</button>
+      {% else %}
+        <p class="muted" id="automatic-performance-assumption">For automatic returns, confirm that deposits and withdrawals occur at the close, after other activity, and recorded shares match raw closing prices.</p>
+        <button class="button button-secondary" name="automatic_performance" value="enable" aria-describedby="automatic-performance-assumption">Confirm and turn on automatic performance</button>
+      {% endif %}
+    </form>
     {% if overview_form.date_notice %}<p class="data-warning" role="status">{{ overview_form.date_notice }}</p>{% endif %}
     <form class="portfolio-overview-form" method="post" action="{% url 'portfolio_overview_load' portfolio.pk %}">
       {% csrf_token %}{{ overview_form.non_field_errors }}
       <div>{{ overview_form.start_date.label_tag }}{{ overview_form.start_date }}{{ overview_form.start_date.errors }}</div>
       <div>{{ overview_form.end_date.label_tag }}{{ overview_form.end_date }}{{ overview_form.end_date.errors }}</div>
-      <div>
+      {% if not portfolio.automatic_performance_enabled %}<div>
         <label class="portfolio-confirmation" for="{{ overview_form.timing_checked.id_for_label }}">
           {{ overview_form.timing_checked }}<span>Cash flows occurred at end of day, after other activity. Recorded shares match raw closing prices.</span>
         </label>
         {{ overview_form.timing_checked.errors }}
-      </div>
+      </div>{% endif %}
       <button class="button" type="submit">Update valuation &amp; performance</button>
     </form>
     <p class="muted">Custom dates and period return · Updated on request</p>

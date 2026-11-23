@@ -5,6 +5,25 @@ cash-flow timing and recorded share basis, and submit **Load returns**. Opening 
 makes no provider request. Returns are calculated per request, not stored as
 independently editable values.
 
+## Automatic performance in My Portfolio
+
+Confirm the end-of-day cash-flow and raw share-basis assumptions once per
+portfolio to load the return automatically on its overview. You can turn this
+off at any time. The overview uses the chosen dates saved in the current
+browser session. With no chosen dates, the latest eligible close ends the
+period and the session on or before the date 30 calendar days earlier starts
+it. The card displays the actual dates used.
+
+Automatic performance shares the two-request background budget with automatic
+valuation and reuses its closing value when the dates match. If the period
+requires more requests, use the dedicated returns page. The same timing and
+exact-price rules apply. A period without enough valid history stays
+unavailable. Custom dates can be changed from the overview without confirming
+the assumptions again while automatic performance is enabled.
+If the automatic request is rate-limited and receives a short retry delay, the
+overview shows the wait and retries once. Use the detailed returns page to
+request the calculation directly.
+
 Calculations use the effective journal after [corrections](corrections.md). Historical
 results can be restated; the audit does not reconstruct what was known earlier.
 

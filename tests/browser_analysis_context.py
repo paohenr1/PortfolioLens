@@ -46,6 +46,29 @@ def main():
             dates(page)
             open_section(page, "Overview")
             dates(page)
+            automatic.get_by_text("1,000.00", exact=True).wait_for()
+            retry_attempts = []
+
+            def rate_limit_once(route):
+                retry_attempts.append(True)
+                if len(retry_attempts) == 1:
+                    route.fulfill(
+                        status=429,
+                        headers={"Retry-After": "1", "Content-Type": "text/html"},
+                        body="<div data-valuation-result>Temporarily rate-limited</div>",
+                    )
+                else:
+                    route.continue_()
+
+            page.route("**/overview/valuation/", rate_limit_once)
+            page.get_by_role("button", name="Confirm and turn on automatic performance").click()
+            automatic.get_by_text("Automatic figures will retry once", exact=False).wait_for()
+            automatic.get_by_text("0.0000%", exact=True).wait_for()
+            assert len(retry_attempts) == 2
+            page.unroute("**/overview/valuation/", rate_limit_once)
+            assert automatic.get_by_text("Jan 2, 2020 – Jan 8, 2020", exact=False).is_visible()
+            page.get_by_role("button", name="Turn off automatic performance").click()
+            page.get_by_role("button", name="Confirm and turn on automatic performance").wait_for()
             open_section(page, "Valuation")
             valuation_date = page.get_by_label("Valuation date:", exact=True)
             assert valuation_date.input_value() == "2020-01-08"

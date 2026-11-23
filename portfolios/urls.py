@@ -28,6 +28,11 @@ urlpatterns = [
         name="portfolio_automatic_valuation",
     ),
     path(
+        "<uuid:portfolio_id>/overview/performance-preference/",
+        views.portfolio_performance_preference,
+        name="portfolio_performance_preference",
+    ),
+    path(
         "<uuid:portfolio_id>/overview/load/",
         views.portfolio_overview_load,
         name="portfolio_overview_load",

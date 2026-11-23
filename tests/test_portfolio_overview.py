@@ -102,6 +102,109 @@ class PortfolioOverviewTests(TestCase):
         self.assertEqual(protected.post(url).status_code, 403)
         self.quotes.assert_not_called()
 
+    @override_settings(PORTFOLIO_VALUATION_CACHE=False)
+    def test_opted_in_performance_reuses_closing_value_and_remembers_range(self):
+        self.record(cash())
+        self.record(trade())
+        auto_url = reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])
+        preference = reverse("portfolio_performance_preference", args=[self.portfolio.pk])
+        latest = date(2020, 1, 10)
+        self.quotes.side_effect = lambda identifier, day, address, **kwargs: history(
+            "25" if day == DAY else "30", as_of=day
+        )
+
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 13)):
+            before = self.client.post(auto_url)
+            self.assertNotContains(before, "Time-weighted return")
+            self.quotes.assert_called_once()
+            self.assertEqual(
+                self.client.post(preference, {"automatic_performance": "enable"}).status_code, 302
+            )
+            self.assertEqual(self.quotes.call_count, 1)
+            default = self.client.post(auto_url)
+            self.assertEqual(default.context["period"], (date(2019, 12, 11), latest))
+            self.assertContains(default, "deposits and withdrawals must follow")
+            selection = self.client.post(self.url, {"start_date": DAY, "end_date": latest})
+            self.assertEqual(selection.status_code, 200)
+            self.assertContains(selection, "Turn off automatic performance")
+            self.quotes.reset_mock()
+
+            automatic = self.client.post(auto_url)
+            self.assertEqual(automatic.context["period"], (DAY, latest))
+            self.assertContains(automatic, "5.0050%")
+            self.assertContains(automatic, "1,049.00")
+            self.assertEqual([call.args[1] for call in self.quotes.call_args_list], [latest, DAY])
+            self.assertTrue(
+                all(call.kwargs == {"background": True} for call in self.quotes.call_args_list)
+            )
+
+            self.assertEqual(
+                self.client.post(preference, {"automatic_performance": "disable"}).status_code, 302
+            )
+            self.assertNotContains(self.client.post(auto_url), "Time-weighted return")
+
+    def test_automatic_performance_preflight_keeps_latest_value_when_range_needs_extra_quote(self):
+        self.record(cash())
+        self.record(trade())
+        self.quotes.side_effect = lambda identifier, day, address, **kwargs: history(
+            "30", as_of=day
+        )
+        self.client.post(self.url, self.data)
+        self.client.post(
+            reverse("portfolio_performance_preference", args=[self.portfolio.pk]),
+            {"automatic_performance": "enable"},
+        )
+        self.quotes.reset_mock()
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 13)):
+            automatic = self.client.post(
+                reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])
+            )
+        self.assertContains(automatic, "1,049.00")
+        self.assertContains(automatic, "This period needs manual performance analysis.")
+        self.quotes.assert_called_once()
+
+    def test_automatic_perf_preference_is_private_and_csrf_protected(self):
+        preference = reverse("portfolio_performance_preference", args=[self.portfolio.pk])
+        foreign = reverse("portfolio_performance_preference", args=[self.foreign.pk])
+        data = {"automatic_performance": "enable"}
+        self.assertEqual(self.client.get(preference).status_code, 405)
+        self.assertEqual(self.client.post(foreign, data).status_code, 404)
+        protected = Client(enforce_csrf_checks=True)
+        protected.force_login(self.user)
+        self.assertEqual(protected.post(preference, data).status_code, 403)
+        self.portfolio.refresh_from_db()
+        self.foreign.refresh_from_db()
+        self.assertFalse(self.portfolio.automatic_performance_enabled)
+        self.assertFalse(self.foreign.automatic_performance_enabled)
+
+    def test_cash_only_historical_return_can_load_even_when_current_valuation_exceeds_budget(self):
+        self.record(cash())
+        self.client.post(self.url, self.data)
+        for number in range(3):
+            security_id = f"sec_later_{number}"
+            self.reference.return_value = replace(
+                REFERENCE, security=replace(REFERENCE.security, id=security_id)
+            )
+            self.record(
+                trade(
+                    quantity="1",
+                    sequence=number + 1,
+                    event_date=date(2020, 1, 9),
+                    security_id=security_id,
+                )
+            )
+        self.client.post(
+            reverse("portfolio_performance_preference", args=[self.portfolio.pk]),
+            {"automatic_performance": "enable"},
+        )
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 13)):
+            response = self.client.post(
+                reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])
+            )
+        self.assertContains(response, "Open manual valuation")
+        self.assertContains(response, "0.0000%")
+        self.quotes.assert_not_called()
+
     def test_combined_load_reuses_closing_prices_and_renders_results_inline(self):
         self.record(cash())
         self.record(trade())

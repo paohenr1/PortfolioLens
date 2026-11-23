@@ -29,12 +29,16 @@ def performance_plan(entries, start_date, end_date):
     return boundaries
 
 
-def value_performance_plan(boundaries, entries, client_address):
+def value_performance_plan(
+    boundaries, entries, client_address, *, background=False, existing_valuation=None, error=None
+):
     """Value a validated plan once; callers can reuse its closing valuation."""
-    valuations, error = [], None
+    valuations = []
     for point in boundaries:
         labels = entry_labels([entry for entry in entries if entry.event_date <= point.as_of])
-        if isinstance(error, ProviderRateLimited):
+        if existing_valuation is not None and point.as_of == existing_valuation.as_of:
+            result = existing_valuation
+        elif isinstance(error, ProviderRateLimited):
             result = value_snapshot(
                 point.analysis,
                 point.as_of,
@@ -45,7 +49,9 @@ def value_performance_plan(boundaries, entries, client_address):
                 },
             )
         else:
-            result, failure = load_valuation(point.analysis, labels, point.as_of, client_address)
+            result, failure = load_valuation(
+                point.analysis, labels, point.as_of, client_address, background=background
+            )
             if failure and (error is None or isinstance(failure, ProviderRateLimited)):
                 error = failure
         valuations.append(result)
