@@ -30,7 +30,8 @@ def main():
         browser = driver.chromium.launch(executable_path="/usr/bin/chromium", headless=True)
         owner, other = browser.new_context(), browser.new_context()
         errors, requests = [], []
-        pacer = RequestPacer(clock=time.time if shared else time.monotonic)
+        # Leave room for automatic valuation requests triggered by navigation.
+        pacer = RequestPacer(clock=time.time if shared else time.monotonic, limit=8)
         try:
             page, bob = owner.new_page(), other.new_page()
             for context in (owner, other):
@@ -136,7 +137,7 @@ def main():
             load_valuation(page, portfolio + "valuation/", "2020-01-08")
             text = page.locator("main").inner_text()
             for expected in ("882.00", "80.80", "248.00", "1130.00", "167.20", "78.05", "21.95"):
-                assert expected in text
+                assert expected in text, text
             responsive(page, screenshots=True, name="release-journey-valuation")
             watchlist = create_watchlist(page, base, "Release watchlist")
             page.get_by_role("link", name="Add instrument", exact=True).click()
@@ -154,7 +155,9 @@ def main():
             page.locator('.watchlist-picker input[type="checkbox"]').check()
             pacer.before(1)
             page.get_by_role("button", name="Load selected market information").click()
-            assert page.locator(".market-close").inner_text() == "14.5 USD per share"
+            assert page.locator(".market-close").inner_text() == "14.5 USD per share", page.locator(
+                "main"
+            ).inner_text()
             assert page.locator(".market-volume").inner_text() == "Unavailable"
             responsive(page, screenshots=True, name="release-journey-watchlist")
             for url in (

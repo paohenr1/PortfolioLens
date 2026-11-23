@@ -1,0 +1,12 @@
+<div data-valuation-result>
+  <p class="muted">Total portfolio value · USD</p>
+  {% if valuation and valuation.total_value != None %}
+    <strong class="portfolio-automatic-amount">{{ valuation.total_value|floatformat:"2g" }}</strong>
+  {% else %}
+    <strong>{% if busy %}Valuation already loading{% else %}Unavailable{% endif %}</strong>
+  {% endif %}
+  {% if valuation %}<p class="muted">Closing date {{ valuation.as_of|date:"M j, Y" }} · Based on recorded transactions and splits</p>{% endif %}
+  {% if issue %}<p class="data-warning">{{ issue }}</p>
+  {% elif valuation and valuation.total_value == None %}<p class="muted">A confirmed closing price is missing for one or more holdings.</p>{% endif %}
+  {% if manual_portfolio_id %}<a href="{% url 'portfolio_valuation' manual_portfolio_id %}">Open manual valuation</a>{% endif %}
+</div>

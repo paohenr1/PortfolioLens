@@ -79,9 +79,11 @@ index](methodology.md) for related calculations.
 
 The portfolio overview shows recorded cash, remaining FIFO cost, realized sale gain
 or loss, up to five open holdings, and the latest five effective transactions from
-one journal snapshot. Opening it makes no provider request. One CSRF-protected
-submission loads closing market value, unrealized gains, cash and holding weights,
-and time-weighted return for the chosen dates and confirmed assumptions.
+one journal snapshot. The browser then [loads the latest eligible closing
+valuation](valuation.md#load-behavior-and-cost).
+A separate CSRF-protected submission loads closing market value, unrealized gains,
+cash and holding weights, and time-weighted return for custom dates and confirmed
+assumptions.
 
 The combined load uses one owner-scoped journal snapshot and the existing
 performance plan. Cash-inclusive weights reuse the closing valuation. If timing
@@ -90,7 +92,7 @@ within its existing five-instrument limit. If that limit is exceeded, the overvi
 still shows the recorded holdings and transactions. A supported plan retains the eight-request
 limit and stops after rate exhaustion, preserving Retry-After. Missing closes withhold
 unknown totals. Recorded journal totals include all entries; market values explicitly
-stop at the selected closing date. No pricing cache or automatic refresh is introduced.
+stop at the selected closing date. Custom-date submissions fetch prices on request.
 
 The transaction entry form shows type-specific inputs when JavaScript is available,
 retaining values when switching types but omitting inactive inputs on submission.
@@ -113,8 +115,8 @@ range-based pages suggest the preceding 30 calendar days anchored to that closin
 
 Date preferences are scoped to the signed-in owner and portfolio, bounded to 50 contexts,
 and contain no prices, results or confirmations. Invalid submissions do not overwrite
-the last valid selection. A valid selection survives a provider failure. Opening pages
-still makes no provider request; loading analysis and confirming its assumptions remain
-explicit actions. Existing date, session and period limits are unchanged. Unsupported
-saved ranges remain visible with an explanation rather than being silently shortened
-or moved to different trading dates. Market results are not cached or reused.
+the last valid selection. A valid selection survives a provider failure. The automatic
+valuation uses the latest eligible session. Custom-date analysis and confirmation of
+its assumptions remain explicit actions. Existing date, session and period limits
+are unchanged. Unsupported saved ranges remain visible with an explanation rather
+than being silently shortened or moved to different trading dates.

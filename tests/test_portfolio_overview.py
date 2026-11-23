@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from ledger.models import Entry
@@ -65,6 +65,42 @@ class PortfolioOverviewTests(TestCase):
         self.quotes.assert_not_called()
         self.reference.assert_not_called()
         self.assertEqual(Entry.objects.count(), count)
+
+    @override_settings(PORTFOLIO_VALUATION_CACHE=True)
+    def test_automatic_valuation_uses_previous_session_and_reuses_unchanged_value(self):
+        self.record(cash())
+        self.record(trade())
+        overview = self.client.get(reverse("portfolio_detail", args=[self.portfolio.pk]))
+        self.assertContains(overview, "data-automatic-valuation")
+        self.quotes.assert_not_called()
+        auto_url = reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])
+        self.quotes.side_effect = lambda identifier, day, address, **kwargs: history(
+            "30", as_of=day
+        )
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 13)):
+            result = self.client.post(auto_url)
+            repeated = self.client.post(auto_url)
+            self.record(cash(amount="50", sequence=3))
+            changed = self.client.post(auto_url)
+        self.assertContains(result, "1,049.00")
+        self.assertContains(result, "Closing date Jan 10, 2020")
+        self.assertIn("no-store", result.headers["Cache-Control"])
+        self.assertContains(repeated, "1,049.00")
+        self.assertContains(changed, "1,099.00")
+        self.assertEqual(self.quotes.call_count, 2)
+        self.assertTrue(
+            all(call.args[1] == date(2020, 1, 10) for call in self.quotes.call_args_list)
+        )
+
+    def test_automatic_valuation_enforces_owner_post_and_csrf(self):
+        url = reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])
+        foreign_url = reverse("portfolio_automatic_valuation", args=[self.foreign.pk])
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.assertNotContains(self.client.post(foreign_url), "Foreign secret", status_code=404)
+        protected = Client(enforce_csrf_checks=True)
+        protected.force_login(self.user)
+        self.assertEqual(protected.post(url).status_code, 403)
+        self.quotes.assert_not_called()
 
     def test_combined_load_reuses_closing_prices_and_renders_results_inline(self):
         self.record(cash())
@@ -136,6 +172,11 @@ class PortfolioOverviewTests(TestCase):
                 REFERENCE, security=replace(REFERENCE.security, id=security_id)
             )
             self.record(trade(quantity="1", sequence=number + 2, security_id=security_id))
+        automatic = self.client.post(
+            reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])
+        )
+        self.assertContains(automatic, "Open manual valuation")
+        self.quotes.assert_not_called()
         response = self.client.post(self.url, self.data)
         self.assertContains(response, "Valuation supports at most five", status_code=400)
         self.assertContains(response, "First five holdings shown", status_code=400)

@@ -4,18 +4,19 @@ import time
 
 
 class RequestPacer:
-    def __init__(self, *, clock=time.monotonic):
+    def __init__(self, *, clock=time.monotonic, limit=10):
         self.clock = clock
+        self.limit = limit
         self.window = None
         self.spent = 0
 
     def before(self, maximum_requests):
-        if not 1 <= maximum_requests <= 10:
+        if not 1 <= maximum_requests <= self.limit:
             raise ValueError("Acceptance actions must fit the existing client allowance.")
         window = int(self.clock()) // 60
         if window != self.window:
             self.window, self.spent = window, 0
-        if self.spent + maximum_requests > 10:
+        if self.spent + maximum_requests > self.limit:
             print("Acceptance pacing: waiting for the existing client request window.", flush=True)
             wait_for_window(self.window, clock=self.clock)
             self.window, self.spent = int(self.clock()) // 60, 0

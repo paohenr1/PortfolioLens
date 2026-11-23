@@ -279,3 +279,7 @@ input, select, textarea { background: var(--mp-surface); color: var(--ink); }
 @media (max-width: 850px) {
   .company-overview-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+.portfolio-automatic-value { margin-block: 1rem; }
+.portfolio-automatic-value p { margin: 0; }
+.portfolio-automatic-amount { display: block; font-size: 1.8rem; font-variant-numeric: tabular-nums; }

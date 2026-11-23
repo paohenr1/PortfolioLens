@@ -92,6 +92,17 @@ class SharedBudgetTests(TransactionTestCase):
         self.assertEqual(row.total, 10)
         self.assertEqual(row.clients, {hashlib.sha256(b"private-client-address").hexdigest(): 10})
 
+    def test_automatic_market_calls_keep_capacity_for_explicit_analysis(self):
+        for _ in range(2):
+            self.assertIsNone(reserve("market", "client", background=True))
+        self.assertEqual(reserve("market", "client", background=True), 55)
+        for number in range(20):
+            self.assertIsNone(reserve("market", str(number), background=True))
+        self.assertEqual(reserve("market", "different-client", background=True), 55)
+        for _ in range(8):
+            self.assertIsNone(reserve("market", "client"))
+        self.assertEqual(reserve("market", "client"), 55)
+
     def test_global_flood_is_bounded_and_does_not_store_denied_clients(self):
         for number in range(30):
             self.assertIsNone(reserve("market", str(number)))

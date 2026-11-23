@@ -22,6 +22,7 @@ class Environment:
     # repr=False prevents accidental disclosure when configuration is inspected.
     secret_key: str = field(repr=False)
     intrinio_api_key: str = field(repr=False)
+    portfolio_valuation_cache: bool = False
     rate_limit_backend: str = "memory"
     trust_proxy_https: bool = False
     private_site: bool = False
@@ -108,6 +109,10 @@ def load_environment(environ: Mapping[str, str]) -> Environment:
         allowed_hosts=allowed_hosts,
         secret_key=secret_key,
         intrinio_api_key=environ.get("INTRINIO_API_KEY", "").strip(),
+        portfolio_valuation_cache=_boolean(
+            environ.get("DJANGO_PORTFOLIO_VALUATION_CACHE", "false"),
+            "DJANGO_PORTFOLIO_VALUATION_CACHE",
+        ),
         rate_limit_backend=backend,
         trust_proxy_https=trust_proxy,
         private_site=private_site,

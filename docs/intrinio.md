@@ -65,8 +65,9 @@ broadening access or retaining additional provider data.
 - Decoded response size is limited to 256 KiB. Duplicate JSON fields,
   nonfinite numbers, malformed types, duplicate security IDs, excess results,
   and inconsistent detail identities are rejected.
-- No automatic retries, prefetching, or success-data caching is implemented.
-  Licensing must permit retention before a market-data cache is introduced.
+- Provider calls do not retry or prefetch. The
+  [automatic portfolio valuation](valuation.md#load-behavior-and-cost) can reuse
+  complete results when the deployment enables retention under its provider terms.
 - Successful/error result pages use `Cache-Control: no-store`.
 
 ## Cost guards

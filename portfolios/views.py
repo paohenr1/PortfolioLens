@@ -12,7 +12,9 @@ from ledger.analysis_context import analysis_form, remember_dates
 from ledger.domain import LedgerRuleError
 from ledger.performance_forms import PerformanceForm
 from ledger.services import PortfolioUnavailable
+from ledger.valuation_services import ValuationLimitError
 from portfolios import services
+from portfolios.automatic_valuation import automatic_valuation
 from portfolios.forms import PortfolioForm
 from portfolios.overview import overview_context
 
@@ -92,7 +94,46 @@ def portfolio_detail(request, portfolio_id):
     except PortfolioUnavailable:
         return render(request, "portfolios/not_found.html", status=404)
     context["overview_form"] = analysis_form(request, portfolio_id, PerformanceForm)
+    context["load_automatic_valuation"] = not context.get("summary_unavailable", False)
     return render(request, "portfolios/detail.html", context)
+
+
+@never_cache
+@login_required
+@require_POST
+def portfolio_automatic_valuation(request, portfolio_id):
+    try:
+        valuation, provider_error, busy = automatic_valuation(
+            request.user, portfolio_id, request.META.get("REMOTE_ADDR", "unknown")
+        )
+    except PortfolioUnavailable:
+        return render(request, "portfolios/not_found.html", status=404)
+    except services.PortfolioStorageUnavailable:
+        return unavailable(request)
+    except ValuationLimitError as error:
+        return render(
+            request,
+            "portfolios/automatic_valuation.html",
+            {"issue": str(error), "manual_portfolio_id": portfolio_id},
+        )
+    except LedgerRuleError as error:
+        return render(
+            request, "portfolios/automatic_valuation.html", {"issue": str(error)}, status=400
+        )
+    status = (429 if provider_error.status == 429 else 503) if provider_error else 200
+    response = render(
+        request,
+        "portfolios/automatic_valuation.html",
+        {
+            "valuation": valuation,
+            "issue": provider_error.message if provider_error else "",
+            "busy": busy,
+        },
+        status=status,
+    )
+    if provider_error and provider_error.retry_after:
+        response.headers["Retry-After"] = str(provider_error.retry_after)
+    return response
 
 
 @never_cache
