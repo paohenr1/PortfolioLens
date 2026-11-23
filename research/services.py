@@ -8,9 +8,11 @@ from django.conf import settings
 
 from market_data.errors import CredentialsMissing, ProviderError, ProviderRateLimited
 from market_data.intrinio import IntrinioClient
+from operations.rate_limits import MARKET_FOREGROUND_HEADROOM
 
 CLIENT_REQUESTS_PER_MINUTE = 10
 TOTAL_REQUESTS_PER_MINUTE = 30
+MAX_AUTOMATIC_PRICE_REQUESTS = CLIENT_REQUESTS_PER_MINUTE - MARKET_FOREGROUND_HEADROOM
 
 
 class _RequestBudget:
@@ -28,7 +30,7 @@ class _RequestBudget:
             self._total = 0
             self._clients.clear()
 
-    def reserve(self, client_address: str):
+    def reserve(self, client_address: str, *, background=False):
         # A monotonic clock avoids quota resets caused by wall-clock corrections.
         now = int(time.monotonic())
         identity = hashlib.sha256(client_address.encode()).hexdigest()
@@ -38,9 +40,10 @@ class _RequestBudget:
                 self._total = 0
                 self._clients.clear()
             client_count = self._clients.get(identity, 0)
+            headroom = MARKET_FOREGROUND_HEADROOM if background else 0
             if (
-                self._total >= TOTAL_REQUESTS_PER_MINUTE
-                or client_count >= CLIENT_REQUESTS_PER_MINUTE
+                self._total >= TOTAL_REQUESTS_PER_MINUTE - headroom
+                or client_count >= CLIENT_REQUESTS_PER_MINUTE - headroom
             ):
                 raise ProviderRateLimited(60 - now % 60)
             # Only admitted requests create entries: at most 30 client hashes.
@@ -51,18 +54,18 @@ class _RequestBudget:
 _request_budget = _RequestBudget()
 
 
-def _reserve_request(client_address: str):
+def _reserve_request(client_address: str, *, background=False):
     if settings.RATE_LIMIT_BACKEND == "postgresql":
         from operations.rate_limits import BudgetUnavailable, reserve
 
         try:
-            retry_after = reserve("market", client_address)
+            retry_after = reserve("market", client_address, background=background)
         except BudgetUnavailable:
             raise ProviderError() from None
         if retry_after is not None:
             raise ProviderRateLimited(retry_after)
     else:
-        _request_budget.reserve(client_address)
+        _request_budget.reserve(client_address, background=background)
 
 
 def _key_and_budget(client_address: str) -> str:
@@ -96,6 +99,25 @@ def historical_prices(security_id, start_date, end_date, client_address):
         )
 
 
+def overview_prices(security_id, start_date, end_date, client_address):
+    with IntrinioClient(_key_and_budget(client_address)) as provider:
+        return provider.overview_prices(security_id, start_date, end_date)
+
+
+def overview_income_statement(security, fiscal_year, client_address):
+    key = settings.INTRINIO_API_KEY
+    if not key:
+        raise CredentialsMissing()
+    with IntrinioClient(key) as provider:
+        return provider.statement_for_verified_security(
+            security,
+            "income_statement",
+            fiscal_year,
+            "FY",
+            before_request=lambda: _reserve_request(client_address),
+        )
+
+
 def benchmark_prices(security_id, start_date, end_date, client_address):
     """Spend the shared quota on one page, without following a remaining cursor."""
     key = settings.INTRINIO_API_KEY
@@ -110,7 +132,7 @@ def benchmark_prices(security_id, start_date, end_date, client_address):
         )
 
 
-def daily_prices(security_id, price_date, client_address):
+def daily_prices(security_id, price_date, client_address, *, background=False):
     key = settings.INTRINIO_API_KEY
     if not key:
         raise CredentialsMissing()
@@ -118,7 +140,7 @@ def daily_prices(security_id, price_date, client_address):
         return provider.daily_prices(
             security_id,
             price_date,
-            before_request=lambda: _reserve_request(client_address),
+            before_request=lambda: _reserve_request(client_address, background=background),
         )
 
 

@@ -12,6 +12,7 @@
     <p><a href="{% url 'statement_trends' security_id %}">View annual financial statement trends</a></p>
     {% if statement %}<p class="lead">{{ statement.fundamental.company.name|default_if_none:"Company name unavailable" }} · {{ statement.security.ticker|default_if_none:"Ticker unavailable" }}</p>{% endif %}
   </section>
+  {% include 'research/company_nav.html' with active_section='financials' %}
   <form class="search-form statement-form" method="get" action="{% url 'financials' security_id %}" aria-label="Financial statement settings">
     {{ form.non_field_errors }}
     <div class="price-controls">

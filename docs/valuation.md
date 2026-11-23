@@ -7,6 +7,28 @@ restated without reconstructing what was known earlier.
 
 ## Load behavior and cost
 
+My Portfolio starts one automatic, CSRF-protected closing valuation after the
+page renders. It uses the latest U.S. equity session through yesterday in
+Toronto time and shows that session date with the result. It uses the same
+exact-date price checks and request limits as the manual page. Cash-only
+portfolios make no price requests. Missing closes leave the total unavailable.
+Automatic valuation is available for up to two holdings. The manual page
+supports up to five. Automatic calls leave room in the shared request budget
+for an explicit analysis load.
+
+Where the Intrinio agreement permits retention, set
+`DJANGO_PORTFOLIO_VALUATION_CACHE=true` to reuse complete automatic valuations
+for up to five minutes within a single web worker. Each worker holds up to 256
+results. A changed effective journal or closing date requires a new result.
+The same setting allows outage fallback to the last verified value and return.
+Each worker keeps up to 256 fallback figures in memory, with a 24-hour expiry.
+They carry their original dates and a stale label. The applicable journal and
+selected return range must still match. A missing snapshot or changed input
+leaves the affected figure unavailable. Worker restarts clear this history.
+The setting defaults to false. The automatic request does not poll.
+[Automatic performance](performance.md#automatic-performance-in-my-portfolio)
+can retry once after a short rate-limit delay.
+
 Choose **View market valuation**, select a completed calendar date in Toronto
 time (1900 through yesterday), confirm that recorded shares match the raw price
 basis, and submit **Load valuation**. Opening the page makes no provider request.

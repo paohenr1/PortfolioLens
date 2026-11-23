@@ -1,0 +1,6 @@
+<nav class="research-links portfolio-section-nav" aria-label="Company sections">
+  <a href="{% url 'security' security_id %}"{% if active_section == 'overview' %} aria-current="page"{% endif %}>Overview</a>
+  <a href="{% url 'prices' security_id %}"{% if active_section == 'prices' %} aria-current="page"{% endif %}>Price history</a>
+  <a href="{% url 'financials' security_id %}"{% if active_section == 'financials' %} aria-current="page"{% endif %}>Financials</a>
+  <a href="{% url 'annual_multiples' security_id %}"{% if active_section == 'valuation' %} aria-current="page"{% endif %}>Valuation</a>
+</nav>

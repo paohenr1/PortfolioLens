@@ -32,7 +32,7 @@ def main():
             register(page, base, "performance-browser-alice")
             register(bob, base, "performance-browser-bob")
             portfolio = create(page, base, "Performance example")
-            page.get_by_role("link", name="View time-weighted returns", exact=True).click()
+            page.get_by_role("link", name="Returns", exact=True).click()
             url = page.url
             assert page.locator(".reference-grid").count() == 0
             load(page, url)
@@ -120,6 +120,7 @@ def main():
                 form={"start_date": "2020-01-02", "end_date": "2020-01-08", "timing_checked": "on"},
             )
             assert response.status == 403
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(url)
             assert "/sign-in/?next=" in page.url

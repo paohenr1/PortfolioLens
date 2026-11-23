@@ -10,6 +10,7 @@ from django.utils.timezone import is_aware
 
 from market_data.errors import InvalidResponse, ProviderError
 from market_data.fields import optional_boolean, optional_text, valid_provider_id
+from market_data.identities import register_intrinio_instrument
 from research import services as market_data
 from watchlists.market import INSTRUMENT_ORDERS, PRICE_BASES, VOLUME_BASES
 from watchlists.models import Watchlist, WatchlistItem
@@ -99,7 +100,7 @@ def reference_fields(security_id, address):
             delisted=optional_boolean(vars(security), "delisted"),
             reference_retrieved_at=result.retrieved_at,
         )
-        return fields
+        return fields, security.company_id
     except ProviderError:
         raise
     except Exception:
@@ -115,13 +116,14 @@ def add_instrument(*, user, watchlist_id, security_id, client_address):
     existing = existing_or_capacity(watchlist, security_id)
     if existing:
         return existing
-    fields = reference_fields(security_id, client_address)
+    fields, company_id = reference_fields(security_id, client_address)
     with transaction.atomic():
         # Recheck authorization, uniqueness and allowance after network verification.
         watchlist = private_watchlist(user, watchlist_id, lock=True)
         existing = existing_or_capacity(watchlist, security_id)
         if existing:
             return existing
+        register_intrinio_instrument(security_id, company_id)
         return WatchlistItem.objects.create(watchlist=watchlist, security_id=security_id, **fields)
 
 

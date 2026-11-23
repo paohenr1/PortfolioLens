@@ -158,6 +158,7 @@ def main():
                 )
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
                 page.screenshot(path=f"/tmp/stock-portfolios-duplicate-{name}.png", full_page=True)
+            bob.locator(".account-menu summary").click()
             bob.get_by_role("button", name="Sign out", exact=True).click()
             bob.goto(bob_url)
             assert "/sign-in/?next=" in bob.url

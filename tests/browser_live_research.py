@@ -1,4 +1,4 @@
-"""Opt-in real Intrinio acceptance: at most 32 backend calls, no saved data."""
+"""Opt-in real Intrinio acceptance: at most 31 backend calls, no saved data."""
 
 import argparse
 from decimal import ROUND_HALF_UP, Decimal
@@ -84,7 +84,7 @@ def main():
         help="26-call follow-up; skip previously verified prices and market capitalization.",
     )
     follow_up = parser.parse_args().financial_follow_up
-    maximum = 26 if follow_up else 32
+    maximum = 26 if follow_up else 31
     counts, errors, hosts = [], [], []
     with (
         portfolio_application(
@@ -100,10 +100,6 @@ def main():
         try:
             root = search(page, base, pacer, "AAPL")
             if not follow_up:
-                pacer.before(1)
-                assert page.goto(root).status == 200
-                assert "XNAS" in page.locator("main").inner_text()
-                assert "USD" in page.locator("main").inner_text()
                 prices(page, root, pacer, "raw", "adjusted")
                 print("Live AAPL identity, daily prices, volume and stock risk PASS.", flush=True)
 

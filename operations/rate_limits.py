@@ -8,6 +8,7 @@ from django.db import DatabaseError, connection, transaction
 from operations.models import RequestBudgetState
 
 POLICIES = {"market": (10, 30), "auth": (10, 60)}
+MARKET_FOREGROUND_HEADROOM = 8
 _DIGEST = re.compile(r"[0-9a-f]{64}\Z")
 
 
@@ -42,7 +43,7 @@ def _valid_state(state, client_limit, total_limit):
     )
 
 
-def reserve(scope, address):
+def reserve(scope, address, *, background=False):
     """Return None on admission or Retry-After seconds on denial; never refund."""
     if scope not in POLICIES:
         raise ValueError("Unsupported operational request scope.")
@@ -67,7 +68,8 @@ def reserve(scope, address):
             if now // 60 > state.window:
                 state.window, state.total, state.clients = now // 60, 0, {}
             count = state.clients.get(identity, 0)
-            if state.total >= total_limit or count >= client_limit:
+            headroom = MARKET_FOREGROUND_HEADROOM if background and scope == "market" else 0
+            if state.total >= total_limit - headroom or count >= client_limit - headroom:
                 return max(1, min((state.window + 1) * 60 - now, 3600))
             state.clients[identity] = count + 1
             state.total += 1

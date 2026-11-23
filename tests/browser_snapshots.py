@@ -77,6 +77,7 @@ def main():
             page.get_by_role("button", name="Save private snapshot", exact=True).click()
             assert "Cash-only snapshot" in page.locator("main").inner_text()
             assert "USD 0.01" in page.locator("main").inner_text()
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(base + "/portfolios/snapshots/")
             assert "/sign-in/?next=" in page.url

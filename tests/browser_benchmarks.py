@@ -112,6 +112,7 @@ def main():
             assert "no-store" in response.headers["cache-control"]
             response = owner.request.post(url, form={"benchmark_id": "sec_fixture_benchmark"})
             assert response.status == 403
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(url)
             assert "/sign-in/?next=" in page.url

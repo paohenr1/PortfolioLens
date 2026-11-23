@@ -24,7 +24,7 @@ def main():
             register(page, base, "fifo-browser-alice")
             register(bob, base, "fifo-browser-bob")
             portfolio = create(page, base, "FIFO example")
-            page.get_by_role("link", name="View positions and gains", exact=True).click()
+            page.get_by_role("link", name="Holdings & gains", exact=True).click()
             positions_url = page.url
             assert "No open positions" in page.locator("main").inner_text()
             assert "No sales recorded" in page.locator("main").inner_text()
@@ -45,7 +45,7 @@ def main():
                     fees=fees,
                     security_id="sec_fixture_primary",
                 )
-            page.get_by_role("link", name="View positions and gains", exact=True).click()
+            page.get_by_role("link", name="Holdings & gains", exact=True).click()
             assert page.url == positions_url
             totals = page.locator(".reference-grid")
             assert totals.locator("dd").all_text_contents() == [
@@ -102,6 +102,7 @@ def main():
                 "0.00",
             ]
             assert "-12.00" in page.get_by_role("region", name="Realized sale table").inner_text()
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(positions_url)
             assert "/sign-in/?next=" in page.url

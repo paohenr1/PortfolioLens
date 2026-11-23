@@ -12,6 +12,7 @@ class Portfolio(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     name = models.CharField(max_length=100)
+    automatic_performance_enabled = models.BooleanField(default=False, db_default=False)
     # Reporting denomination is explicit. Cross-currency valuation waits for FX policy.
     reporting_currency = models.CharField(max_length=3, default="USD", editable=False)
     created_at = models.DateTimeField(auto_now_add=True)

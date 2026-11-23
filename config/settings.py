@@ -13,6 +13,7 @@ SECRET_KEY = ENVIRONMENT.secret_key
 DEBUG = ENVIRONMENT.debug
 ALLOWED_HOSTS = list(ENVIRONMENT.allowed_hosts)
 INTRINIO_API_KEY = ENVIRONMENT.intrinio_api_key
+PORTFOLIO_VALUATION_CACHE = ENVIRONMENT.portfolio_valuation_cache
 RATE_LIMIT_BACKEND = ENVIRONMENT.rate_limit_backend
 PRIVATE_SITE = ENVIRONMENT.private_site
 ALLOW_REGISTRATION = ENVIRONMENT.allow_registration
@@ -29,6 +30,7 @@ INSTALLED_APPS = [
     "ledger",
     "watchlists",
     "operations",
+    "market_data",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -72,6 +74,7 @@ LOGOUT_REDIRECT_URL = "home"
 # Idle sessions expire after eight hours; active use refreshes the expiry.
 SESSION_COOKIE_AGE = 8 * 60 * 60
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_ENGINE = "config.session_backend"
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {

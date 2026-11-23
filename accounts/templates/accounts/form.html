@@ -2,7 +2,7 @@
 {% block title %}{% block page_title %}{% endblock %} · PortfolioLens{% endblock %}
 {% block content %}
 <section class="intro compact">
-  <p class="eyebrow">Your research account</p>
+  {% block account_eyebrow %}<p class="eyebrow">Your research account</p>{% endblock %}
   <h1>{% block heading %}{% endblock %}</h1>
   {% block introduction %}{% endblock %}
 </section>

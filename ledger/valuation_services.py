@@ -1,6 +1,7 @@
 """Explicit, bounded quote loading for a private immutable journal snapshot."""
 
 import logging
+from functools import partial
 
 from ledger.services import SUPPORTED_MICS
 from ledger.valuation import value_snapshot
@@ -15,7 +16,10 @@ class ValuationLimitError(ValueError):
     pass
 
 
-def load_valuation(analysis, labels, as_of, client_address):
+def load_valuation(analysis, labels, as_of, client_address, *, background=False, failures=None):
+    prices = market_data.daily_prices
+    if background:
+        prices = partial(prices, background=True)
     if len(analysis.positions) > MAX_VALUATION_INSTRUMENTS:
         raise ValuationLimitError(
             "Valuation supports at most five open instruments on the selected date."
@@ -30,10 +34,10 @@ def load_valuation(analysis, labels, as_of, client_address):
             # Fail closed for an unsupported stored venue before spending quota.
             continue
         try:
-            histories[position.security_id] = market_data.daily_prices(
-                position.security_id, as_of, client_address
-            )
+            histories[position.security_id] = prices(position.security_id, as_of, client_address)
         except ProviderError as failure:
+            if failures is not None:
+                failures.append(failure)
             issues[position.security_id] = failure.message
             if error is None or isinstance(failure, ProviderRateLimited):
                 error = failure

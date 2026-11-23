@@ -32,7 +32,7 @@ def main():
             register(page, base, "valuation-browser-alice")
             register(bob, base, "valuation-browser-bob")
             portfolio = create(page, base, "Valuation example")
-            page.get_by_role("link", name="View market valuation", exact=True).click()
+            page.get_by_role("link", name="Valuation", exact=True).click()
             valuation_url = page.url
             assert page.locator(".reference-grid").count() == 0
             assert page.get_by_role("region", name="Allocation table", exact=True).count() == 0
@@ -133,6 +133,7 @@ def main():
                 valuation_url, form={"as_of": "2020-01-08", "share_basis_checked": "on"}
             )
             assert response.status == 403
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(valuation_url)
             assert "/sign-in/?next=" in page.url

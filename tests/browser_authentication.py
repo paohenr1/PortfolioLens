@@ -96,6 +96,7 @@ def main():
             alice.get_by_role("button", name="Change password", exact=True).click()
             alice.get_by_role("heading", name="Password changed", exact=True).wait_for()
             alice.get_by_role("link", name="Back to my account", exact=True).click()
+            alice.locator(".account-menu summary").click()
             alice.get_by_role("button", name="Sign out", exact=True).click()
             alice.goto(base + "/account/")
             assert "/sign-in/?next=" in alice.url
@@ -111,6 +112,7 @@ def main():
             alice.get_by_role("heading", name="My account", exact=True).wait_for()
             assert "Signed in as browser-alice." in alice.locator("main").inner_text()
 
+            bob.locator(".account-menu summary").click()
             bob.get_by_role("button", name="Sign out", exact=True).click()
             bob.goto(base + "/register/")
             bob.get_by_label("Username:", exact=True).fill("invalid-test-user")

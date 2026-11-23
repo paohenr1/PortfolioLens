@@ -10,6 +10,7 @@ from django.db import transaction
 from django.http import Http404
 from django.utils import timezone
 
+from market_data.identities import register_intrinio_instrument
 from portfolios import snapshot_previews as previews
 from portfolios.models import HoldingsSnapshot, SnapshotHolding, SnapshotSubmission
 from portfolios.services import require_portfolio_storage
@@ -81,6 +82,8 @@ def save_snapshot(*, user, token, confirmed):
             as_of=payload["as_of"],
             cash=payload["cash"],
         )
+        for security_id in sorted({row["reference"]["security_id"] for row in payload["rows"]}):
+            register_intrinio_instrument(security_id)
         SnapshotHolding.objects.bulk_create(
             [
                 SnapshotHolding(

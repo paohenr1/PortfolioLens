@@ -10,6 +10,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from ledger import analytics, services
 from ledger.allocations import allocation_weights
+from ledger.analysis_context import analysis_form, remember_dates
 from ledger.domain import LedgerRuleError
 from ledger.fifo import analyze
 from ledger.forms import EntryForm, SimpleEntryForm
@@ -27,13 +28,14 @@ def valuation(request, portfolio_id):
         portfolio = services.private_portfolio(request.user, portfolio_id)
     except (PortfolioStorageUnavailable, services.PortfolioUnavailable) as error:
         return private_error(request, error)
-    form = ValuationForm(request.POST if request.method == "POST" else None)
+    form = analysis_form(request, portfolio_id, ValuationForm)
     context = {"portfolio": portfolio, "form": form}
     status, provider_error = 200, None
     if request.method == "POST":
         if not form.is_valid():
             status = 400
         else:
+            remember_dates(request, portfolio_id, form)
             try:
                 # Materialize once before I/O; a later append cannot mix new cash
                 # or split quantities into this response's earlier quote snapshot.

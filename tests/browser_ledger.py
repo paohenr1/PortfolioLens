@@ -74,7 +74,7 @@ def main():
             register(page, base, "ledger-browser-alice")
             register(bob, base, "ledger-browser-bob")
             portfolio_url = create(page, base, "Transaction fixture")
-            page.get_by_role("link", name="View transactions", exact=True).click()
+            page.get_by_role("link", name="Transactions", exact=True).click()
             history_url = page.url
             record_url = history_url + "record/"
             assert page.get_by_role("heading", name="No transactions yet").is_visible()
@@ -150,7 +150,8 @@ def main():
             assert "1.7815%" in page.locator(".portfolio-inline-values").inner_text()
             assert page.get_by_role("region", name="Holding market values").is_visible()
             assert page.locator("main table").count() == 1
-            assert not page.locator(".portfolio-analysis-links").is_visible()
+            assert page.get_by_role("navigation", name="Portfolio sections").is_visible()
+            assert page.get_by_role("heading", name="Recent transactions").is_visible()
             update = page.get_by_role("button", name="Update valuation & performance")
             assert update.bounding_box()["height"] >= 44
             for theme in ("dark", "light"):
@@ -163,6 +164,7 @@ def main():
                 response = bob.goto(url)
                 assert response.status == 404
                 assert "Transaction fixture" not in bob.locator("main").inner_text()
+            page.locator(".account-menu summary").click()
             page.get_by_role("button", name="Sign out", exact=True).click()
             page.goto(history_url)
             assert "/sign-in/?next=" in page.url

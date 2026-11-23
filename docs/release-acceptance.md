@@ -49,7 +49,7 @@ process/database before retrying. Do not terminate unrelated application process
 [Intrinio commands](intrinio.md#live-acceptance-after-secure-configuration) provide
 bounded endpoint checks. `tests/browser_live_research.py` additionally exercises
 research pages with live data and an isolated account/database. Its default ceiling is
-32 backend calls; `--financial-follow-up` has a 26-call ceiling. It paces requests under
+31 backend calls; `--financial-follow-up` has a 26-call ceiling. It paces requests under
 existing quotas and does not replace transport with fixtures.
 
 Live checks require secure credentials and applicable rights. They are not part of
