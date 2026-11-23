@@ -12,9 +12,10 @@ from django.db import connection
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
+from ledger.corrections import commit_correction, preview_correction
 from ledger.models import Entry
 from ledger.services import append_entry
-from market_data.errors import ProviderRateLimited
+from market_data.errors import EntitlementDenied, ProviderError, ProviderRateLimited
 from portfolios.services import create_portfolio
 from tests.test_ledger import REFERENCE
 from tests.test_ledger_domain import DAY, cash, trade
@@ -43,7 +44,7 @@ class PortfolioOverviewTests(TestCase):
         self.addCleanup(patch.stopall)
 
     def record(self, event):
-        append_entry(
+        return append_entry(
             user=self.user,
             portfolio_id=self.portfolio.pk,
             client_key=uuid.uuid4(),
@@ -91,6 +92,132 @@ class PortfolioOverviewTests(TestCase):
         self.assertTrue(
             all(call.args[1] == date(2020, 1, 10) for call in self.quotes.call_args_list)
         )
+
+    @override_settings(PORTFOLIO_VALUATION_CACHE=True)
+    def test_outage_uses_last_verified_dates_and_invalidates_changed_journal(self):
+        self.record(cash(event_date=date(2019, 12, 2)))
+        self.record(trade(event_date=date(2019, 12, 3), sequence=1))
+        preference = reverse("portfolio_performance_preference", args=[self.portfolio.pk])
+        self.client.post(preference, {"automatic_performance": "enable"})
+        auto_url = reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])
+        self.quotes.side_effect = lambda identifier, day, address, **kwargs: history(
+            "30" if day == date(2020, 1, 10) else "25", as_of=day
+        )
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 13)):
+            initial = self.client.post(auto_url)
+        self.assertContains(initial, "1,049.00")
+        self.assertContains(initial, "5.0050%")
+        self.assertNotContains(initial, "Stale")
+
+        self.quotes.side_effect = ProviderError()
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 14)):
+            stale = self.client.post(auto_url)
+            self.assertContains(stale, "Stale · Last verified close Jan 10, 2020", status_code=503)
+            self.assertContains(
+                stale, "Stale · Last verified return Dec 11, 2019 – Jan 10, 2020", status_code=503
+            )
+            self.assertContains(stale, "5.0050%", status_code=503)
+
+            with override_settings(PORTFOLIO_VALUATION_CACHE=False):
+                self.assertNotContains(self.client.post(auto_url), "Stale", status_code=503)
+            self.quotes.side_effect = EntitlementDenied()
+            self.assertNotContains(self.client.post(auto_url), "Stale", status_code=503)
+
+            self.quotes.side_effect = ProviderError()
+            self.record(cash(amount="50", event_date=date(2020, 1, 13)))
+            changed = self.client.post(auto_url)
+            self.assertNotContains(changed, "Stale", status_code=503)
+            self.assertNotContains(changed, "1,049.00", status_code=503)
+            self.assertNotContains(changed, "5.0050%", status_code=503)
+
+    @override_settings(PORTFOLIO_VALUATION_CACHE=True)
+    def test_entitlement_denial_prevents_fallback_even_when_other_security_has_outage(self):
+        self.record(cash())
+        self.record(trade(quantity="1"))
+        second = "sec_fixture_second"
+        self.reference.return_value = replace(
+            REFERENCE, security=replace(REFERENCE.security, id=second)
+        )
+        self.record(trade(quantity="1", security_id=second, sequence=3))
+        auto_url = reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])
+        self.quotes.side_effect = lambda identifier, day, address, **kwargs: history(
+            "30", identifier=identifier, as_of=day
+        )
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 13)):
+            self.assertContains(self.client.post(auto_url), "1,008.00")
+
+        self.quotes.side_effect = [ProviderError(), EntitlementDenied()]
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 14)):
+            response = self.client.post(auto_url)
+        self.assertNotContains(response, "Stale", status_code=503)
+        self.assertNotContains(response, "1,008.00", status_code=503)
+
+    @override_settings(PORTFOLIO_VALUATION_CACHE=True)
+    def test_correction_committed_during_outage_request_invalidates_fallback(self):
+        deposit = self.record(cash())
+        self.record(trade())
+        auto_url = reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])
+        self.quotes.side_effect = lambda identifier, day, address, **kwargs: history(
+            "30", as_of=day
+        )
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 13)):
+            self.assertContains(self.client.post(auto_url), "1,049.00")
+
+        correction = {
+            "user": self.user,
+            "portfolio_id": self.portfolio.pk,
+            "target_id": deposit.pk,
+            "intent": cash(amount="1200"),
+            "reason": "Correct recorded deposit",
+        }
+        version = preview_correction(**correction)[4]
+
+        def outage_during_correction(*args, **kwargs):
+            commit_correction(
+                **correction,
+                expected_version=version,
+                client_key=uuid.uuid4(),
+                client_address="127.0.0.1",
+            )
+            raise ProviderError()
+
+        self.quotes.side_effect = outage_during_correction
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 14)):
+            response = self.client.post(auto_url)
+        self.assertNotContains(response, "Stale", status_code=503)
+        self.assertNotContains(response, "1,049.00", status_code=503)
+
+    @override_settings(PORTFOLIO_VALUATION_CACHE=True)
+    def test_return_with_changed_selected_dates_does_not_reuse_previous_return(self):
+        self.record(cash())
+        self.record(trade())
+        self.client.post(
+            reverse("portfolio_performance_preference", args=[self.portfolio.pk]),
+            {"automatic_performance": "enable"},
+        )
+        auto_url = reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])
+        latest = date(2020, 1, 10)
+        self.quotes.side_effect = lambda identifier, day, address, **kwargs: history(
+            "30" if day == latest else "25", as_of=day
+        )
+        with patch("portfolios.automatic_valuation.ledger_today", return_value=date(2020, 1, 13)):
+            self.assertEqual(
+                self.client.post(self.url, {"start_date": DAY, "end_date": latest}).status_code,
+                200,
+            )
+            self.assertContains(self.client.post(auto_url), "5.0050%")
+
+            self.quotes.side_effect = ProviderError()
+            self.assertEqual(
+                self.client.post(
+                    self.url, {"start_date": DAY + timedelta(days=1), "end_date": latest}
+                ).status_code,
+                503,
+            )
+            changed = self.client.post(auto_url)
+        self.assertContains(changed, "Stale · Last verified close", status_code=503)
+        self.assertNotContains(changed, "Last verified return", status_code=503)
+        self.assertNotContains(changed, "5.0050%", status_code=503)
 
     def test_automatic_valuation_enforces_owner_post_and_csrf(self):
         url = reverse("portfolio_automatic_valuation", args=[self.portfolio.pk])

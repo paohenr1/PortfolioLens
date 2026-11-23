@@ -30,7 +30,14 @@ def performance_plan(entries, start_date, end_date):
 
 
 def value_performance_plan(
-    boundaries, entries, client_address, *, background=False, existing_valuation=None, error=None
+    boundaries,
+    entries,
+    client_address,
+    *,
+    background=False,
+    existing_valuation=None,
+    error=None,
+    failures=None,
 ):
     """Value a validated plan once; callers can reuse its closing valuation."""
     valuations = []
@@ -50,7 +57,12 @@ def value_performance_plan(
             )
         else:
             result, failure = load_valuation(
-                point.analysis, labels, point.as_of, client_address, background=background
+                point.analysis,
+                labels,
+                point.as_of,
+                client_address,
+                background=background,
+                failures=failures,
             )
             if failure and (error is None or isinstance(failure, ProviderRateLimited)):
                 error = failure

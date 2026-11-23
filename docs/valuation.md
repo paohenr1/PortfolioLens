@@ -20,6 +20,11 @@ Where the Intrinio agreement permits retention, set
 `DJANGO_PORTFOLIO_VALUATION_CACHE=true` to reuse complete automatic valuations
 for up to five minutes within a single web worker. Each worker holds up to 256
 results. A changed effective journal or closing date requires a new result.
+The same setting allows outage fallback to the last verified value and return.
+Each worker keeps up to 256 fallback figures in memory, with a 24-hour expiry.
+They carry their original dates and a stale label. The applicable journal and
+selected return range must still match. A missing snapshot or changed input
+leaves the affected figure unavailable. Worker restarts clear this history.
 The setting defaults to false. The automatic request does not poll.
 [Automatic performance](performance.md#automatic-performance-in-my-portfolio)
 can retry once after a short rate-limit delay.

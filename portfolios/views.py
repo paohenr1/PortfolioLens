@@ -128,6 +128,8 @@ def portfolio_automatic_valuation(request, portfolio_id):
             "period": result.period,
             "performance_issue": result.performance_issue,
             "performance_portfolio_id": portfolio_id,
+            "stale_valuation": result.stale_valuation,
+            "stale_performance": result.stale_performance,
             "issue": result.valuation_issue or (provider_error.message if provider_error else ""),
             "manual_portfolio_id": portfolio_id if result.valuation_issue else None,
             "busy": result.busy,

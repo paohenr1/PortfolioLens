@@ -16,7 +16,7 @@ class ValuationLimitError(ValueError):
     pass
 
 
-def load_valuation(analysis, labels, as_of, client_address, *, background=False):
+def load_valuation(analysis, labels, as_of, client_address, *, background=False, failures=None):
     prices = market_data.daily_prices
     if background:
         prices = partial(prices, background=True)
@@ -36,6 +36,8 @@ def load_valuation(analysis, labels, as_of, client_address, *, background=False)
         try:
             histories[position.security_id] = prices(position.security_id, as_of, client_address)
         except ProviderError as failure:
+            if failures is not None:
+                failures.append(failure)
             issues[position.security_id] = failure.message
             if error is None or isinstance(failure, ProviderRateLimited):
                 error = failure
